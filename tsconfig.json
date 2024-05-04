@@ -1,0 +1,19 @@
+{
+  "include": ["src/*.ts", "src/features/KickInviteSpam.ts", "src/features/PermaRole.ts"],
+  "exclude": [],
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "CommonJS",
+    "rootDir": "./src",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "noImplicitAny": true,
+    "outDir": "./out",
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "noUncheckedIndexedAccess": true,
+    "sourceMap": true,
+  }
+}

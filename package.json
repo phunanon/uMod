@@ -1,0 +1,13 @@
+{
+  "scripts": {
+    "start": "node out/index.js"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.12.1",
+    "discord.js": "^14.14.1",
+    "dotenv": "^16.0.3"
+  },
+  "devDependencies": {
+    "prisma": "^5.12.1"
+  }
+}

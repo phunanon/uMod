@@ -1,0 +1,35 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./db.db"
+}
+
+model PermaRole {
+  id            Int    @id @default(autoincrement())
+  userSnowflake BigInt
+  roleSnowflake BigInt
+}
+
+model ChannelWhitelist {
+  id        Int    @id @default(autoincrement())
+  snowflake BigInt
+}
+
+model GuildMirror {
+  id               Int    @id @default(autoincrement())
+  guildSnowflake   BigInt
+  channelSnowflake BigInt
+}
+
+model Member {
+  id             Int    @id @default(autoincrement())
+  snowflake      BigInt
+  guildSnowflake BigInt
+  tag            String
+  numMessages    Int    @default(0)
+
+  @@unique([snowflake, guildSnowflake])
+}
