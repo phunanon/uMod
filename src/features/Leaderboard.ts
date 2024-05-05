@@ -12,42 +12,33 @@ export const Leaderboard: Feature = {
     const { id, tag } = interaction.user;
     const member = await getMember(tag, id, guildId);
 
-    //Fetch both the top ten and the user's rank
-    const result: { tag: string; rank: bigint; numMessages: number }[] =
-      await prisma.$queryRaw`
-      WITH ranked AS (
-        SELECT id, tag, numMessages, ROW_NUMBER() OVER (ORDER BY numMessages DESC) as rank
-        FROM "Member"
-        WHERE "guildSnowflake" = ${BigInt(guildId)}
-      )
-      SELECT tag, rank, numMessages
-      FROM ranked
-      WHERE id = ${member.id}
-      UNION ALL
-      SELECT tag, rank, numMessages
-      FROM ranked
-      WHERE rank <= 10
-      ORDER BY rank`;
-
-    const userRankAt = result.findIndex(row => row.tag === member.tag);
-    const userRank = result[userRankAt]?.rank ?? 0n;
-    result.splice(userRankAt, 1);
-
-    const boldIfUser = ({ tag }: { tag: string }) =>
-      tag === member.tag ? `**${tag}**` : tag;
-
-    const leaderboard = result.map(row => {
-      const tag = boldIfUser(row);
-      return `${row.rank}. ${tag}: ${row.numMessages} messages`;
+    const top10 = await prisma.member.findMany({
+      select: { id: true, tag: true, numMessages: true },
+      orderBy: { numMessages: 'desc' },
+      take: 10,
     });
 
-    if (userRank > 10n) {
-      const tag = boldIfUser(member);
-      const stat = `${userRank}. ${tag}: ${member.numMessages} messages`;
-      leaderboard.push(stat);
+    const boldIfUser = ({ index, tag }: { index: number; tag: string }) => {
+      const i = (index + 1).toString().padStart(2, ' ');
+      return `\`${i}\` ` + (tag === member.tag ? `**${tag}**` : tag);
+    };
+
+    const leaderboard = top10.map((row, index) => {
+      const tag = boldIfUser({ index, ...row });
+      return `${tag}: ${row.numMessages} messages`;
+    });
+
+    if (!top10.some(({ id }) => id === member.id)) {
+      const userRank = await prisma.member.count({
+        where: { numMessages: { gt: member.numMessages } },
+      });
+      const index = userRank + 1;
+      const tag = boldIfUser({ index, ...member });
+      const stat = `${tag}: ${member.numMessages} messages`;
+      leaderboard.push('...', stat);
     }
 
-    await interaction.reply(leaderboard.join('\n'));
+    await interaction.reply('.\n' + leaderboard.join('\n'));
   },
   async HandleMessageCreate(message: Message) {
     if (await IsChannelWhitelisted(message.channel.id)) return;
