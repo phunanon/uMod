@@ -1,20 +1,26 @@
-import { ChannelType, Interaction, InteractionType, Message } from 'discord.js';
+import { ChannelType } from 'discord.js';
 import { client, prisma } from '../infrastructure';
-import { Feature, IsChannelWhitelisted, ModeratorOnly } from '.';
+import { Feature, InteractionGuard, IsChannelWhitelisted } from '.';
 
 export const MirrorGuild: Feature = {
-  async HandleMessageCreate(message: Message) {
+  async Init(commands) {
+    await commands.create({
+      name: 'mirror-guild',
+      description: 'Mirror all server messages into the current channel.',
+    });
+  },
+  async HandleMessageCreate(message) {
     if (await IsChannelWhitelisted(message.channel.id)) return;
     const guildId = message.guild?.id;
     if (!guildId) return;
 
     const mirror = await prisma.guildMirror.findFirst({
-      where: { guildSnowflake: BigInt(guildId) },
+      where: { guildSf: BigInt(guildId) },
     });
 
     if (!mirror) return;
 
-    const channel = await client.channels.fetch(`${mirror.channelSnowflake}`);
+    const channel = await client.channels.fetch(`${mirror.channelSf}`);
     if (!channel || channel.type !== ChannelType.GuildText) return;
 
     if (channel.id === message.channel.id) return;
@@ -32,38 +38,21 @@ export const MirrorGuild: Feature = {
       files: attachments.map(attachment => attachment.url),
     });
   },
-  async HandleInteractionCreate(interaction: Interaction) {
-    if (interaction.channel?.type !== ChannelType.GuildText) return;
-    if (interaction.type !== InteractionType.ApplicationCommand) return;
-    if (interaction.commandName !== 'mirror-guild') return;
-    if (await ModeratorOnly(interaction)) return;
+  async HandleInteractionCreate(interaction) {
+    const { guildSf, channelSf, chatInteraction } =
+      (await InteractionGuard(interaction, 'mirror-guild', true)) ?? {};
+    if (!guildSf || !channelSf || !chatInteraction) return;
 
-    const guildId = interaction.guild?.id;
-    if (!guildId) return;
-
-    const channel = interaction.options.get('channel', true).channel;
-    if (!channel || channel.type !== ChannelType.GuildText) {
-      await interaction.reply('Invalid channel.');
-      return;
-    }
-
-    const existing = await prisma.guildMirror.findFirst({
-      where: { guildSnowflake: BigInt(guildId) },
-    });
+    const existing = await prisma.guildMirror.findFirst({ where: { guildSf } });
 
     if (existing) {
       await prisma.guildMirror.delete({ where: { id: existing.id } });
-      await interaction.reply('Mirror channel disabled.');
+      await chatInteraction.reply('Mirror channel disabled.');
       return;
     }
 
-    await prisma.guildMirror.create({
-      data: {
-        guildSnowflake: BigInt(guildId),
-        channelSnowflake: BigInt(channel.id),
-      },
-    });
+    await prisma.guildMirror.create({ data: { guildSf, channelSf } });
 
-    await interaction.reply('Mirror channel enabled.');
+    await chatInteraction.reply('Mirror channel enabled.');
   },
 };

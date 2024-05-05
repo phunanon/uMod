@@ -1,11 +1,13 @@
-import { InteractionType } from 'discord.js';
-import { Feature } from '.';
+import { Feature, InteractionGuard } from '.';
 
 export const Ping: Feature = {
+  async Init(commands) {
+    await commands.create({ name: 'ping', description: 'Replies with pong!' });
+  },
   async HandleInteractionCreate(interaction) {
-    if (interaction.type !== InteractionType.ApplicationCommand) return;
-    if (interaction.commandName !== 'ping') return;
+    const { chatInteraction } =
+      (await InteractionGuard(interaction, 'ping', false)) ?? {};
 
-    await interaction.reply('Pong!');
+    await chatInteraction?.reply('Pong!');
   },
 };

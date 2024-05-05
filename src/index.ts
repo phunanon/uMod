@@ -2,7 +2,6 @@ import * as dotenv from 'dotenv';
 import { client, log } from './infrastructure';
 import * as Features from './features';
 import { Feature } from './features';
-import { ApplicationCommandOptionType } from 'discord.js';
 dotenv.config();
 
 console.log('Loading...');
@@ -14,6 +13,7 @@ const features = [
   Features.PermaRole,
   Features.MirrorGuild,
   Features.Leaderboard,
+  Features.StickyMessage,
 ];
 
 client.once('ready', async () => {
@@ -25,38 +25,10 @@ client.once('ready', async () => {
 
   setTimeout(async () => {
     if (!client.application) return;
-    const { commands } = client.application;
-
-    await commands.create({ name: 'ping', description: 'Replies with pong!' });
-    await commands.create({
-      name: 'whitelist-channel',
-      description: 'Disable moderation for a channel.',
-      options: [
-        {
-          name: 'channel',
-          description: 'The channel to whitelist.',
-          type: ApplicationCommandOptionType.Channel,
-          required: true,
-        },
-      ],
-    });
-    await commands.create({
-      name: 'mirror-guild',
-      description: 'Mirror messages from entire guild into a channel.',
-      options: [
-        {
-          name: 'channel',
-          description: 'The channel to mirror to.',
-          type: ApplicationCommandOptionType.Channel,
-          required: true,
-        },
-      ],
-    });
-    await commands.create({
-      name: 'leaderboard',
-      description: 'Show the leaderboard.',
-    });
-    log('Commands registered.');
+    for (const feature of features) {
+      await feature.Init?.(client.application.commands);
+    }
+    log('Features initialised.');
   });
 
   log('Ready.');

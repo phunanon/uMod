@@ -1,33 +1,27 @@
-import { InteractionType } from 'discord.js';
-import { Feature, ModeratorOnly } from '.';
+import { Feature, InteractionGuard } from '.';
 import { prisma } from '../infrastructure';
 
 export const WhitelistChannel: Feature = {
-  async HandleInteractionCreate(interaction) {
-    if (interaction.type !== InteractionType.ApplicationCommand) return;
-    if (interaction.commandName !== 'whitelist-channel') return;
-    if (await ModeratorOnly(interaction)) return;
-
-    const channel = interaction.options.get('channel', true).channel;
-
-    if (!channel) {
-      await interaction.reply('Invalid channel.');
-      return;
-    }
-
-    const existing = await prisma.channelWhitelist.findFirst({
-      where: { snowflake: BigInt(channel.id) },
+  async Init(commands) {
+    await commands.create({
+      name: 'whitelist-channel',
+      description: 'Disable moderation for current channel.',
     });
+  },
+  async HandleInteractionCreate(interaction) {
+    const { chatInteraction, channelSf: sf } =
+      (await InteractionGuard(interaction, 'whitelist-channel', true)) ?? {};
+    if (!chatInteraction || !sf) return;
+
+    const existing = await prisma.channelWhitelist.findFirst({ where: { sf } });
     if (existing) {
       await prisma.channelWhitelist.delete({ where: { id: existing.id } });
-      await interaction.reply('Channel unwhitelisted.');
+      await chatInteraction.reply('Channel unwhitelisted.');
       return;
     }
 
-    await prisma.channelWhitelist.create({
-      data: { snowflake: BigInt(channel.id) },
-    });
+    await prisma.channelWhitelist.create({ data: { sf } });
 
-    await interaction.reply('Channel whitelisted.');
+    await chatInteraction.reply('Channel whitelisted.');
   },
 };

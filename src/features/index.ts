@@ -1,7 +1,10 @@
 import {
+  ApplicationCommandManager,
+  ChannelType,
   ChatInputCommandInteraction,
   GuildMember,
   Interaction,
+  InteractionType,
   Message,
   MessageContextMenuCommandInteraction,
   PartialGuildMember,
@@ -15,8 +18,11 @@ export { Ping } from './Ping';
 export { WhitelistChannel } from './WhitelistChannel';
 export { MirrorGuild } from './MirrorGuild';
 export { Leaderboard } from './Leaderboard';
+export { StickyMessage } from './StickyMessage';
 
 export type Feature = {
+  /** Call is guaranteed but not necessarily prior to other handlers. */
+  Init?: (commands: ApplicationCommandManager) => Promise<void>;
   HandleMemberUpdate?: (
     oldMember: GuildMember | PartialGuildMember,
     newMember: GuildMember,
@@ -28,12 +34,12 @@ export type Feature = {
 
 export const IsChannelWhitelisted = async (snowflake: string) => {
   const record = await prisma.channelWhitelist.findFirst({
-    where: { snowflake: BigInt(snowflake) },
+    where: { sf: BigInt(snowflake) },
   });
   return record !== null;
 };
 
-export const ModeratorOnly = async (
+const ModeratorOnly = async (
   interaction:
     | ChatInputCommandInteraction
     | MessageContextMenuCommandInteraction
@@ -49,4 +55,23 @@ export const ModeratorOnly = async (
     await interaction.reply('You must be a moderator to use this command!');
   }
   return notMod;
+};
+
+export const InteractionGuard = async (
+  chatInteraction: Interaction,
+  commandName: string,
+  moderatorOnly: boolean,
+) => {
+  if (chatInteraction.channel?.type !== ChannelType.GuildText) return;
+  if (chatInteraction.type !== InteractionType.ApplicationCommand) return;
+  if (chatInteraction.commandName !== commandName) return;
+  if (moderatorOnly && (await ModeratorOnly(chatInteraction))) return;
+  const guildId = chatInteraction.guildId;
+  if (!guildId) return;
+  return {
+    guildSf: BigInt(guildId),
+    channelSf: BigInt(chatInteraction.channelId),
+    channel: chatInteraction.channel,
+    chatInteraction,
+  };
 };

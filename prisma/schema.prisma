@@ -8,28 +8,40 @@ datasource db {
 }
 
 model PermaRole {
-  id            Int    @id @default(autoincrement())
-  userSnowflake BigInt
-  roleSnowflake BigInt
+  id     Int    @id @default(autoincrement())
+  userSf BigInt
+  roleSf BigInt
 }
 
 model ChannelWhitelist {
-  id        Int    @id @default(autoincrement())
-  snowflake BigInt
+  id Int    @id @default(autoincrement())
+  sf BigInt
 }
 
 model GuildMirror {
-  id               Int    @id @default(autoincrement())
-  guildSnowflake   BigInt
-  channelSnowflake BigInt
+  id        Int    @id @default(autoincrement())
+  guildSf   BigInt
+  channelSf BigInt
 }
 
 model Member {
-  id             Int    @id @default(autoincrement())
-  snowflake      BigInt
-  guildSnowflake BigInt
-  tag            String
-  numMessages    Int    @default(0)
+  id          Int    @id @default(autoincrement())
+  sf          BigInt
+  guildSf     BigInt
+  tag         String
+  numMessages Int    @default(0)
 
-  @@unique([snowflake, guildSnowflake])
+  @@unique([sf, guildSf])
+}
+
+model StickyMessage {
+  id             Int      @id @default(autoincrement())
+  renewAt        DateTime
+  sf             BigInt
+  guildSf        BigInt
+  channelSf      BigInt
+  content        String
+  renewalSeconds Int
+
+  @@unique([guildSf, channelSf])
 }

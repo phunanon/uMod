@@ -1,9 +1,8 @@
-import { Message } from 'discord.js';
 import { log } from '../infrastructure';
 import { Feature, IsChannelWhitelisted } from '.';
 
 export const KickInviteSpam: Feature = {
-  async HandleMessageCreate(message: Message) {
+  async HandleMessageCreate(message) {
     if (await IsChannelWhitelisted(message.channel.id)) return;
 
     const wordDiscord = message.content.includes('discord');

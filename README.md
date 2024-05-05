@@ -8,3 +8,8 @@ Simple moderation bot so I can kick Carlbot.
 - MirrorGuild: mirrors messages from entire guild into one channel
 - Ping: replies with "Pong!"
 - WhitelistChannel: disables moderation for a channel
+- StickyMessage: periodically resends a message to a channel
+
+```
+npx prisma db push
+```

@@ -1,16 +1,20 @@
-import { ChannelType, InteractionType, Message } from 'discord.js';
-import { Feature, IsChannelWhitelisted } from '.';
+import { Feature, InteractionGuard, IsChannelWhitelisted } from '.';
 import { prisma } from '../infrastructure';
 
 export const Leaderboard: Feature = {
+  async Init(commands) {
+    await commands.create({
+      name: 'leaderboard',
+      description: 'Show the server leaderboard.',
+    });
+  },
   async HandleInteractionCreate(interaction) {
-    if (interaction.channel?.type !== ChannelType.GuildText) return;
-    if (interaction.type !== InteractionType.ApplicationCommand) return;
-    if (interaction.commandName !== 'leaderboard') return;
-    const guildId = interaction.guildId;
-    if (!guildId) return;
+    const { guildSf, chatInteraction } =
+      (await InteractionGuard(interaction, 'leaderboard', false)) ?? {};
+    if (!guildSf || !chatInteraction) return;
+
     const { id, tag } = interaction.user;
-    const member = await getMember(tag, id, guildId);
+    const member = await getMember(tag, id, guildSf);
 
     const top10 = await prisma.member.findMany({
       select: { id: true, tag: true, numMessages: true },
@@ -38,14 +42,14 @@ export const Leaderboard: Feature = {
       leaderboard.push('...', stat);
     }
 
-    await interaction.reply('.\n' + leaderboard.join('\n'));
+    await chatInteraction.reply('.\n' + leaderboard.join('\n'));
   },
-  async HandleMessageCreate(message: Message) {
+  async HandleMessageCreate(message) {
     if (await IsChannelWhitelisted(message.channel.id)) return;
     const guildId = message.guild?.id;
     if (!guildId) return;
     const { id, tag } = message.author;
-    const member = await getMember(tag, id, guildId);
+    const member = await getMember(tag, id, BigInt(guildId));
 
     await prisma.member.update({
       where: { id: member.id },
@@ -54,14 +58,12 @@ export const Leaderboard: Feature = {
   },
 };
 
-async function getMember(tag: string, userId: string, guildId: string) {
-  const snowflake = BigInt(userId);
-  const guildSnowflake = BigInt(guildId);
-  const snowflake_guildSnowflake = { snowflake, guildSnowflake };
-  const data = { tag, snowflake, guildSnowflake };
+async function getMember(tag: string, userId: string, guildSf: bigint) {
+  const sf = BigInt(userId);
+  const sf_guildSf = { sf, guildSf };
 
   const member =
-    (await prisma.member.findUnique({ where: { snowflake_guildSnowflake } })) ??
-    (await prisma.member.create({ data }));
+    (await prisma.member.findUnique({ where: { sf_guildSf } })) ??
+    (await prisma.member.create({ data: { tag, ...sf_guildSf } }));
   return member;
 }
