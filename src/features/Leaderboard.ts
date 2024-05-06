@@ -24,12 +24,12 @@ export const Leaderboard: Feature = {
 
     const boldIfUser = ({ index, tag }: { index: number; tag: string }) => {
       const i = (index + 1).toString().padStart(2, ' ');
-      return `\`${i}\` ` + (tag === member.tag ? `**${tag}**` : tag);
+      return '`' + i + ' ' + (tag === member.tag ? `${tag}` : tag) + '`';
     };
 
     const leaderboard = top10.map((row, index) => {
       const tag = boldIfUser({ index, ...row });
-      return `${tag}: ${row.numMessages} messages`;
+      return `${tag} ${row.numMessages} messages`;
     });
 
     if (!top10.some(({ id }) => id === member.id)) {
@@ -38,7 +38,7 @@ export const Leaderboard: Feature = {
       });
       const index = userRank + 1;
       const tag = boldIfUser({ index, ...member });
-      const stat = `${tag}: ${member.numMessages} messages`;
+      const stat = `${tag} ${member.numMessages} messages`;
       leaderboard.push('...', stat);
     }
 

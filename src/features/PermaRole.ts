@@ -30,6 +30,7 @@ export const PermaRole: Feature = {
       where: { userSf },
     });
     const roleSnowflakes = permaRoles.map(({ roleSf }) => `${roleSf}`);
+    if (!roleSnowflakes.length) return;
     await member.roles.add(roleSnowflakes);
     log('PermaRole restore', member.id, roleSnowflakes);
   },

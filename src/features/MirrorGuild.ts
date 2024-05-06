@@ -11,6 +11,7 @@ export const MirrorGuild: Feature = {
   },
   async HandleMessageCreate(message) {
     if (await IsChannelWhitelisted(message.channel.id)) return;
+    if (message.channel.type !== ChannelType.GuildText) return;
     const guildId = message.guild?.id;
     if (!guildId) return;
 
@@ -28,14 +29,11 @@ export const MirrorGuild: Feature = {
     const author = message.author;
     if (!author) return;
 
-    const content = message.content;
-    if (!content) return;
-
-    const attachments = message.attachments;
+    const content = message.content ?? '[No content]';
 
     await channel.send({
-      content: `(${author.id}) **${author.tag}**: ${content}`,
-      files: attachments.map(attachment => attachment.url),
+      content: `${message.url}\n${author.id} **${author.tag}**: ${content}`,
+      files: message.attachments.map(a => a.url),
     });
   },
   async HandleInteractionCreate(interaction) {

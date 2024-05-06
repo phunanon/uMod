@@ -19,6 +19,7 @@ export { WhitelistChannel } from './WhitelistChannel';
 export { MirrorGuild } from './MirrorGuild';
 export { Leaderboard } from './Leaderboard';
 export { StickyMessage } from './StickyMessage';
+export { Echo } from './Echo';
 
 export type Feature = {
   /** Call is guaranteed but not necessarily prior to other handlers. */

@@ -14,6 +14,7 @@ const features = [
   Features.MirrorGuild,
   Features.Leaderboard,
   Features.StickyMessage,
+  Features.Echo,
 ];
 
 client.once('ready', async () => {

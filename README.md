@@ -9,6 +9,7 @@ Simple moderation bot so I can kick Carlbot.
 - Ping: replies with "Pong!"
 - WhitelistChannel: disables moderation for a channel
 - StickyMessage: periodically resends a message to a channel
+- Echo: repeats a message in a channel, anonymously
 
 ```
 npx prisma db push
