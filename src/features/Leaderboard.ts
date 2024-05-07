@@ -13,6 +13,8 @@ export const Leaderboard: Feature = {
       (await InteractionGuard(interaction, 'leaderboard', false)) ?? {};
     if (!guildSf || !chatInteraction) return;
 
+    await chatInteraction.deferReply();
+
     const { id, tag } = interaction.user;
     const member = await getMember(tag, id, guildSf);
 
@@ -42,7 +44,7 @@ export const Leaderboard: Feature = {
       leaderboard.push('...', stat);
     }
 
-    await chatInteraction.reply('.\n' + leaderboard.join('\n'));
+    await chatInteraction.editReply('.\n' + leaderboard.join('\n'));
   },
   async HandleMessageCreate(message) {
     if (await IsChannelWhitelisted(message.channel.id)) return;

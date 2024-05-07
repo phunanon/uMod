@@ -1,21 +1,9 @@
 import * as dotenv from 'dotenv';
 import { client, log } from './infrastructure';
-import * as Features from './features';
-import { Feature } from './features';
+import { Feature, features } from './features';
 dotenv.config();
 
 console.log('Loading...');
-
-const features = [
-  Features.WhitelistChannel,
-  Features.KickInviteSpam,
-  Features.Ping,
-  Features.PermaRole,
-  Features.MirrorGuild,
-  Features.Leaderboard,
-  Features.StickyMessage,
-  Features.Echo,
-];
 
 client.once('ready', async () => {
   client
@@ -26,7 +14,8 @@ client.once('ready', async () => {
 
   setTimeout(async () => {
     if (!client.application) return;
-    for (const feature of features) {
+    for (const [name, feature] of Object.entries(features)) {
+      process.stdout.write(`${name}... `);
       await feature.Init?.(client.application.commands);
     }
     log('Features initialised.');
@@ -53,7 +42,7 @@ function dispatchEvent<T extends keyof Feature>(fn: T) {
   return async (
     ...args: Parameters<NonNullable<Feature[T]>>
   ): Promise<void> => {
-    for (const feature of features) {
+    for (const feature of Object.values(features)) {
       const featureFn = feature[fn];
       if (!featureFn) continue;
       await failable(featureFn)(...args);

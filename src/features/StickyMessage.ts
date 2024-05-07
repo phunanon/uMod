@@ -32,10 +32,12 @@ export const StickyMessage: Feature = {
     if (!guildSf || !channelSf || !channel || !chatInteraction) return;
     const guildSf_channelSf = { guildSf, channelSf };
 
+    await chatInteraction.reply('Creating sticky message...');
+
     const content = chatInteraction.options.get('content', true).value;
     const renewalSeconds = chatInteraction.options.get('renewal', false)?.value;
     if (typeof content !== 'string' || typeof renewalSeconds !== 'number') {
-      await chatInteraction.reply('Invalid content or renewal.');
+      await chatInteraction.editReply('Invalid content or renewal.');
       return;
     }
 
@@ -49,7 +51,7 @@ export const StickyMessage: Feature = {
       create: { ...guildSf_channelSf, renewAt, content, renewalSeconds, sf },
     });
 
-    await chatInteraction.reply('Sticky message created or updated.');
+    await chatInteraction.editReply('Sticky message created or updated.');
   },
 };
 

@@ -12,14 +12,20 @@ import {
 } from 'discord.js';
 import { client, prisma } from '../infrastructure';
 
-export { PermaRole } from './PermaRole';
-export { KickInviteSpam } from './KickInviteSpam';
-export { Ping } from './Ping';
-export { WhitelistChannel } from './WhitelistChannel';
-export { MirrorGuild } from './MirrorGuild';
-export { Leaderboard } from './Leaderboard';
-export { StickyMessage } from './StickyMessage';
-export { Echo } from './Echo';
+import { PermaRole } from './PermaRole';
+import { KickInviteSpam } from './KickInviteSpam';
+import { Ping } from './Ping';
+import { WhitelistChannel } from './WhitelistChannel';
+import { MirrorGuild } from './MirrorGuild';
+import { Leaderboard } from './Leaderboard';
+import { StickyMessage } from './StickyMessage';
+import { Echo } from './Echo';
+import { Purge } from './Purge';
+
+export const features = {
+  ...{ PermaRole, KickInviteSpam, Ping, WhitelistChannel, MirrorGuild },
+  ...{ Leaderboard, StickyMessage, Echo, Purge },
+};
 
 export type Feature = {
   /** Call is guaranteed but not necessarily prior to other handlers. */
