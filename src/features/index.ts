@@ -21,10 +21,11 @@ import { Leaderboard } from './Leaderboard';
 import { StickyMessage } from './StickyMessage';
 import { Echo } from './Echo';
 import { Purge } from './Purge';
+import { JoinsLeaves } from './JoinsLeaves';
 
 export const features = {
   ...{ PermaRole, KickInviteSpam, Ping, WhitelistChannel, MirrorGuild },
-  ...{ Leaderboard, StickyMessage, Echo, Purge },
+  ...{ Leaderboard, StickyMessage, Echo, Purge, JoinsLeaves },
 };
 
 export type Feature = {
@@ -35,6 +36,9 @@ export type Feature = {
     newMember: GuildMember,
   ) => Promise<void>;
   HandleMemberAdd?: (member: GuildMember) => Promise<void>;
+  HandleMemberRemove?: (
+    member: GuildMember | PartialGuildMember,
+  ) => Promise<void>;
   HandleMessageCreate?: (message: Message) => Promise<void>;
   HandleInteractionCreate?: (interaction: Interaction) => Promise<void>;
 };

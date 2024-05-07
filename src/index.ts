@@ -9,6 +9,7 @@ client.once('ready', async () => {
   client
     .on('guildMemberUpdate', dispatchEvent('HandleMemberUpdate'))
     .on('guildMemberAdd', dispatchEvent('HandleMemberAdd'))
+    .on('guildMemberRemove', dispatchEvent('HandleMemberRemove'))
     .on('messageCreate', dispatchEvent('HandleMessageCreate'))
     .on('interactionCreate', dispatchEvent('HandleInteractionCreate'));
 

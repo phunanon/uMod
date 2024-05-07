@@ -11,6 +11,7 @@ Simple moderation bot so I can kick Carlbot.
 - StickyMessage: periodically resends a message to a channel
 - Echo: repeats a message in a channel, anonymously
 - Purge: deletes a number of messages in a channel
+- JoinsLeaves: logs user joins and leaves
 
 ```
 npx prisma db push

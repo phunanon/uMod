@@ -30,7 +30,6 @@ export const StickyMessage: Feature = {
     const { guildSf, channelSf, channel, chatInteraction } =
       (await InteractionGuard(interaction, 'sticky-message', true)) ?? {};
     if (!guildSf || !channelSf || !channel || !chatInteraction) return;
-    const guildSf_channelSf = { guildSf, channelSf };
 
     await chatInteraction.reply('Creating sticky message...');
 
@@ -45,11 +44,8 @@ export const StickyMessage: Feature = {
     const sf = BigInt(message.id);
     const renewAt = calcRenewAt(renewalSeconds);
 
-    await prisma.stickyMessage.upsert({
-      where: { guildSf_channelSf },
-      update: { content, renewAt },
-      create: { ...guildSf_channelSf, renewAt, content, renewalSeconds, sf },
-    });
+    const data = { guildSf, channelSf, renewAt, content, renewalSeconds, sf };
+    await prisma.stickyMessage.create({ data });
 
     await chatInteraction.editReply('Sticky message created or updated.');
   },
@@ -62,7 +58,7 @@ const RenewStickyMessages = async () => {
 
   for (const sticky of needsRenewal) {
     const { guildSf, channelSf, sf, content, renewalSeconds } = sticky;
-    const guildSf_channelSf = { guildSf, channelSf };
+    const where = { sf_guildSf_channelSf: { sf, guildSf, channelSf } };
     const guild = await client.guilds.fetch(`${guildSf}`);
     const channel = await guild.channels.fetch(`${channelSf}`);
     if (!channel?.isTextBased()) return;
@@ -71,26 +67,21 @@ const RenewStickyMessages = async () => {
     const renewAt = calcRenewAt(renewalSeconds);
 
     if (!message) {
-      await prisma.stickyMessage.delete({ where: { guildSf_channelSf } });
+      await prisma.stickyMessage.delete({ where });
       return;
     }
 
     //Check if it's already the last message
     const mostRecent = await channel.messages.fetch({ limit: 1 });
     if (mostRecent.first()?.id === message.id) {
-      await prisma.stickyMessage.update({
-        where: { guildSf_channelSf },
-        data: { renewAt },
-      });
+      await prisma.stickyMessage.update({ where, data: { renewAt } });
       return;
     }
 
     await message.delete();
     const newMessage = await channel.send(content);
-    await prisma.stickyMessage.update({
-      where: { guildSf_channelSf },
-      data: { sf: BigInt(newMessage.id), renewAt },
-    });
+    const data = { sf: BigInt(newMessage.id), renewAt };
+    await prisma.stickyMessage.update({ where, data });
   }
 };
 

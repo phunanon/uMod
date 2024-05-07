@@ -22,6 +22,16 @@ model GuildMirror {
   id        Int    @id @default(autoincrement())
   guildSf   BigInt
   channelSf BigInt
+
+  @@unique([guildSf, channelSf])
+}
+
+model JoinsLeaves {
+  id        Int    @id @default(autoincrement())
+  guildSf   BigInt
+  channelSf BigInt
+
+  @@unique([guildSf, channelSf])
 }
 
 model Member {
@@ -43,5 +53,5 @@ model StickyMessage {
   content        String
   renewalSeconds Int
 
-  @@unique([guildSf, channelSf])
+  @@unique([sf, guildSf, channelSf])
 }
