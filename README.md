@@ -14,7 +14,8 @@ Simple moderation bot so I can kick Carlbot.
 - **JoinsLeaves**: logs user joins and leaves
 - **GlobalChat**: mirrors messages between all opted-in guilds
 - **Respond**: replies to messages with a specific content
-- (Planned) **ActivitySort**: sorts channels in a category by recent activity
+- **ActivitySort**: sorts channels in a category by recent activity
+- (Planned) **Alerts**: sends a message to a channel reacting to a specific event
 - (Planned) **Censor**: deletes messages with blacklisted words or phrases
 
 ## To host it yourself

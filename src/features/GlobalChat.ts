@@ -33,7 +33,7 @@ export const GlobalChat: Feature = {
         member.displayName ?? member.nickname ?? message.author.tag;
       const content = `**${nickname}**: ${message.content}`;
       const files = message.attachments.map(a => a.url);
-      await channel.send({ content, files });
+      await channel.send({ content, files, allowedMentions: { parse: [] } });
     }
   },
   async HandleInteractionCreate(interaction) {

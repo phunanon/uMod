@@ -63,8 +63,16 @@ model GlobalChat {
 }
 
 model Response {
-  id      Int    @id @default(autoincrement())
-  guildSf BigInt
-  pattern String
+  id       Int    @id @default(autoincrement())
+  guildSf  BigInt
+  pattern  String
   response String
+}
+
+model ActivitySort {
+  id         Int    @id @default(autoincrement())
+  guildSf    BigInt
+  categorySf BigInt
+  
+  @@unique([guildSf, categorySf])
 }

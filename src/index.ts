@@ -14,14 +14,22 @@ client.once('ready', async () => {
     .on('messageUpdate', dispatchEvent('HandleMessageUpdate'))
     .on('interactionCreate', dispatchEvent('HandleInteractionCreate'));
 
-  setTimeout(async () => {
+  const inits = Object.entries(features).flatMap(([name, feature]) =>
+    feature.Init ? [[name, feature.Init] as const] : [],
+  );
+
+  const initTimer = setInterval(async () => {
     if (!client.application) return;
-    for (const [name, feature] of Object.entries(features)) {
-      process.stdout.write(`${name}... `);
-      await feature.Init?.(client.application.commands);
+    const feature = inits.shift();
+    if (!feature) {
+      clearInterval(initTimer);
+      log('Features initialised.');
+      return;
     }
-    log('Features initialised.');
-  });
+    const [name, init] = feature;
+    process.stdout.write(`${name}... `);
+    await init(client.application.commands);
+  }, 1000);
 
   log('Ready.');
 });

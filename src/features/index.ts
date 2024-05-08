@@ -25,11 +25,12 @@ import { Purge } from './Purge';
 import { JoinsLeaves } from './JoinsLeaves';
 import { GlobalChat } from './GlobalChat';
 import { Respond } from './Respond';
+import { ActivitySort } from './ActivitySort';
 
 export const features = {
   ...{ PermaRole, KickInviteSpam, Ping, WhitelistChannel, MirrorGuild },
   ...{ Leaderboard, StickyMessage, Echo, Purge, JoinsLeaves, GlobalChat },
-  ...{ Respond },
+  ...{ Respond, ActivitySort },
 };
 
 export type Feature = {
@@ -95,13 +96,12 @@ export const InteractionGuard = async (
   };
 };
 
-export const MessageGuard = async (message: Message) => {
-  if (message.channel.type !== ChannelType.GuildText) return;
-  if (message.author.bot) return;
-  if (await IsChannelWhitelisted(message.channel.id)) return;
-  const guildId = message.guild?.id;
+export const MessageGuard = async ({ channel, author, guildId }: Message) => {
+  if (channel.type !== ChannelType.GuildText) return;
+  if (author.bot) return;
+  if (await IsChannelWhitelisted(channel.id)) return;
   if (!guildId) return;
   const guildSf = BigInt(guildId);
-  const channelSf = BigInt(message.channel.id);
-  return { guildSf, channelSf, message };
+  const channelSf = BigInt(channel.id);
+  return { guildSf, channelSf, channel };
 };
