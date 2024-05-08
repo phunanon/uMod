@@ -56,7 +56,8 @@ async function HandleMessageCreate(partial: Message | PartialMessage) {
   const content = message.content ?? '[No content]';
 
   await channel.send({
-    content: `${message.url}\n${author.id} **${author.tag}**: ${content}`,
+    content: `**${author.tag}** ${message.url} ||${author.id}||\n${content}`,
     files: message.attachments.map(a => a.url),
+    allowedMentions: { parse: [] },
   });
 }

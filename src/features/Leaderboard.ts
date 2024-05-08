@@ -19,6 +19,7 @@ export const Leaderboard: Feature = {
     const member = await getMember(tag, id, guildSf);
 
     const top10 = await prisma.member.findMany({
+      where: { guildSf },
       select: { id: true, tag: true, numMessages: true },
       orderBy: { numMessages: 'desc' },
       take: 10,

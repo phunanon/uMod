@@ -23,10 +23,11 @@ import { StickyMessage } from './StickyMessage';
 import { Echo } from './Echo';
 import { Purge } from './Purge';
 import { JoinsLeaves } from './JoinsLeaves';
+import { GlobalChat } from './GlobalChat';
 
 export const features = {
   ...{ PermaRole, KickInviteSpam, Ping, WhitelistChannel, MirrorGuild },
-  ...{ Leaderboard, StickyMessage, Echo, Purge, JoinsLeaves },
+  ...{ Leaderboard, StickyMessage, Echo, Purge, JoinsLeaves, GlobalChat },
 };
 
 export type Feature = {

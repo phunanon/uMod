@@ -12,7 +12,18 @@ Simple moderation bot so I can kick Carlbot.
 - Echo: repeats a message in a channel, anonymously
 - Purge: deletes a number of messages in a channel
 - JoinsLeaves: logs user joins and leaves
+- GlobalChat: mirrors messages between all opted-in guilds
+- (Planned) ActivitySort: sorts channels in a category by recent activity
+- (Planned) Censor: deletes messages with blacklisted words or phrases
+- (Planned) Respond: replies to messages with a specific content
 
+## To host it yourself
+
+I recommend using Bun. Then, in the terminal:
 ```
-npx prisma db push
+npm i -g pm2                       # Keeps the bot running even if it crashes
+npm ci                             # Installs exact dependencies
+npx prisma generate                # Generates Prisma client
+npx prisma migrate dev             # Migrates the database
+pm2 start out/index.js --name uMod # Starts up the bot
 ```

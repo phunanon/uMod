@@ -55,3 +55,9 @@ model StickyMessage {
 
   @@unique([sf, guildSf, channelSf])
 }
+
+model GlobalChat {
+  id        Int    @id @default(autoincrement())
+  guildSf   BigInt @unique
+  channelSf BigInt
+}

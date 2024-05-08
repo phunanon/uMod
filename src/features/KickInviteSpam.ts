@@ -14,7 +14,8 @@ export const KickInviteSpam: Feature = {
     const member = message.member;
     if (!member) return;
     try {
-      await member.dmChannel?.send(
+      const channel  = await member.createDM();
+      await channel?.send(
         `You were automatically kicked from ${guild} for spamming an invite link.
 If you suspect your account was hacked:
 - Change your password
