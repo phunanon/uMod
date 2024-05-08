@@ -22,15 +22,14 @@ import { Leaderboard } from './Leaderboard';
 import { StickyMessage } from './StickyMessage';
 import { Echo } from './Echo';
 import { Purge } from './Purge';
-import { JoinsLeaves } from './JoinsLeaves';
 import { GlobalChat } from './GlobalChat';
-import { Respond } from './Respond';
 import { ActivitySort } from './ActivitySort';
+import { Alert } from './Alert';
 
 export const features = {
   ...{ PermaRole, KickInviteSpam, Ping, WhitelistChannel, MirrorGuild },
-  ...{ Leaderboard, StickyMessage, Echo, Purge, JoinsLeaves, GlobalChat },
-  ...{ Respond, ActivitySort },
+  ...{ Leaderboard, StickyMessage, Echo, Purge, GlobalChat, Alert },
+  ...{ ActivitySort },
 };
 
 export type Feature = {
@@ -103,5 +102,6 @@ export const MessageGuard = async ({ channel, author, guildId }: Message) => {
   if (!guildId) return;
   const guildSf = BigInt(guildId);
   const channelSf = BigInt(channel.id);
-  return { guildSf, channelSf, channel };
+  const userSf = BigInt(author.id);
+  return { guildSf, channelSf, userSf, channel };
 };
