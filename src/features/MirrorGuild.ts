@@ -1,6 +1,6 @@
 import { ChannelType, Message, PartialMessage } from 'discord.js';
 import { client, prisma } from '../infrastructure';
-import { Feature, InteractionGuard, IsChannelWhitelisted } from '.';
+import { Feature, InteractionGuard, MessageGuard } from '.';
 
 export const MirrorGuild: Feature = {
   async Init(commands) {
@@ -34,14 +34,10 @@ export const MirrorGuild: Feature = {
 
 async function HandleMessageCreate(partial: Message | PartialMessage) {
   const message = partial.partial ? await partial.fetch() : partial;
-  if (await IsChannelWhitelisted(message.channel.id)) return;
-  if (message.channel.type !== ChannelType.GuildText) return;
-  const guildId = message.guild?.id;
-  if (!guildId) return;
+  const { guildSf } = (await MessageGuard(message)) ?? {};
+  if (!guildSf) return;
 
-  const mirror = await prisma.guildMirror.findFirst({
-    where: { guildSf: BigInt(guildId) },
-  });
+  const mirror = await prisma.guildMirror.findFirst({ where: { guildSf } });
 
   if (!mirror) return;
 

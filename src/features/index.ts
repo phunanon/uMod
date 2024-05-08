@@ -24,10 +24,12 @@ import { Echo } from './Echo';
 import { Purge } from './Purge';
 import { JoinsLeaves } from './JoinsLeaves';
 import { GlobalChat } from './GlobalChat';
+import { Respond } from './Respond';
 
 export const features = {
   ...{ PermaRole, KickInviteSpam, Ping, WhitelistChannel, MirrorGuild },
   ...{ Leaderboard, StickyMessage, Echo, Purge, JoinsLeaves, GlobalChat },
+  ...{ Respond },
 };
 
 export type Feature = {
@@ -91,4 +93,15 @@ export const InteractionGuard = async (
     channel: chatInteraction.channel,
     chatInteraction,
   };
+};
+
+export const MessageGuard = async (message: Message) => {
+  if (message.channel.type !== ChannelType.GuildText) return;
+  if (message.author.bot) return;
+  if (await IsChannelWhitelisted(message.channel.id)) return;
+  const guildId = message.guild?.id;
+  if (!guildId) return;
+  const guildSf = BigInt(guildId);
+  const channelSf = BigInt(message.channel.id);
+  return { guildSf, channelSf, message };
 };

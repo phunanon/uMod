@@ -61,3 +61,10 @@ model GlobalChat {
   guildSf   BigInt @unique
   channelSf BigInt
 }
+
+model Response {
+  id      Int    @id @default(autoincrement())
+  guildSf BigInt
+  pattern String
+  response String
+}

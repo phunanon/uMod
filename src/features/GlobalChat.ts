@@ -1,5 +1,5 @@
 import { ChannelType } from 'discord.js';
-import { Feature, InteractionGuard } from '.';
+import { Feature, InteractionGuard, MessageGuard } from '.';
 import { prisma } from '../infrastructure';
 
 export const GlobalChat: Feature = {
@@ -10,13 +10,12 @@ export const GlobalChat: Feature = {
     });
   },
   async HandleMessageCreate(message) {
-    if (message.author.bot) return;
-    if (!message.guildId || !message.channelId) return;
-    const guildSf = BigInt(message.guildId);
+    const { guildSf, channelSf } = (await MessageGuard(message)) ?? {};
+    if (!guildSf || !channelSf) return;
 
     const existing = await prisma.globalChat.findFirst({ where: { guildSf } });
 
-    if (!existing || existing.channelSf !== BigInt(message.channelId)) return;
+    if (!existing || existing.channelSf !== channelSf) return;
 
     const guilds = await prisma.globalChat.findMany({
       where: { NOT: { guildSf } },
