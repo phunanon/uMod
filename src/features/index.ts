@@ -8,6 +8,7 @@ import {
   Message,
   MessageContextMenuCommandInteraction,
   PartialGuildMember,
+  PartialMessage,
   UserContextMenuCommandInteraction,
 } from 'discord.js';
 import { client, prisma } from '../infrastructure';
@@ -40,6 +41,10 @@ export type Feature = {
     member: GuildMember | PartialGuildMember,
   ) => Promise<void>;
   HandleMessageCreate?: (message: Message) => Promise<void>;
+  HandleMessageUpdate?: (
+    oldMessage: Message | PartialMessage,
+    newMessage: Message | PartialMessage,
+  ) => Promise<void>;
   HandleInteractionCreate?: (interaction: Interaction) => Promise<void>;
 };
 

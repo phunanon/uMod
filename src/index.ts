@@ -11,6 +11,7 @@ client.once('ready', async () => {
     .on('guildMemberAdd', dispatchEvent('HandleMemberAdd'))
     .on('guildMemberRemove', dispatchEvent('HandleMemberRemove'))
     .on('messageCreate', dispatchEvent('HandleMessageCreate'))
+    .on('messageUpdate', dispatchEvent('HandleMessageUpdate'))
     .on('interactionCreate', dispatchEvent('HandleInteractionCreate'));
 
   setTimeout(async () => {
@@ -39,14 +40,12 @@ function failable<T extends (...args: any[]) => Promise<void>>(fn: T) {
   };
 }
 
-function dispatchEvent<T extends keyof Feature>(fn: T) {
-  return async (
-    ...args: Parameters<NonNullable<Feature[T]>>
-  ): Promise<void> => {
+const dispatchEvent =
+  <T extends keyof Feature>(fn: T) =>
+  async (...args: Parameters<NonNullable<Feature[T]>>): Promise<void> => {
     for (const feature of Object.values(features)) {
       const featureFn = feature[fn];
       if (!featureFn) continue;
       await failable(featureFn)(...args);
     }
   };
-}

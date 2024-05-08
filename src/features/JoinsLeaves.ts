@@ -14,9 +14,9 @@ export const JoinsLeaves: Feature = {
     await channel?.send(`:inbox_tray: <@${member.id}> joined.`);
   },
   async HandleMemberRemove(member) {
-    console.log('member', member.user.tag);
     const channel = await GetChannel(member);
-    await channel?.send(`:outbox_tray: <@${member.id}> left.`);
+    const { id, tag } = member.user;
+    await channel?.send(`:outbox_tray: <@${id}> (${tag}) left.`);
   },
   async HandleInteractionCreate(interaction) {
     const { chatInteraction, channelSf, guildSf } =
@@ -46,4 +46,4 @@ const GetChannel = async (member: GuildMember | PartialGuildMember) => {
 
   const channel = await member.guild.channels.fetch(`${config.channelSf}`);
   return channel?.isTextBased() ? channel : undefined;
-}
+};

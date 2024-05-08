@@ -1,4 +1,4 @@
-import { ChannelType } from 'discord.js';
+import { ChannelType, Message, PartialMessage } from 'discord.js';
 import { client, prisma } from '../infrastructure';
 import { Feature, InteractionGuard, IsChannelWhitelisted } from '.';
 
@@ -9,32 +9,9 @@ export const MirrorGuild: Feature = {
       description: 'Mirror all server messages into the current channel.',
     });
   },
-  async HandleMessageCreate(message) {
-    if (await IsChannelWhitelisted(message.channel.id)) return;
-    if (message.channel.type !== ChannelType.GuildText) return;
-    const guildId = message.guild?.id;
-    if (!guildId) return;
-
-    const mirror = await prisma.guildMirror.findFirst({
-      where: { guildSf: BigInt(guildId) },
-    });
-
-    if (!mirror) return;
-
-    const channel = await client.channels.fetch(`${mirror.channelSf}`);
-    if (!channel || channel.type !== ChannelType.GuildText) return;
-
-    if (channel.id === message.channel.id) return;
-
-    const author = message.author;
-    if (!author) return;
-
-    const content = message.content ?? '[No content]';
-
-    await channel.send({
-      content: `${message.url}\n${author.id} **${author.tag}**: ${content}`,
-      files: message.attachments.map(a => a.url),
-    });
+  HandleMessageCreate,
+  async HandleMessageUpdate(_, newMessage) {
+    await HandleMessageCreate(newMessage);
   },
   async HandleInteractionCreate(interaction) {
     const { guildSf, channelSf, chatInteraction } =
@@ -54,3 +31,32 @@ export const MirrorGuild: Feature = {
     await chatInteraction.reply('Mirror channel enabled.');
   },
 };
+
+async function HandleMessageCreate(partial: Message | PartialMessage) {
+  const message = partial.partial ? await partial.fetch() : partial;
+  if (await IsChannelWhitelisted(message.channel.id)) return;
+  if (message.channel.type !== ChannelType.GuildText) return;
+  const guildId = message.guild?.id;
+  if (!guildId) return;
+
+  const mirror = await prisma.guildMirror.findFirst({
+    where: { guildSf: BigInt(guildId) },
+  });
+
+  if (!mirror) return;
+
+  const channel = await client.channels.fetch(`${mirror.channelSf}`);
+  if (!channel || channel.type !== ChannelType.GuildText) return;
+
+  if (channel.id === message.channel.id) return;
+
+  const author = message.author;
+  if (!author) return;
+
+  const content = message.content ?? '[No content]';
+
+  await channel.send({
+    content: `${message.url}\n${author.id} **${author.tag}**: ${content}`,
+    files: message.attachments.map(a => a.url),
+  });
+}
