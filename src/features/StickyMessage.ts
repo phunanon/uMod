@@ -23,7 +23,11 @@ export const StickyMessage: Feature = {
       ],
     });
     setInterval(async () => {
-      await RenewStickyMessages();
+      try {
+        await RenewStickyMessages();
+      } catch (e) {
+        console.error(e);
+      }
     }, 5_000);
   },
   async HandleInteractionCreate(interaction) {

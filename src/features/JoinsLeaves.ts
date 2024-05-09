@@ -16,7 +16,8 @@ export const JoinsLeaves: Feature = {
   async HandleMemberRemove(member) {
     const channel = await GetChannel(member);
     const { id, tag } = member.user;
-    await channel?.send(`:outbox_tray: <@${id}> (${tag}) left.`);
+    const roles = member.roles.cache.map((r) => r.name).join(', ');
+    await channel?.send(`:outbox_tray: <@${id}> left. Roles: ${roles}`);
   },
   async HandleInteractionCreate(interaction) {
     const { chatInteraction, channelSf, guildSf } =
