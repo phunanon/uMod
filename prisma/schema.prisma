@@ -26,14 +26,6 @@ model GuildMirror {
   @@unique([guildSf, channelSf])
 }
 
-model JoinsLeaves {
-  id        Int    @id @default(autoincrement())
-  guildSf   BigInt
-  channelSf BigInt
-
-  @@unique([guildSf, channelSf])
-}
-
 model Member {
   id          Int    @id @default(autoincrement())
   sf          BigInt
@@ -62,17 +54,21 @@ model GlobalChat {
   channelSf BigInt
 }
 
-model Response {
-  id       Int    @id @default(autoincrement())
-  guildSf  BigInt
-  pattern  String
-  response String
-}
-
 model ActivitySort {
   id         Int    @id @default(autoincrement())
   guildSf    BigInt
   categorySf BigInt
-  
+
   @@unique([guildSf, categorySf])
+}
+
+model Alert {
+  id        Int     @id @default(autoincrement())
+  guildSf   BigInt
+  channelSf BigInt
+  userSf    BigInt?
+  roleSf    BigInt?
+  event     String?
+  pattern   String?
+  altReason String?
 }

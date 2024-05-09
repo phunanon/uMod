@@ -11,15 +11,17 @@ Simple moderation bot so I can kick Carlbot.
 - **StickyMessage**: periodically resends a message to a channel
 - **Echo**: repeats a message in a channel, anonymously
 - **Purge**: deletes a number of messages in a channel
-- **JoinsLeaves**: logs user joins and leaves
 - **GlobalChat**: mirrors messages between all opted-in guilds
-- **Respond**: replies to messages with a specific content
 - **ActivitySort**: sorts channels in a category by recent activity
+- **Alerts**: sends a message to a channel reacting to a specific event
+  - Criteria: user ID, role ID, message pattern, event (join, leave, role assignment)
+  - Optionally with a custom alert message with tokens: `$userId $content`
 - (Planned) **Censor**: deletes messages with blacklisted words or phrases
 
 ## To host it yourself
 
 I recommend using Bun. Then, in the terminal:
+
 ```
 npm i -g pm2                       # Keeps the bot running even if it crashes
 npm ci                             # Installs exact dependencies
