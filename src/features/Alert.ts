@@ -20,7 +20,8 @@ export const Alert: Feature = {
         },
         {
           name: 'pattern',
-          description: 'Involving a message containing a RegExp pattern',
+          description:
+            'Involving a message containing a RegExp pattern (case-insensitive)',
           type: ApplicationCommandOptionType.String,
         },
         {
@@ -35,7 +36,7 @@ export const Alert: Feature = {
         },
         {
           name: 'alt-reason',
-          description: 'Tokens: $content, $userId',
+          description: "Tokens: $content, $user (won't ping)",
           type: ApplicationCommandOptionType.String,
         },
       ],
@@ -161,7 +162,8 @@ const Handle = async (i: HandleInfo) => {
 
   for (const a of alerts) {
     const { channelSf, userSf, roleSf, event, pattern } = a;
-    if (pattern && i.content && !new RegExp(pattern).test(i.content)) continue;
+    const regex = pattern ? new RegExp(pattern, 'i') : null;
+    if (regex && i.content && !regex.test(i.content)) continue;
     const channel = await client.channels.fetch(`${channelSf}`);
     if (!channel || channel.type !== ChannelType.GuildText) continue;
 
@@ -183,7 +185,7 @@ const alertInfo = (
   const r = roleSf ? `<@&${roleSf}>` : 'any role';
   const e = event ?? 'any event';
   const p = pattern ?? 'any';
-  return `${u}, ${r}, ${e}, pattern: ${p}`;
+  return `${u}, ${r}, ${e}, pattern: \`${p}\``;
 };
 
 const nBigInt = (x: any) => (x ? BigInt(x) : null);
