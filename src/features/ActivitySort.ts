@@ -1,4 +1,4 @@
-import { Feature, InteractionGuard, MessageGuard } from '.';
+import { Feature } from '.';
 import { prisma } from '../infrastructure';
 
 export const ActivitySort: Feature = {
@@ -8,41 +8,38 @@ export const ActivitySort: Feature = {
       description: 'Toggle sorting channels in category by latest activity',
     });
   },
-  async HandleInteractionCreate(interaction) {
-    const x = await InteractionGuard(interaction, 'activity-sort', true);
-    if (!x) return;
-    const { chatInteraction, channel, guildSf } = x;
-    await chatInteraction.deferReply();
+  Interaction: {
+    commandName: 'activity-sort',
+    moderatorOnly: true,
+    async handler({ interaction, guildSf, channel }) {
+      await interaction.deferReply();
 
-    if (!channel.parentId) {
-      await chatInteraction.editReply('Invalid category');
-      return;
-    }
+      if (!channel.parentId) {
+        await interaction.editReply('Invalid category');
+        return;
+      }
 
-    const categorySf = BigInt(channel.parentId);
+      const categorySf = BigInt(channel.parentId);
 
-    const existing = await prisma.activitySort.findFirst({
-      where: { categorySf },
-    });
-
-    if (existing) {
-      await prisma.activitySort.delete({
-        where: { guildSf_categorySf: { guildSf, categorySf } },
+      const existing = await prisma.activitySort.findFirst({
+        where: { categorySf },
       });
-      await chatInteraction.editReply('Activity sort disabled');
-      return;
-    }
 
-    await prisma.activitySort.create({
-      data: { guildSf, categorySf },
-    });
+      if (existing) {
+        await prisma.activitySort.delete({
+          where: { guildSf_categorySf: { guildSf, categorySf } },
+        });
+        await interaction.editReply('Activity sort disabled');
+        return;
+      }
 
-    await chatInteraction.editReply('Activity sort enabled');
+      await prisma.activitySort.create({ data: { guildSf, categorySf } });
+
+      await interaction.editReply('Activity sort enabled');
+    },
   },
-  async HandleMessageCreate(message) {
-    const x = await MessageGuard(message);
-    if (!x) return;
-    const { guildSf, channel } = x;
+  async HandleMessage({ guildSf, channel, isEdit }) {
+    if (isEdit) return;
     const category = channel.parent?.id;
 
     if (!category || !channel.position) return;

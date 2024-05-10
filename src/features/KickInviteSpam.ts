@@ -1,10 +1,8 @@
 import { log } from '../infrastructure';
-import { Feature, IsChannelWhitelisted } from '.';
+import { Feature } from '.';
 
 export const KickInviteSpam: Feature = {
-  async HandleMessageCreate(message) {
-    if (await IsChannelWhitelisted(message.channel.id)) return;
-
+  async HandleMessage({ message }) {
     const wordDiscord = message.content.includes('discord');
     const wordEveryone = message.content.includes('@everyone');
     if (!wordDiscord || !wordEveryone) return;
@@ -13,8 +11,9 @@ export const KickInviteSpam: Feature = {
     const guild = message.guild?.name ?? 'the server';
     const member = message.member;
     if (!member) return;
+
     try {
-      const channel  = await member.createDM();
+      const channel = await member.createDM();
       await channel?.send(
         `You were automatically kicked from ${guild} for spamming an invite link.
 If you suspect your account was hacked:

@@ -1,6 +1,6 @@
-import { ChannelType, Message, PartialMessage } from 'discord.js';
+import { ChannelType } from 'discord.js';
 import { client, prisma } from '../infrastructure';
-import { Feature, InteractionGuard, MessageGuard } from '.';
+import { Feature, MessageContext } from '.';
 
 export const MirrorGuild: Feature = {
   async Init(commands) {
@@ -9,34 +9,30 @@ export const MirrorGuild: Feature = {
       description: 'Mirror all server messages into the current channel.',
     });
   },
-  HandleMessageCreate,
-  async HandleMessageUpdate(_, newMessage) {
-    await HandleMessageCreate(newMessage);
-  },
-  async HandleInteractionCreate(interaction) {
-    const { guildSf, channelSf, chatInteraction } =
-      (await InteractionGuard(interaction, 'mirror-guild', true)) ?? {};
-    if (!guildSf || !channelSf || !chatInteraction) return;
+  HandleMessage,
+  Interaction: {
+    commandName: 'mirror-guild',
+    moderatorOnly: true,
+    async handler({ interaction, guildSf, channelSf }) {
+      await interaction.deferReply();
 
-    const existing = await prisma.guildMirror.findFirst({ where: { guildSf } });
+      const where = { guildSf };
+      const existing = await prisma.guildMirror.findFirst({ where });
 
-    if (existing) {
-      await prisma.guildMirror.delete({ where: { id: existing.id } });
-      await chatInteraction.reply('Mirror channel disabled.');
-      return;
-    }
+      if (existing) {
+        await prisma.guildMirror.delete({ where: { id: existing.id } });
+        await interaction.editReply('Mirror channel disabled.');
+        return;
+      }
 
-    await prisma.guildMirror.create({ data: { guildSf, channelSf } });
+      await prisma.guildMirror.create({ data: { guildSf, channelSf } });
 
-    await chatInteraction.reply('Mirror channel enabled.');
+      await interaction.editReply('Mirror channel enabled.');
+    },
   },
 };
 
-async function HandleMessageCreate(partial: Message | PartialMessage) {
-  const message = partial.partial ? await partial.fetch() : partial;
-  const { guildSf } = (await MessageGuard(message)) ?? {};
-  if (!guildSf) return;
-
+async function HandleMessage({ message, guildSf }: MessageContext) {
   const mirror = await prisma.guildMirror.findFirst({ where: { guildSf } });
 
   if (!mirror) return;

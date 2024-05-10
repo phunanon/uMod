@@ -1,5 +1,5 @@
 import { ChannelType } from 'discord.js';
-import { Feature, InteractionGuard, MessageGuard } from '.';
+import { Feature } from '.';
 import { prisma } from '../infrastructure';
 
 export const GlobalChat: Feature = {
@@ -9,10 +9,7 @@ export const GlobalChat: Feature = {
       description: 'Enable global chat for this server in this channel.',
     });
   },
-  async HandleMessageCreate(message) {
-    const { guildSf, channelSf } = (await MessageGuard(message)) ?? {};
-    if (!guildSf || !channelSf) return;
-
+  async HandleMessage({ message, guildSf, channelSf, isEdit }) {
     const existing = await prisma.globalChat.findFirst({ where: { guildSf } });
 
     if (!existing || existing.channelSf !== channelSf) return;
@@ -31,30 +28,31 @@ export const GlobalChat: Feature = {
       const member = await guild.members.fetch(message.author.id);
       const nickname =
         member.displayName ?? member.nickname ?? message.author.tag;
-      const content = `**${nickname}**: ${message.content}`;
+      const asterisk = isEdit ? '* ' : '';
+      const content = `**${nickname}**: ${asterisk}${message.content}`;
       const files = message.attachments.map(a => a.url);
       await channel.send({ content, files, allowedMentions: { parse: [] } });
     }
   },
-  async HandleInteractionCreate(interaction) {
-    const { chatInteraction, guildSf, channelSf } =
-      (await InteractionGuard(interaction, 'global-chat', true)) ?? {};
-    if (!chatInteraction || !guildSf || !channelSf) return;
+  Interaction: {
+    commandName: 'global-chat',
+    moderatorOnly: true,
+    async handler({ interaction, guildSf, channelSf }) {
+      await interaction.deferReply();
 
-    await chatInteraction.deferReply();
+      const existing = await prisma.globalChat.findFirst({
+        where: { guildSf, channelSf },
+      });
 
-    const existing = await prisma.globalChat.findFirst({
-      where: { guildSf, channelSf },
-    });
+      if (existing) {
+        await prisma.globalChat.delete({ where: { id: existing.id } });
+        await interaction.editReply('Global chat disabled.');
+        return;
+      }
 
-    if (existing) {
-      await prisma.globalChat.delete({ where: { id: existing.id } });
-      await chatInteraction.editReply('Global chat disabled.');
-      return;
-    }
+      await prisma.globalChat.create({ data: { guildSf, channelSf } });
 
-    await prisma.globalChat.create({ data: { guildSf, channelSf } });
-
-    await chatInteraction.editReply('Global chat enabled.');
+      await interaction.editReply('Global chat enabled.');
+    },
   },
 };

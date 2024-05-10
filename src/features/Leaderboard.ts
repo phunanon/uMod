@@ -1,4 +1,4 @@
-import { Feature, InteractionGuard, IsChannelWhitelisted } from '.';
+import { Feature } from '.';
 import { prisma } from '../infrastructure';
 
 export const Leaderboard: Feature = {
@@ -8,51 +8,48 @@ export const Leaderboard: Feature = {
       description: 'Show the server leaderboard.',
     });
   },
-  async HandleInteractionCreate(interaction) {
-    const { guildSf, chatInteraction } =
-      (await InteractionGuard(interaction, 'leaderboard', false)) ?? {};
-    if (!guildSf || !chatInteraction) return;
+  Interaction: {
+    commandName: 'leaderboard',
+    moderatorOnly: false,
+    async handler({ interaction, guildSf }) {
+      await interaction.deferReply();
 
-    await chatInteraction.deferReply();
+      const { id, tag } = interaction.user;
+      const member = await getMember(tag, id, guildSf);
 
-    const { id, tag } = interaction.user;
-    const member = await getMember(tag, id, guildSf);
-
-    const top10 = await prisma.member.findMany({
-      where: { guildSf },
-      select: { id: true, tag: true, numMessages: true },
-      orderBy: { numMessages: 'desc' },
-      take: 10,
-    });
-
-    const boldIfUser = ({ index, tag }: { index: number; tag: string }) => {
-      const i = (index + 1).toString().padStart(2, ' ');
-      return '`' + i + ' ' + (tag === member.tag ? `${tag}` : tag) + '`';
-    };
-
-    const leaderboard = top10.map((row, index) => {
-      const tag = boldIfUser({ index, ...row });
-      return `${tag} ${row.numMessages} messages`;
-    });
-
-    if (!top10.some(({ id }) => id === member.id)) {
-      const userRank = await prisma.member.count({
-        where: { numMessages: { gt: member.numMessages } },
+      const top10 = await prisma.member.findMany({
+        where: { guildSf },
+        select: { id: true, tag: true, numMessages: true },
+        orderBy: { numMessages: 'desc' },
+        take: 10,
       });
-      const index = userRank + 1;
-      const tag = boldIfUser({ index, ...member });
-      const stat = `${tag} ${member.numMessages} messages`;
-      leaderboard.push('...', stat);
-    }
 
-    await chatInteraction.editReply('.\n' + leaderboard.join('\n'));
+      const boldIfUser = ({ index, tag }: { index: number; tag: string }) => {
+        const i = (index + 1).toString().padStart(2, ' ');
+        return '`' + i + ' ' + (tag === member.tag ? `${tag}` : tag) + '`';
+      };
+
+      const leaderboard = top10.map((row, index) => {
+        const tag = boldIfUser({ index, ...row });
+        return `${tag} ${row.numMessages} messages`;
+      });
+
+      if (!top10.some(({ id }) => id === member.id)) {
+        const userRank = await prisma.member.count({
+          where: { numMessages: { gt: member.numMessages } },
+        });
+        const index = userRank + 1;
+        const tag = boldIfUser({ index, ...member });
+        const stat = `${tag} ${member.numMessages} messages`;
+        leaderboard.push('...', stat);
+      }
+
+      await interaction.editReply('.\n' + leaderboard.join('\n'));
+    },
   },
-  async HandleMessageCreate(message) {
-    if (await IsChannelWhitelisted(message.channel.id)) return;
-    const guildId = message.guild?.id;
-    if (!guildId) return;
+  async HandleMessage({ message, guildSf }) {
     const { id, tag } = message.author;
-    const member = await getMember(tag, id, BigInt(guildId));
+    const member = await getMember(tag, id, guildSf);
 
     await prisma.member.update({
       where: { id: member.id },

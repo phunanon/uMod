@@ -1,5 +1,5 @@
 import { ApplicationCommandOptionType } from 'discord.js';
-import { Feature, InteractionGuard } from '.';
+import { Feature } from '.';
 import { log } from '../infrastructure';
 
 export const Echo: Feature = {
@@ -17,25 +17,25 @@ export const Echo: Feature = {
       ],
     });
   },
-  async HandleInteractionCreate(interaction) {
-    const { chatInteraction, channel } =
-      (await InteractionGuard(interaction, 'echo', false)) ?? {};
-    if (!chatInteraction || !channel) return;
+  Interaction: {
+    commandName: 'echo',
+    moderatorOnly: false,
+    async handler({ interaction, channel }) {
+      const content = interaction.options.get('content', true).value;
 
-    const content = chatInteraction.options.get('content', true).value;
+      if (typeof content !== 'string') {
+        await interaction.reply('Invalid content.');
+        return;
+      }
 
-    if (typeof content !== 'string') {
-      await chatInteraction.reply('Invalid content.');
-      return;
-    }
+      await interaction.reply({
+        content: 'Your message should be posted shortly.',
+        ephemeral: true,
+      });
 
-    await chatInteraction.reply({
-      content: 'Your message should be posted shortly.',
-      ephemeral: true,
-    });
+      await channel.send({ content, allowedMentions: { parse: [] } });
 
-    await channel.send({ content, allowedMentions: { parse: [] } });
-
-    log(`Echo from ${chatInteraction.user.id}`);
+      log(`Echo from ${interaction.user.id}`);
+    },
   },
 };

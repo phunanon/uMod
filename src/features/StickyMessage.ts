@@ -1,4 +1,4 @@
-import { Feature, InteractionGuard } from '.';
+import { Feature } from '.';
 import { ApplicationCommandOptionType, TextBasedChannel } from 'discord.js';
 import { client, prisma } from '../infrastructure';
 
@@ -30,28 +30,28 @@ export const StickyMessage: Feature = {
       }
     }, 5_000);
   },
-  async HandleInteractionCreate(interaction) {
-    const { guildSf, channelSf, channel, chatInteraction } =
-      (await InteractionGuard(interaction, 'sticky-message', true)) ?? {};
-    if (!guildSf || !channelSf || !channel || !chatInteraction) return;
+  Interaction: {
+    commandName: 'sticky-message',
+    moderatorOnly: true,
+    async handler({ interaction, guildSf, channelSf, channel }) {
+      await interaction.reply('Creating sticky message...');
 
-    await chatInteraction.reply('Creating sticky message...');
+      const content = interaction.options.get('content', true).value;
+      const renewalSeconds = interaction.options.get('renewal', false)?.value;
+      if (typeof content !== 'string' || typeof renewalSeconds !== 'number') {
+        await interaction.editReply('Invalid content or renewal.');
+        return;
+      }
 
-    const content = chatInteraction.options.get('content', true).value;
-    const renewalSeconds = chatInteraction.options.get('renewal', false)?.value;
-    if (typeof content !== 'string' || typeof renewalSeconds !== 'number') {
-      await chatInteraction.editReply('Invalid content or renewal.');
-      return;
-    }
+      const message = await channel.send(content);
+      const sf = BigInt(message.id);
+      const renewAt = calcRenewAt(renewalSeconds);
 
-    const message = await channel.send(content);
-    const sf = BigInt(message.id);
-    const renewAt = calcRenewAt(renewalSeconds);
+      const data = { guildSf, channelSf, renewAt, content, renewalSeconds, sf };
+      await prisma.stickyMessage.create({ data });
 
-    const data = { guildSf, channelSf, renewAt, content, renewalSeconds, sf };
-    await prisma.stickyMessage.create({ data });
-
-    await chatInteraction.editReply('Sticky message created or updated.');
+      await interaction.editReply('Sticky message created or updated.');
+    },
   },
 };
 
@@ -82,10 +82,14 @@ const RenewStickyMessages = async () => {
       return;
     }
 
-    await message.delete();
-    const newMessage = await channel.send(content);
-    const data = { sf: BigInt(newMessage.id), renewAt };
-    await prisma.stickyMessage.update({ where, data });
+    try {
+      await message.delete();
+      const newMessage = await channel.send(content);
+      const data = { sf: BigInt(newMessage.id), renewAt };
+      await prisma.stickyMessage.update({ where, data });
+    } catch (e) {
+      console.log('StickyMessage', sticky, e);
+    }
   }
 };
 

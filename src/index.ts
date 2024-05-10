@@ -1,18 +1,25 @@
 import * as dotenv from 'dotenv';
-import { client, log } from './infrastructure';
+import { client, log, prisma } from './infrastructure';
 import { Feature, features } from './features';
+import {
+  ChannelType,
+  Interaction,
+  InteractionType,
+  Message,
+  PartialMessage,
+} from 'discord.js';
 dotenv.config();
 
 console.log('Loading...');
 
 client.once('ready', async () => {
   client
-    .on('guildMemberUpdate', dispatchEvent('HandleMemberUpdate'))
-    .on('guildMemberAdd', dispatchEvent('HandleMemberAdd'))
-    .on('guildMemberRemove', dispatchEvent('HandleMemberRemove'))
-    .on('messageCreate', dispatchEvent('HandleMessageCreate'))
-    .on('messageUpdate', dispatchEvent('HandleMessageUpdate'))
-    .on('interactionCreate', dispatchEvent('HandleInteractionCreate'));
+    .on('guildMemberUpdate', handleEvent('HandleMemberUpdate'))
+    .on('guildMemberAdd', handleEvent('HandleMemberAdd'))
+    .on('guildMemberRemove', handleEvent('HandleMemberRemove'))
+    .on('messageCreate', handleMessage)
+    .on('messageUpdate', handleMessage)
+    .on('interactionCreate', handleInteraction);
 
   const inits = Object.entries(features).flatMap(([name, feature]) =>
     feature.Init ? [[name, feature.Init] as const] : [],
@@ -48,8 +55,10 @@ function failable<T extends (...args: any[]) => Promise<void>>(fn: T) {
   };
 }
 
-const dispatchEvent =
-  <T extends keyof Feature>(fn: T) =>
+const handleEvent =
+  <T extends 'HandleMemberUpdate' | 'HandleMemberAdd' | 'HandleMemberRemove'>(
+    fn: T,
+  ) =>
   async (...args: Parameters<NonNullable<Feature[T]>>): Promise<void> => {
     for (const feature of Object.values(features)) {
       const featureFn = feature[fn];
@@ -57,3 +66,84 @@ const dispatchEvent =
       await failable(featureFn)(...args);
     }
   };
+
+const handleInteraction = failable(_handleInteraction);
+async function _handleInteraction(interaction: Interaction): Promise<void> {
+  if (
+    interaction.channel?.type !== ChannelType.GuildText ||
+    interaction.type !== InteractionType.ApplicationCommand ||
+    !interaction.isChatInputCommand() ||
+    !interaction.guild ||
+    !interaction.member ||
+    !client.user
+  ) {
+    if (interaction.isRepliable()) {
+      await interaction.reply('Unavailable here or at this time.');
+    }
+    return;
+  }
+
+  const guildSf = BigInt(interaction.guild.id);
+  const channelSf = BigInt(interaction.channel.id);
+  const { channel, guild, member } = interaction;
+
+  const feature = (() => {
+    for (const feature of Object.values(features)) {
+      const info = feature.Interaction;
+      if (info?.commandName !== interaction.commandName) continue;
+      return info;
+    }
+  })();
+
+  if (!feature) {
+    await interaction.reply({ content: 'Command not found.', ephemeral: true });
+    return;
+  }
+
+  if (feature.moderatorOnly) {
+    const id = member.user.id;
+    const me = await guild.members.fetch(client.user.id);
+    const them = await guild.members.fetch(id);
+    const notMod = them.roles.highest.position < me.roles.highest.position;
+    if (notMod) {
+      await interaction.reply('You must be a moderator to use this command!');
+      return;
+    }
+  }
+
+  const context = { interaction, guildSf, channelSf, channel };
+  await feature.handler(context);
+}
+
+export const IsChannelWhitelisted = async (snowflake: string) => {
+  const record = await prisma.channelWhitelist.findFirst({
+    where: { sf: BigInt(snowflake) },
+  });
+  return record !== null;
+};
+
+const handleMessage = failable(_handleMessage);
+async function _handleMessage(
+  oldMessage: Message | PartialMessage,
+  newMessage?: Message | PartialMessage,
+): Promise<void> {
+  const maybePartial = newMessage ?? oldMessage;
+  const message = maybePartial.partial
+    ? await maybePartial.fetch()
+    : maybePartial;
+  if (message.channel.type !== ChannelType.GuildText) return;
+  if (message.author?.bot !== false) return;
+  if (await IsChannelWhitelisted(message.channel.id)) return;
+  if (!message.guildId) return;
+  const guildSf = BigInt(message.guildId);
+  const channelSf = BigInt(message.channel.id);
+  const userSf = BigInt(message.author.id);
+  const { channel } = message;
+  const isEdit = !!newMessage;
+  const context = { message, guildSf, channelSf, userSf, channel, isEdit };
+
+  for (const feature of Object.values(features)) {
+    const { HandleMessage } = feature;
+    await HandleMessage?.(context);
+  }
+}
