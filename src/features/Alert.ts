@@ -90,6 +90,7 @@ export const Alert: Feature = {
     await Handle({ guildSf, userSf, event: 'role', roles });
   },
   async HandleMessage({ message, guildSf, userSf }) {
+    if (!message.content) return;
     const member = await message.guild?.members.fetch(message.author.id);
     const roles = member?.roles.cache.map(role => BigInt(role.id));
     await Handle({ guildSf, userSf, roles, content: message.content });
