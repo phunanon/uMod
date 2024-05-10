@@ -29,8 +29,12 @@ export const Echo: Feature = {
       return;
     }
 
+    await chatInteraction.reply({
+      content: 'Your message should be posted shortly.',
+      ephemeral: true,
+    });
+
     await channel.send({ content, allowedMentions: { parse: [] } });
-    await chatInteraction.reply({ content: 'Done!', ephemeral: true });
 
     log(`Echo from ${chatInteraction.user.id}`);
   },

@@ -184,7 +184,7 @@ const alertInfo = (
   const u = userSf ? `<@${userSf}>` : 'any user';
   const r = roleSf ? `<@&${roleSf}>` : 'any role';
   const e = event ?? 'any event';
-  const p = pattern ?? 'any';
+  const p = pattern ?? 'none';
   return `${u}, ${r}, ${e}, pattern: \`${p}\``;
 };
 

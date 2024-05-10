@@ -16,6 +16,7 @@ export const client = new Client({
     GatewayIntentBits.MessageContent,
   ],
   partials: [Partials.Channel, Partials.Message],
+  closeTimeout: 6_000,
 });
 
 export const log = (...args: any[]) =>
