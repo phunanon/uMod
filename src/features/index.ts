@@ -1,10 +1,12 @@
 import {
   ApplicationCommandManager,
   ChatInputCommandInteraction,
+  Guild,
   GuildMember,
   Message,
   PartialGuildMember,
   TextChannel,
+  User,
 } from 'discord.js';
 
 import { PermaRole } from './PermaRole';
@@ -20,11 +22,13 @@ import { GlobalChat } from './GlobalChat';
 import { ActivitySort } from './ActivitySort';
 import { Alert } from './Alert';
 import { DeleteAlert } from './Alert';
+import { Note, ReadNote } from './Note';
+import { ChannelBan } from './ChannelBan';
 
 export const features = {
   ...{ PermaRole, KickInviteSpam, Ping, WhitelistChannel, MirrorGuild },
   ...{ Leaderboard, StickyMessage, Echo, Purge, GlobalChat, ActivitySort },
-  ...{ Alert, DeleteAlert },
+  ...{ Alert, DeleteAlert, Note, ReadNote, ChannelBan },
 };
 
 export type FeatureConfig = {
@@ -35,6 +39,7 @@ export type FeatureConfig = {
 export type InteractionContext = {
   interaction: ChatInputCommandInteraction;
   guildSf: bigint;
+  userSf: bigint;
   channelSf: bigint;
   channel: TextChannel;
 };
@@ -48,10 +53,17 @@ export type MessageContext = {
   isEdit: boolean;
 };
 
+export type AuditEvent = {
+  kind: 'ban' | 'unban' | 'kick' | 'timeout';
+  target: User;
+  executor: User;
+  reason: string;
+};
+
 export type Feature = {
   /** Call is guaranteed but not necessarily prior to other handlers. */
   Init?: (commands: ApplicationCommandManager) => Promise<void>;
-  HandleMessage?: (context: MessageContext) => Promise<void>;
+  HandleMessage?: (context: MessageContext) => Promise<void | 'stop'>;
   Interaction?: {
     commandName: string;
     moderatorOnly: boolean;
@@ -65,4 +77,5 @@ export type Feature = {
   HandleMemberRemove?: (
     member: GuildMember | PartialGuildMember,
   ) => Promise<void>;
+  HandleAuditLog?: (entry: AuditEvent, guild: Guild) => Promise<void>;
 };

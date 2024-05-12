@@ -1,5 +1,8 @@
 import { ApplicationCommandOptionType } from 'discord.js';
 import { Feature } from '.';
+import { HandleAlert } from './Alert';
+
+const maxValue = 16;
 
 export const Purge: Feature = {
   async Init(commands) {
@@ -13,7 +16,7 @@ export const Purge: Feature = {
           type: ApplicationCommandOptionType.Integer,
           required: true,
           minValue: 1,
-          maxValue: 100,
+          maxValue,
         },
       ],
     });
@@ -21,7 +24,7 @@ export const Purge: Feature = {
   Interaction: {
     commandName: 'purge',
     moderatorOnly: true,
-    async handler({ interaction, channel }) {
+    async handler({ interaction, channel, guildSf, userSf }) {
       await interaction.reply('Deleting messages...');
 
       const limit = interaction.options.get('count', true).value;
@@ -30,8 +33,8 @@ export const Purge: Feature = {
         return;
       }
 
-      if (limit < 1 || limit > 100) {
-        await interaction.editReply('Amount must be between 1 and 100.');
+      if (limit < 1 || limit > maxValue) {
+        await interaction.editReply(`Must be between 1 and ${maxValue}.`);
         return;
       }
 
@@ -39,6 +42,13 @@ export const Purge: Feature = {
       const messages = await channel.messages.fetch({ limit, before });
       await channel.bulkDelete(messages);
       await interaction.editReply(`Deleted ${messages.size} messages.`);
+
+      await HandleAlert({
+        guildSf,
+        userSf,
+        event: 'audit',
+        content: `Deleted ${messages.size} messages in <#${channel.id}>.`,
+      });
     },
   },
 };

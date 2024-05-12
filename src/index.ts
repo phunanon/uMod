@@ -2,11 +2,15 @@ import * as dotenv from 'dotenv';
 import { client, log, prisma } from './infrastructure';
 import { Feature, features } from './features';
 import {
+  AuditLogEvent,
   ChannelType,
+  Guild,
+  GuildAuditLogsEntry,
   Interaction,
   InteractionType,
   Message,
   PartialMessage,
+  User,
 } from 'discord.js';
 dotenv.config();
 
@@ -19,7 +23,8 @@ client.once('ready', async () => {
     .on('guildMemberRemove', handleEvent('HandleMemberRemove'))
     .on('messageCreate', handleMessage)
     .on('messageUpdate', handleMessage)
-    .on('interactionCreate', handleInteraction);
+    .on('interactionCreate', handleInteraction)
+    .on('guildAuditLogEntryCreate', handleAudit);
 
   const inits = Object.entries(features).flatMap(([name, feature]) =>
     feature.Init ? [[name, feature.Init] as const] : [],
@@ -83,9 +88,10 @@ async function _handleInteraction(interaction: Interaction): Promise<void> {
     return;
   }
 
+  const { channel, guild, member } = interaction;
   const guildSf = BigInt(interaction.guild.id);
   const channelSf = BigInt(interaction.channel.id);
-  const { channel, guild, member } = interaction;
+  const userSf = BigInt(member.user.id);
 
   const feature = (() => {
     for (const feature of Object.values(features)) {
@@ -111,7 +117,7 @@ async function _handleInteraction(interaction: Interaction): Promise<void> {
     }
   }
 
-  const context = { interaction, guildSf, channelSf, channel };
+  const context = { interaction, guildSf, userSf, channelSf, channel };
   await feature.handler(context);
 }
 
@@ -142,8 +148,60 @@ async function _handleMessage(
   const isEdit = !!newMessage;
   const context = { message, guildSf, channelSf, userSf, channel, isEdit };
 
-  for (const feature of Object.values(features)) {
+  for (const [name, feature] of Object.entries(features)) {
     const { HandleMessage } = feature;
-    await HandleMessage?.(context);
+    try {
+      const signal = await HandleMessage?.(context);
+      if (signal === 'stop') break;
+    } catch (error) {
+      console.error(name, error);
+    }
+  }
+}
+
+async function handleAudit(log: GuildAuditLogsEntry, guild: Guild) {
+  const entry = (() => {
+    if (log.action === AuditLogEvent.MemberBanAdd)
+      return {
+        kind: 'ban',
+        target: log.target as User,
+        executor: log.executor as User,
+        reason: log.reason ?? 'No reason provided',
+      } as const;
+    if (log.action === AuditLogEvent.MemberBanRemove)
+      return {
+        kind: 'unban',
+        target: log.target as User,
+        executor: log.executor as User,
+        reason: log.reason ?? 'No reason provided',
+      } as const;
+    if (log.action === AuditLogEvent.MemberKick)
+      return {
+        kind: 'kick',
+        target: log.target as User,
+        executor: log.executor as User,
+        reason: log.reason ?? 'No reason provided',
+      } as const;
+    if (log.action === AuditLogEvent.MemberUpdate) {
+      if (log.action === 24) {
+        return {
+          kind: 'timeout',
+          target: log.target as User,
+          executor: log.executor as User,
+          reason: log.reason ?? 'No reason provided',
+        } as const;
+      }
+    }
+  })();
+
+  if (!entry) return;
+
+  for (const [name, feature] of Object.entries(features)) {
+    const { HandleAuditLog } = feature;
+    try {
+      await HandleAuditLog?.(entry, guild);
+    } catch (error) {
+      console.error(name, error);
+    }
   }
 }

@@ -9,6 +9,18 @@ export const Alert: Feature = {
       description: 'Create alerts for various events',
       options: [
         {
+          name: 'event',
+          description: 'Based on an event',
+          type: ApplicationCommandOptionType.String,
+          choices: [
+            { name: 'User joins', value: 'join' },
+            { name: 'User leaves', value: 'leave' },
+            { name: 'Role assigned', value: 'role' },
+            { name: 'Note created', value: 'note' },
+            { name: 'Moderation action', value: 'audit' },
+          ],
+        },
+        {
           name: 'user',
           description: 'Involving a user',
           type: ApplicationCommandOptionType.User,
@@ -23,16 +35,6 @@ export const Alert: Feature = {
           description:
             'Involving a message containing a RegExp pattern (case-insensitive)',
           type: ApplicationCommandOptionType.String,
-        },
-        {
-          name: 'event',
-          description: 'Based on an event',
-          type: ApplicationCommandOptionType.String,
-          choices: [
-            { name: 'User Joins', value: 'join' },
-            { name: 'User Leaves', value: 'leave' },
-            { name: 'Role Assigned', value: 'role' },
-          ],
         },
         {
           name: 'alt-reason',
@@ -73,12 +75,12 @@ export const Alert: Feature = {
     const guildSf = BigInt(member.guild.id);
     const userSf = BigInt(member.id);
     const roles = member.roles.cache.map(role => BigInt(role.id));
-    await Handle({ guildSf, userSf, event: 'leave', roles });
+    await HandleAlert({ guildSf, userSf, event: 'leave', roles });
   },
   async HandleMemberAdd(member) {
     const guildSf = BigInt(member.guild.id);
     const userSf = BigInt(member.id);
-    await Handle({ guildSf, userSf, event: 'join' });
+    await HandleAlert({ guildSf, userSf, event: 'join' });
   },
   async HandleMemberUpdate(oldMember, newMember) {
     const roles = newMember.roles.cache
@@ -87,13 +89,18 @@ export const Alert: Feature = {
     if (!roles.length) return;
     const guildSf = BigInt(newMember.guild.id);
     const userSf = BigInt(newMember.id);
-    await Handle({ guildSf, userSf, event: 'role', roles });
+    await HandleAlert({ guildSf, userSf, event: 'role', roles });
   },
   async HandleMessage({ message, guildSf, userSf }) {
     if (!message.content) return;
     const member = await message.guild?.members.fetch(message.author.id);
     const roles = member?.roles.cache.map(role => BigInt(role.id));
-    await Handle({ guildSf, userSf, roles, content: message.content });
+    await HandleAlert({ guildSf, userSf, roles, content: message.content });
+  },
+  async HandleAuditLog({ kind, executor, target, reason }, guild) {
+    const guildSf = BigInt(guild.id);
+    const content = `${kind} of <@${target.id}> by <@${executor.id}>: ${reason}`;
+    await HandleAlert({ guildSf, event: 'audit', content });
   },
 };
 
@@ -141,16 +148,17 @@ export const DeleteAlert: Feature = {
 type HandleInfo = {
   guildSf: bigint;
   userSf?: bigint;
-  event?: 'join' | 'leave' | 'role';
+  event?: 'join' | 'leave' | 'role' | 'note' | 'audit';
   roles?: bigint[];
-  content?: string;
+  content?: string | null;
 };
-const Handle = async (i: HandleInfo) => {
+export const HandleAlert = async (i: HandleInfo) => {
+  const extraDetailsEvent = i.event && ['note', 'audit'].includes(i.event);
   const alerts = await prisma.alert.findMany({
     where: {
       guildSf: i.guildSf,
-      event: i.event,
-      pattern: i.content ? { not: null } : undefined,
+      event: i.event ? i.event : null,
+      pattern: i.content && !extraDetailsEvent ? { not: null } : undefined,
       AND: [
         { OR: [{ userSf: i.userSf }, { userSf: null }] },
         { OR: [{ roleSf: { in: i.roles } }, { roleSf: null }] },
@@ -166,9 +174,13 @@ const Handle = async (i: HandleInfo) => {
     if (!channel || channel.type !== ChannelType.GuildText) continue;
 
     const altReason = a.altReason
-      ?.replaceAll(/\$content/g, i.content ?? '')
+      ?.replaceAll(/\$content/g, i.content ?? '[no content]')
       .replaceAll(/\$user/g, `<@${i.userSf}>`);
-    const content = altReason || alertInfo(userSf, roleSf, event, pattern);
+    const info = alertInfo(userSf ?? i.userSf ?? null, roleSf, event, pattern);
+    const content =
+      `||${a.id}}|| ` +
+      (altReason || info) +
+      (extraDetailsEvent ? `: ${i.content}` : '');
     await channel.send({ content, allowedMentions: { parse: [] } });
   }
 };
@@ -179,11 +191,13 @@ const alertInfo = (
   event: string | null,
   pattern: string | null,
 ) => {
-  const u = userSf ? `<@${userSf}>` : 'any user';
-  const r = roleSf ? `<@&${roleSf}>` : 'any role';
-  const e = event ?? 'any event';
-  const p = pattern ?? 'none';
-  return `${u}, ${r}, ${e}, pattern: \`${p}\``;
+  const parts = [
+    userSf ? `<@${userSf}>` : null,
+    roleSf ? `<@&${roleSf}>` : null,
+    event,
+    pattern ? `\`${pattern}\` pattern` : null,
+  ].filter(Boolean);
+  return parts.join(', ');
 };
 
 const nBigInt = (x: any) => (x ? BigInt(x) : null);

@@ -22,13 +22,7 @@ export const StickyMessage: Feature = {
         },
       ],
     });
-    setInterval(async () => {
-      try {
-        await RenewStickyMessages();
-      } catch (e) {
-        console.error(e);
-      }
-    }, 5_000);
+    RenewStickyMessageSoon();
   },
   Interaction: {
     commandName: 'sticky-message',
@@ -53,6 +47,16 @@ export const StickyMessage: Feature = {
       await interaction.editReply('Sticky message created or updated.');
     },
   },
+};
+
+const RenewStickyMessageSoon = () => {
+  setTimeout(async () => {
+    try {
+      await RenewStickyMessages();
+    } catch (e) {
+      console.error(e);
+    }
+  }, 5_000);
 };
 
 const RenewStickyMessages = async () => {
@@ -91,6 +95,8 @@ const RenewStickyMessages = async () => {
       console.log('StickyMessage', sticky, e);
     }
   }
+
+  RenewStickyMessageSoon();
 };
 
 const calcRenewAt = (sec: number) => new Date(Date.now() + sec * 1_000);

@@ -14,6 +14,7 @@ export const client = new Client({
     GatewayIntentBits.GuildMembers,
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
+    GatewayIntentBits.GuildModeration,
   ],
   partials: [Partials.Channel, Partials.Message],
   closeTimeout: 6_000,

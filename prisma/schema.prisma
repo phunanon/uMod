@@ -72,3 +72,12 @@ model Alert {
   pattern   String?
   altReason String?
 }
+
+model Note {
+  id       Int      @id @default(autoincrement())
+  guildSf  BigInt
+  userSf   BigInt
+  authorSf BigInt
+  notedAt  DateTime @default(now())
+  content  String
+}
