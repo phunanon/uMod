@@ -48,7 +48,7 @@ export const ChannelBan: Feature = {
         SendMessages: false,
         AddReactions: false,
       });
-      
+
       const content = `User <@${user.id}> banned from <#${channel.id}>.`;
       await HandleAlert({
         event: 'audit',

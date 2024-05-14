@@ -24,14 +24,18 @@ export const Leaderboard: Feature = {
         take: 10,
       });
 
-      const boldIfUser = ({ index, tag }: { index: number; tag: string }) => {
+      const userRow = ({ index, tag }: { index: number; tag: string }) => {
         const i = (index + 1).toString().padStart(2, ' ');
-        return '`' + i + ' ' + (tag === member.tag ? `${tag}` : tag) + '`';
+        const row = '`' + i + ' ' + (tag === member.tag ? `${tag}` : tag);
+        return row.padEnd(22, ' ') + '`';
       };
 
+      const fmt = (x: number) =>
+        `${(x / 1000).toLocaleString('en-GB', { maximumFractionDigits: 1 })}k`;
+
       const leaderboard = top10.map((row, index) => {
-        const tag = boldIfUser({ index, ...row });
-        return `${tag} ${row.numMessages} messages`;
+        const tag = userRow({ index, ...row });
+        return `${tag} ${fmt(row.numMessages)} messages`;
       });
 
       if (!top10.some(({ id }) => id === member.id)) {
@@ -39,8 +43,8 @@ export const Leaderboard: Feature = {
           where: { numMessages: { gt: member.numMessages } },
         });
         const index = userRank + 1;
-        const tag = boldIfUser({ index, ...member });
-        const stat = `${tag} ${member.numMessages} messages`;
+        const tag = userRow({ index, ...member });
+        const stat = `${tag} ${fmt(member.numMessages)} messages`;
         leaderboard.push('...', stat);
       }
 

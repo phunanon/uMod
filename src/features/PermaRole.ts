@@ -1,5 +1,6 @@
 import { log, prisma } from '../infrastructure';
 import { Feature } from '.';
+import { HandleAlert } from './Alert';
 
 /** Restore roles if somebody leaves and rejoins */
 export const PermaRole: Feature = {
@@ -24,6 +25,7 @@ export const PermaRole: Feature = {
   },
   /** Restore roles if any are stored */
   async HandleMemberAdd(member) {
+    const guildSf = BigInt(member.guild.id);
     const userSf = BigInt(member.id);
     const permaRoles = await prisma.permaRole.findMany({
       select: { roleSf: true },
@@ -32,6 +34,8 @@ export const PermaRole: Feature = {
     const roleSnowflakes = permaRoles.map(({ roleSf }) => `${roleSf}`);
     if (!roleSnowflakes.length) return;
     await member.roles.add(roleSnowflakes);
-    log('PermaRole restore', member.id, roleSnowflakes);
+    const snowflakes = roleSnowflakes.map(sf => `<@&${sf}>`);
+    const content = `Restored roles: ${snowflakes.join(', ')}`;
+    await HandleAlert({ guildSf, userSf, event: 'roles', content });
   },
 };

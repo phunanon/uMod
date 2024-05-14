@@ -161,35 +161,18 @@ async function _handleMessage(
 
 async function handleAudit(log: GuildAuditLogsEntry, guild: Guild) {
   const entry = (() => {
+    const target = log.target as User;
+    const executor = log.executor as User;
+    const reason = log.reason ?? 'No reason provided';
     if (log.action === AuditLogEvent.MemberBanAdd)
-      return {
-        kind: 'ban',
-        target: log.target as User,
-        executor: log.executor as User,
-        reason: log.reason ?? 'No reason provided',
-      } as const;
+      return { kind: 'ban', target, executor, reason } as const;
     if (log.action === AuditLogEvent.MemberBanRemove)
-      return {
-        kind: 'unban',
-        target: log.target as User,
-        executor: log.executor as User,
-        reason: log.reason ?? 'No reason provided',
-      } as const;
+      return { kind: 'unban', target, executor, reason } as const;
     if (log.action === AuditLogEvent.MemberKick)
-      return {
-        kind: 'kick',
-        target: log.target as User,
-        executor: log.executor as User,
-        reason: log.reason ?? 'No reason provided',
-      } as const;
+      return { kind: 'kick', target, executor, reason } as const;
     if (log.action === AuditLogEvent.MemberUpdate) {
       if (log.action === 24) {
-        return {
-          kind: 'timeout',
-          target: log.target as User,
-          executor: log.executor as User,
-          reason: log.reason ?? 'No reason provided',
-        } as const;
+        return { kind: 'timeout', target, executor, reason } as const;
       }
     }
   })();

@@ -26,7 +26,6 @@ If you suspect your account was hacked:
       log('KickInviteSpam', 'Failed to DM user', guild, e);
     }
     await member.kick('Discord invite link + @everyone spam');
-    log('KickInviteSpam', member.id, guild, message.content);
 
     return 'stop';
   },

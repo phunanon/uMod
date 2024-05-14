@@ -16,6 +16,7 @@ export const Alert: Feature = {
             { name: 'User joins', value: 'join' },
             { name: 'User leaves', value: 'leave' },
             { name: 'Role assigned', value: 'role' },
+            { name: 'Roles restored', value: 'roles' },
             { name: 'Note created', value: 'note' },
             { name: 'Moderation action', value: 'audit' },
           ],
@@ -148,12 +149,13 @@ export const DeleteAlert: Feature = {
 type HandleInfo = {
   guildSf: bigint;
   userSf?: bigint;
-  event?: 'join' | 'leave' | 'role' | 'note' | 'audit';
+  event?: 'join' | 'leave' | 'role' | 'roles' | 'note' | 'audit';
   roles?: bigint[];
   content?: string | null;
 };
 export const HandleAlert = async (i: HandleInfo) => {
-  const extraDetailsEvent = i.event && ['note', 'audit'].includes(i.event);
+  const extraDetailsEvent =
+    i.event && ['note', 'audit', 'roles'].includes(i.event);
   const alerts = await prisma.alert.findMany({
     where: {
       guildSf: i.guildSf,
@@ -178,7 +180,7 @@ export const HandleAlert = async (i: HandleInfo) => {
       .replaceAll(/\$user/g, `<@${i.userSf}>`);
     const info = alertInfo(userSf ?? i.userSf ?? null, roleSf, event, pattern);
     const content =
-      `||${a.id}}|| ` +
+      `||${a.id}|| ` +
       (altReason || info) +
       (extraDetailsEvent ? `: ${i.content}` : '');
     await channel.send({ content, allowedMentions: { parse: [] } });
