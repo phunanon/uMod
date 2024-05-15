@@ -66,9 +66,9 @@ model Alert {
   id        Int     @id @default(autoincrement())
   guildSf   BigInt
   channelSf BigInt
+  event     String
   userSf    BigInt?
   roleSf    BigInt?
-  event     String?
   pattern   String?
   altReason String?
 }

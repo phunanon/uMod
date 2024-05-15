@@ -13,12 +13,14 @@ Simple moderation bot so I can kick Carlbot.
 - **Purge**: deletes a number of messages in a channel
 - **GlobalChat**: mirrors messages between all opted-in guilds
 - **ActivitySort**: sorts channels in a category by recent activity
-- **Note**: attaches notes to a user that all moderators can see
 - **ChannelBan**: prevents a user from sending messages in a channel
+- **Note**: attaches notes to a user that all moderators can see
+  - Notes are automatically attached for audit logs (ban, unban, kick, timeout, channel ban)
 - **Alerts**: sends a message to a channel reacting to a specific event
   - Criteria: user ID, role ID, message pattern
-    - ... and events: join, leave, role assignment, moderation note, moderator action
+    - ... and events: join, leave, role assignment, role restoration, moderation note, moderator action (ban, unban, kick, timeout, channel ban)
   - Optionally with a custom alert message with tokens: `$userId $content`
+  - Also **DeleteAlert**, **DeleteAlerts**, and **RecommendedAlerts**
 - (Planned) **Censor**: deletes messages with blacklisted words or phrases
 
 ## To host it yourself

@@ -1,6 +1,7 @@
 import { ApplicationCommandOptionType } from 'discord.js';
 import { Feature } from '.';
-import { HandleAlert } from './Alert';
+import { AlertEvent, HandleAlert } from './Alert';
+import { prisma } from '../infrastructure';
 
 export const ChannelBan: Feature = {
   async Init(commands) {
@@ -14,6 +15,12 @@ export const ChannelBan: Feature = {
           type: ApplicationCommandOptionType.User,
           required: true,
         },
+        {
+          name: 'reason',
+          description: 'The reason for the ban',
+          type: ApplicationCommandOptionType.String,
+          required: true,
+        },
       ],
     });
   },
@@ -25,9 +32,10 @@ export const ChannelBan: Feature = {
 
       const { options } = interaction;
       const user = options.getUser('user');
+      const reason = options.getString('reason');
 
-      if (!user) {
-        await interaction.editReply('Invalid user.');
+      if (!user || !reason) {
+        await interaction.editReply('Invalid user or reason.');
         return;
       }
 
@@ -49,12 +57,15 @@ export const ChannelBan: Feature = {
         AddReactions: false,
       });
 
-      const content = `User <@${user.id}> banned from <#${channel.id}>.`;
+      const content = `<@${user.id}> banned from <#${channel.id}>: ${reason}`;
       await HandleAlert({
-        event: 'audit',
+        event: AlertEvent.Audit,
         userSf,
         guildSf,
         content: `concerning <@${user.id}>: ${content}`,
+      });
+      await prisma.note.create({
+        data: { guildSf, authorSf: userSf, userSf: BigInt(user.id), content },
       });
 
       await interaction.editReply(

@@ -1,6 +1,6 @@
-import { log, prisma } from '../infrastructure';
+import { prisma } from '../infrastructure';
 import { Feature } from '.';
-import { HandleAlert } from './Alert';
+import { AlertEvent, HandleAlert } from './Alert';
 
 /** Restore roles if somebody leaves and rejoins */
 export const PermaRole: Feature = {
@@ -36,6 +36,6 @@ export const PermaRole: Feature = {
     await member.roles.add(roleSnowflakes);
     const snowflakes = roleSnowflakes.map(sf => `<@&${sf}>`);
     const content = `Restored roles: ${snowflakes.join(', ')}`;
-    await HandleAlert({ guildSf, userSf, event: 'roles', content });
+    await HandleAlert({ guildSf, userSf, event: AlertEvent.Roles, content });
   },
 };

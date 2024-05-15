@@ -2,6 +2,17 @@ import { ApplicationCommandOptionType, ChannelType } from 'discord.js';
 import { Feature } from '.';
 import { client, prisma } from '../infrastructure';
 
+export enum AlertEvent {
+  Message = 'message',
+  Join = 'join',
+  Leave = 'leave',
+  Role = 'role',
+  Roles = 'roles',
+  Note = 'note',
+  Audit = 'audit',
+  Milestone = 'milestone',
+}
+
 export const Alert: Feature = {
   async Init(commands) {
     await commands.create({
@@ -13,13 +24,16 @@ export const Alert: Feature = {
           description: 'Based on an event',
           type: ApplicationCommandOptionType.String,
           choices: [
+            { name: 'Message sent', value: 'message' },
             { name: 'User joins', value: 'join' },
             { name: 'User leaves', value: 'leave' },
             { name: 'Role assigned', value: 'role' },
             { name: 'Roles restored', value: 'roles' },
             { name: 'Note created', value: 'note' },
             { name: 'Moderation action', value: 'audit' },
+            { name: 'Membership milestone', value: 'milestone' },
           ],
+          required: true,
         },
         {
           name: 'user',
@@ -34,12 +48,12 @@ export const Alert: Feature = {
         {
           name: 'pattern',
           description:
-            'Involving a message containing a RegExp pattern (case-insensitive)',
+            'Involving a message containing a regex pattern (case-insensitive)',
           type: ApplicationCommandOptionType.String,
         },
         {
           name: 'alt-reason',
-          description: "Tokens: $content, $user (won't ping)",
+          description: "Tokens: $content, $url, $user (won't ping)",
           type: ApplicationCommandOptionType.String,
         },
       ],
@@ -53,11 +67,16 @@ export const Alert: Feature = {
       await interaction.deferReply();
 
       const nStr = (x: any) => (x ? `${x}` : null);
+      const event = nStr(options.get('event')?.value);
       const userSf = nBigInt(options.get('user')?.user?.id);
       const roleSf = nBigInt(options.get('role')?.role?.id);
-      const event = nStr(options.get('event')?.value);
       const pattern = nStr(options.get('pattern')?.value);
       const altReason = nStr(options.get('alt-reason')?.value);
+
+      if (!event) {
+        await interaction.editReply('An event must be provided.');
+        return;
+      }
 
       const alert = await prisma.alert.create({
         data: {
@@ -65,7 +84,7 @@ export const Alert: Feature = {
           ...{ userSf, roleSf, event, pattern, altReason },
         },
       });
-      const criteria = alertInfo(userSf, roleSf, event, pattern);
+      const criteria = alertInfo(event, userSf, roleSf, pattern);
       await interaction.editReply({
         content: `Alert ${alert.id} created: ${criteria} ${altReason ?? ''}`,
         allowedMentions: { parse: [] },
@@ -76,12 +95,17 @@ export const Alert: Feature = {
     const guildSf = BigInt(member.guild.id);
     const userSf = BigInt(member.id);
     const roles = member.roles.cache.map(role => BigInt(role.id));
-    await HandleAlert({ guildSf, userSf, event: 'leave', roles });
+    await HandleAlert({ guildSf, userSf, event: AlertEvent.Leave, roles });
   },
   async HandleMemberAdd(member) {
     const guildSf = BigInt(member.guild.id);
     const userSf = BigInt(member.id);
-    await HandleAlert({ guildSf, userSf, event: 'join' });
+    await HandleAlert({ guildSf, userSf, event: AlertEvent.Join });
+    const count = member.guild.memberCount;
+    if ((count < 100 && !(count % 10)) || count % 100 === 0) {
+      const content = `${count} members :tada:`;
+      await HandleAlert({ guildSf, event: AlertEvent.Milestone, content });
+    }
   },
   async HandleMemberUpdate(oldMember, newMember) {
     const roles = newMember.roles.cache
@@ -90,18 +114,32 @@ export const Alert: Feature = {
     if (!roles.length) return;
     const guildSf = BigInt(newMember.guild.id);
     const userSf = BigInt(newMember.id);
-    await HandleAlert({ guildSf, userSf, event: 'role', roles });
+    const content = roles.map(r => `<@&${r}>`).join(', ');
+    await HandleAlert({
+      guildSf,
+      userSf,
+      event: AlertEvent.Role,
+      roles,
+      content,
+    });
   },
   async HandleMessage({ message, guildSf, userSf }) {
     if (!message.content) return;
     const member = await message.guild?.members.fetch(message.author.id);
     const roles = member?.roles.cache.map(role => BigInt(role.id));
-    await HandleAlert({ guildSf, userSf, roles, content: message.content });
+    await HandleAlert({
+      guildSf,
+      userSf,
+      event: AlertEvent.Message,
+      roles,
+      content: message.content,
+      url: message.url,
+    });
   },
   async HandleAuditLog({ kind, executor, target, reason }, guild) {
     const guildSf = BigInt(guild.id);
     const content = `${kind} of <@${target.id}> by <@${executor.id}>: ${reason}`;
-    await HandleAlert({ guildSf, event: 'audit', content });
+    await HandleAlert({ guildSf, event: AlertEvent.Audit, content });
   },
 };
 
@@ -146,21 +184,89 @@ export const DeleteAlert: Feature = {
   },
 };
 
+export const DeleteAlerts: Feature = {
+  async Init(commands) {
+    await commands.create({
+      name: 'delete-alerts',
+      description: 'Delete all alerts in this channel',
+    });
+  },
+  Interaction: {
+    commandName: 'delete-alerts',
+    moderatorOnly: true,
+    async handler({ interaction, guildSf, channelSf }) {
+      await interaction.deferReply();
+      const { count } = await prisma.alert.deleteMany({
+        where: { guildSf, channelSf },
+      });
+      await interaction.editReply(`Deleted ${count} alerts.`);
+    },
+  },
+};
+
+export const RecommendedAlerts: Feature = {
+  async Init(commands) {
+    await commands.create({
+      name: 'recommended-alerts',
+      description: 'Set up recommended alerts in this channel',
+    });
+  },
+  Interaction: {
+    commandName: 'recommended-alerts',
+    moderatorOnly: true,
+    async handler({ interaction, guildSf, channelSf }) {
+      await interaction.deferReply();
+
+      await prisma.alert.createMany({
+        data: [
+          {
+            guildSf,
+            channelSf,
+            event: AlertEvent.Join,
+            altReason: '$user joined',
+          },
+          {
+            guildSf,
+            channelSf,
+            event: AlertEvent.Leave,
+            altReason: '$user left',
+          },
+          { guildSf, channelSf, event: AlertEvent.Role },
+          { guildSf, channelSf, event: AlertEvent.Roles },
+          { guildSf, channelSf, event: AlertEvent.Note },
+          { guildSf, channelSf, event: AlertEvent.Audit },
+          { guildSf, channelSf, event: AlertEvent.Milestone },
+        ],
+      });
+
+      await interaction.editReply('Recommended alerts set up.');
+    },
+  },
+};
+
 type HandleInfo = {
+  event: AlertEvent;
   guildSf: bigint;
   userSf?: bigint;
-  event?: 'join' | 'leave' | 'role' | 'roles' | 'note' | 'audit';
   roles?: bigint[];
   content?: string | null;
+  url?: string;
 };
 export const HandleAlert = async (i: HandleInfo) => {
-  const extraDetailsEvent =
-    i.event && ['note', 'audit', 'roles'].includes(i.event);
+  const requireContent =
+    i.event &&
+    [
+      AlertEvent.Note,
+      AlertEvent.Audit,
+      AlertEvent.Role,
+      AlertEvent.Roles,
+      AlertEvent.Milestone,
+    ].includes(i.event);
   const alerts = await prisma.alert.findMany({
     where: {
       guildSf: i.guildSf,
-      event: i.event ? i.event : null,
-      pattern: i.content && !extraDetailsEvent ? { not: null } : undefined,
+      event: i.event,
+      pattern: i.content && !requireContent ? { not: null } : undefined,
       AND: [
         { OR: [{ userSf: i.userSf }, { userSf: null }] },
         { OR: [{ roleSf: { in: i.roles } }, { roleSf: null }] },
@@ -177,26 +283,27 @@ export const HandleAlert = async (i: HandleInfo) => {
 
     const altReason = a.altReason
       ?.replaceAll(/\$content/g, i.content ?? '[no content]')
-      .replaceAll(/\$user/g, `<@${i.userSf}>`);
-    const info = alertInfo(userSf ?? i.userSf ?? null, roleSf, event, pattern);
+      .replaceAll(/\$user/g, `<@${i.userSf}>`)
+      .replaceAll(/\$url/g, i.url ?? '[no URL]');
+    const info = alertInfo(event, userSf ?? i.userSf ?? null, roleSf, pattern);
     const content =
       `||${a.id}|| ` +
       (altReason || info) +
-      (extraDetailsEvent ? `: ${i.content}` : '');
+      (requireContent ? `: ${i.content}` : '');
     await channel.send({ content, allowedMentions: { parse: [] } });
   }
 };
 
 const alertInfo = (
+  event: string,
   userSf: bigint | null,
   roleSf: bigint | null,
-  event: string | null,
   pattern: string | null,
 ) => {
   const parts = [
+    event,
     userSf ? `<@${userSf}>` : null,
     roleSf ? `<@&${roleSf}>` : null,
-    event,
     pattern ? `\`${pattern}\` pattern` : null,
   ].filter(Boolean);
   return parts.join(', ');

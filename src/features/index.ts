@@ -20,15 +20,15 @@ import { Echo } from './Echo';
 import { Purge } from './Purge';
 import { GlobalChat } from './GlobalChat';
 import { ActivitySort } from './ActivitySort';
-import { Alert } from './Alert';
-import { DeleteAlert } from './Alert';
+import { Alert, DeleteAlert, DeleteAlerts, RecommendedAlerts } from './Alert';
 import { Note, ReadNote } from './Note';
 import { ChannelBan } from './ChannelBan';
 
 export const features = {
   ...{ PermaRole, KickInviteSpam, Ping, WhitelistChannel, MirrorGuild },
   ...{ Leaderboard, StickyMessage, Echo, Purge, GlobalChat, ActivitySort },
-  ...{ Alert, DeleteAlert, Note, ReadNote, ChannelBan },
+  ...{ Note, ReadNote, ChannelBan },
+  ...{ Alert, DeleteAlert, DeleteAlerts, RecommendedAlerts },
 };
 
 export type FeatureConfig = {

@@ -1,6 +1,6 @@
 import { ApplicationCommandOptionType } from 'discord.js';
 import { Feature } from '.';
-import { HandleAlert } from './Alert';
+import { AlertEvent, HandleAlert } from './Alert';
 
 const maxValue = 16;
 
@@ -46,7 +46,7 @@ export const Purge: Feature = {
       await HandleAlert({
         guildSf,
         userSf,
-        event: 'audit',
+        event: AlertEvent.Audit,
         content: `Deleted ${messages.size} messages in <#${channel.id}>.`,
       });
     },

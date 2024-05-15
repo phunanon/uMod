@@ -1,7 +1,7 @@
 import { ApplicationCommandOptionType } from 'discord.js';
 import { Feature } from '.';
 import { prisma } from '../infrastructure';
-import { HandleAlert } from './Alert';
+import { AlertEvent, HandleAlert } from './Alert';
 
 export const Note: Feature = {
   async Init(commands) {
@@ -42,7 +42,7 @@ export const Note: Feature = {
       });
 
       await HandleAlert({
-        event: 'note',
+        event: AlertEvent.Note,
         userSf,
         guildSf,
         content: `concerning <@${user.id}>: ${content}`,
@@ -52,6 +52,16 @@ export const Note: Feature = {
         `Note added for ${user.username}: ${content}`,
       );
     },
+  },
+  async HandleAuditLog({ kind, executor, target, reason }, guild) {
+    await prisma.note.create({
+      data: {
+        guildSf: BigInt(guild.id),
+        authorSf: BigInt(executor.id),
+        userSf: BigInt(target.id),
+        content: `${kind}: ${reason}`,
+      },
+    });
   },
 };
 
