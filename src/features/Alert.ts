@@ -66,12 +66,11 @@ export const Alert: Feature = {
       const { options } = interaction;
       await interaction.deferReply();
 
-      const nStr = (x: any) => (x ? `${x}` : null);
-      const event = nStr(options.get('event')?.value);
+      const event = options.getString('event');
       const userSf = nBigInt(options.get('user')?.user?.id);
       const roleSf = nBigInt(options.get('role')?.role?.id);
-      const pattern = nStr(options.get('pattern')?.value);
-      const altReason = nStr(options.get('alt-reason')?.value);
+      const pattern = options.getString('pattern');
+      const altReason = options.getString('alt-reason');
 
       if (!event) {
         await interaction.editReply('An event must be provided.');

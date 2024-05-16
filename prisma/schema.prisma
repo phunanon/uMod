@@ -81,3 +81,10 @@ model Note {
   notedAt  DateTime @default(now())
   content  String
 }
+
+model Censor {
+  id       Int @id @default(autoincrement())
+  guildSf  BigInt
+  word     String
+  censored String
+}

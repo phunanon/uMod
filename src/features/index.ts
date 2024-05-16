@@ -23,11 +23,12 @@ import { ActivitySort } from './ActivitySort';
 import { Alert, DeleteAlert, DeleteAlerts, RecommendedAlerts } from './Alert';
 import { Note, ReadNote } from './Note';
 import { ChannelBan } from './ChannelBan';
+import { Censor, DeleteCensor } from './Censor';
 
 export const features = {
   ...{ PermaRole, KickInviteSpam, Ping, WhitelistChannel, MirrorGuild },
   ...{ Leaderboard, StickyMessage, Echo, Purge, GlobalChat, ActivitySort },
-  ...{ Note, ReadNote, ChannelBan },
+  ...{ Note, ReadNote, ChannelBan, Censor, DeleteCensor },
   ...{ Alert, DeleteAlert, DeleteAlerts, RecommendedAlerts },
 };
 

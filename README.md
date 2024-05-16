@@ -21,7 +21,7 @@ Simple moderation bot so I can kick Carlbot.
     - ... and events: join, leave, role assignment, role restoration, moderation note, moderator action (ban, unban, kick, timeout, channel ban)
   - Optionally with a custom alert message with tokens: `$userId $content`
   - Also **DeleteAlert**, **DeleteAlerts**, and **RecommendedAlerts**
-- (Planned) **Censor**: deletes messages with blacklisted words or phrases
+- **Censor**: deletes messages with blacklisted words or phrases and replaces them with a censored message
 
 ## To host it yourself
 
