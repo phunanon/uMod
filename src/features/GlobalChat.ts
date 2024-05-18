@@ -6,7 +6,7 @@ export const GlobalChat: Feature = {
   async Init(commands) {
     await commands.create({
       name: 'global-chat',
-      description: 'Enable global chat for this server in this channel.',
+      description: 'Enable global chat for this server in this channel',
     });
   },
   async HandleMessage({ message, guildSf, channelSf, isEdit }) {

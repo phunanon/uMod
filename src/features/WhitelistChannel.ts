@@ -5,7 +5,7 @@ export const WhitelistChannel: Feature = {
   async Init(commands) {
     await commands.create({
       name: 'whitelist-channel',
-      description: 'Disable moderation for current channel.',
+      description: 'Disable moderation for current channel',
     });
   },
   Interaction: {

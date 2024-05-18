@@ -29,7 +29,7 @@ export const Censor: Feature = {
     async handler({ guildSf, interaction }) {
       await interaction.deferReply();
 
-      const word = interaction.options.getString('word');
+      const word = interaction.options.getString('word')?.toLowerCase();
       const unescaped = interaction.options.getString('censored');
 
       if (!word || !unescaped) {
@@ -43,24 +43,25 @@ export const Censor: Feature = {
       await interaction.editReply(`New censored word: ${censored}`);
     },
   },
-  async HandleMessage({ guildSf, channel, message }) {
-    const words = message.content.replaceAll(/[^a-zA-Z ]/g, '').split(' ');
+  async HandleMessage({ guildSf, userSf, channel, message }) {
+    const words = message.content
+      .toLowerCase()
+      .replaceAll(/[^a-z ]/g, '')
+      .split(' ');
     const censors = await prisma.censor.findMany({
       where: { guildSf, word: { in: words } },
     });
 
     if (!censors.length) return;
 
-    const member = await channel.guild.members.fetch(message.author.id);
-    const username =
-      member.displayName ?? member.nickname ?? message.author.tag;
-
     const content = censors.reduce(
       (sum, { word, censored }) => sum.replaceAll(word, censored),
       message.content,
     );
-    await channel.send({ content: `**${username}**: ${content}` });
+    await channel.send({ content: `<@${userSf}>: ${content}` });
     await message.delete();
+
+    return 'stop';
   },
 };
 

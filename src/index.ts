@@ -171,7 +171,10 @@ async function handleAudit(log: GuildAuditLogsEntry, guild: Guild) {
     if (log.action === AuditLogEvent.MemberKick)
       return { kind: 'kick', target, executor, reason } as const;
     if (log.action === AuditLogEvent.MemberUpdate) {
-      if (log.action === 24) {
+      const isTimeout = log.changes.some(
+        change => change.key === 'communication_disabled_until',
+      );
+      if (isTimeout) {
         return { kind: 'timeout', target, executor, reason } as const;
       }
     }

@@ -5,7 +5,7 @@ export const Leaderboard: Feature = {
   async Init(commands) {
     await commands.create({
       name: 'leaderboard',
-      description: 'Show the server leaderboard.',
+      description: 'Show the server leaderboard',
     });
   },
   Interaction: {

@@ -6,11 +6,11 @@ export const Echo: Feature = {
   async Init(commands) {
     await commands.create({
       name: 'echo',
-      description: 'Sends an anonymous message in the channel.',
+      description: 'Sends an anonymous message in the channel',
       options: [
         {
           name: 'content',
-          description: 'The content of the message.',
+          description: 'The content of the message',
           type: ApplicationCommandOptionType.String,
           required: true,
         },

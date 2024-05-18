@@ -23,6 +23,13 @@ Simple moderation bot so I can kick Carlbot.
   - Also **DeleteAlert**, **DeleteAlerts**, and **RecommendedAlerts**
 - **Censor**: deletes messages with blacklisted words or phrases and replaces them with a censored message
 
+Aspirations:
+- Per-channel leaderboards
+- Leaderboard alerts (position changes in the top 10)
+- Different global-chat channels (e.g. tech and math)
+- Auto-timeout for sharing an invite link
+- Ticket system
+
 ## To host it yourself
 
 I recommend using Bun. Then, in the terminal:

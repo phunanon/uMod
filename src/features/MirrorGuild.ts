@@ -6,7 +6,7 @@ export const MirrorGuild: Feature = {
   async Init(commands) {
     await commands.create({
       name: 'mirror-guild',
-      description: 'Mirror all server messages into the current channel.',
+      description: 'Mirror all server messages into the current channel',
     });
   },
   HandleMessage,

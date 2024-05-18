@@ -2,21 +2,26 @@ import { ApplicationCommandOptionType } from 'discord.js';
 import { Feature } from '.';
 import { AlertEvent, HandleAlert } from './Alert';
 
-const maxValue = 16;
+const maxValue = 32;
 
 export const Purge: Feature = {
   async Init(commands) {
     await commands.create({
       name: 'purge',
-      description: 'Delete messages in the channel.',
+      description: `Delete latest up to ${maxValue} messages in the channel`,
       options: [
         {
           name: 'count',
-          description: 'The number of messages to delete.',
+          description: 'The number of messages to delete',
           type: ApplicationCommandOptionType.Integer,
           required: true,
           minValue: 1,
           maxValue,
+        },
+        {
+          name: 'user',
+          description: 'The user to delete messages of',
+          type: ApplicationCommandOptionType.User,
         },
       ],
     });
@@ -38,8 +43,12 @@ export const Purge: Feature = {
         return;
       }
 
+      const user = interaction.options.getUser('user');
+
       const before = interaction.id;
-      const messages = await channel.messages.fetch({ limit, before });
+      const messages = (await channel.messages.fetch({ limit, before })).filter(
+        m => !user || m.author.id === user.id,
+      );
       await channel.bulkDelete(messages);
       await interaction.editReply(`Deleted ${messages.size} messages.`);
 

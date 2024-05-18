@@ -85,7 +85,7 @@ export const Alert: Feature = {
       });
       const criteria = alertInfo(event, userSf, roleSf, pattern);
       await interaction.editReply({
-        content: `Alert ${alert.id} created: ${criteria} ${altReason ?? ''}`,
+        content: `Alert ${alert.id} created: ${criteria}, ${altReason ?? ''}`,
         allowedMentions: { parse: [] },
       });
     },

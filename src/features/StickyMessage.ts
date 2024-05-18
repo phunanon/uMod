@@ -6,17 +6,17 @@ export const StickyMessage: Feature = {
   async Init(commands) {
     await commands.create({
       name: 'sticky-message',
-      description: 'Create a sticky message in the chat.',
+      description: 'Create a sticky message in the chat',
       options: [
         {
           name: 'content',
-          description: 'The content of the sticky message.',
+          description: 'The content of the sticky message',
           type: ApplicationCommandOptionType.String,
           required: true,
         },
         {
           name: 'renewal',
-          description: 'How many seconds before the message is renewed.',
+          description: 'How many seconds before the message is renewed',
           type: ApplicationCommandOptionType.Integer,
           required: true,
         },
