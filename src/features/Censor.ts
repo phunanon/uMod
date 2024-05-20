@@ -58,7 +58,10 @@ export const Censor: Feature = {
       (sum, { word, censored }) => sum.replaceAll(word, censored),
       message.content,
     );
-    await channel.send({ content: `<@${userSf}>: ${content}` });
+    await channel.send({
+      content: `<@${userSf}>: ${content}`,
+      allowedMentions: { parse: [] },
+    });
     await message.delete();
 
     return 'stop';
