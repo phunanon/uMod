@@ -1,9 +1,9 @@
 # μMod
 
-Simple moderation bot so I can kick Carlbot.
+A moderation bot I made so I could kick Carlbot, but which now has now become quite featureful.
 
 - **PermaRole**: ensures roles are restored even if somebody leaves and joins
-- **KickInviteSpam**: kicks users who post invites and ping @everyone
+- **InviteSpam**: auto-timeout users who post invites, and kick those who post invites and ping @everyone
 - **Leaderboard**: keeps track of user messages and ranks them
 - **Tickets**: a ticket system for users to ask for help
 - **MirrorGuild**: mirrors messages from entire guild into one channel
@@ -26,14 +26,14 @@ Simple moderation bot so I can kick Carlbot.
 - **Censor**: deletes messages with blacklisted words or phrases and replaces them with a censored message
 
 Aspirations:
+
 - Different global-chat channels (e.g. tech and math)
-- Auto-timeout for sharing any invite link
 - Audit echoes
 - Open ticket for particular user
 
 ## To host it yourself
 
-I recommend using Bun. Then, in the terminal:
+Instructions for Node.js, in the terminal:
 
 ```
 npm i -g pm2                       # Keeps the bot running even if it crashes
@@ -42,3 +42,5 @@ npx prisma generate                # Generates Prisma client
 npx prisma migrate dev             # Migrates the database
 pm2 start out/index.js --name uMod # Starts up the bot
 ```
+
+Though, you could probably instead use Bun.

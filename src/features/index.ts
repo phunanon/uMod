@@ -11,7 +11,7 @@ import {
 } from 'discord.js';
 
 import { PermaRole } from './PermaRole';
-import { KickInviteSpam } from './KickInviteSpam';
+import { InviteSpam } from './InviteSpam';
 import { Ping } from './Ping';
 import { WhitelistChannel } from './WhitelistChannel';
 import { MirrorGuild } from './MirrorGuild';
@@ -29,7 +29,7 @@ import { BlockGifs } from './BlockGifs';
 import { CreateTicket, TicketsHere, CloseTicket } from './Ticket';
 
 export const features = {
-  ...{ PermaRole, KickInviteSpam, Ping, WhitelistChannel, MirrorGuild },
+  ...{ PermaRole, InviteSpam, Ping, WhitelistChannel, MirrorGuild },
   ...{ Leaderboard, StickyMessage, Echo, Purge, GlobalChat, ActivitySort },
   ...{ Note, ReadNote, ChannelBan, Censor, DeleteCensor },
   ...{ Alert, DeleteAlert, DeleteAlerts, RecommendedAlerts, BlockGifs },

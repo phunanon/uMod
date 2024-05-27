@@ -115,13 +115,13 @@ export const CreateTicket: Feature = {
 
       const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
         new ButtonBuilder()
-          .setCustomId('close_ticket')
+          .setCustomId(`close_ticket_${role}`)
           .setLabel('Close ticket')
           .setStyle(ButtonStyle.Danger),
       );
 
       await newChannel.send({
-        content: `<@&${role}>`,
+        content: `<@&${role}> <@${interaction.user.id}>`,
         embeds: [
           {
             title: 'Ticket created',
@@ -131,17 +131,35 @@ export const CreateTicket: Feature = {
         components: [row],
       });
 
-      await interaction.editReply('Ticket created.');
+      await interaction.editReply(`Ticket created: ${newChannel.url}`);
     },
   },
 };
 
 export const CloseTicket: Feature = {
   Interaction: {
-    name: 'close_ticket',
+    name: 'close_ticket_*',
     moderatorOnly: false,
-    async button({ interaction, channel }) {
+    async button({ interaction, channel, userSf }) {
       await interaction.deferReply({ ephemeral: true });
+
+      const role = interaction.customId.split('_')[2];
+      if (!role) {
+        await interaction.editReply('Error: invalid ticket.');
+        return;
+      }
+
+      const member = await interaction.guild?.members.fetch(`${userSf}`);
+      if (!member) {
+        await interaction.editReply('Error: could not fetch member.');
+        return;
+      }
+
+      if (!member.roles.cache.has(role)) {
+        await interaction.editReply(`Only <@&${role}> can close this ticket.`);
+        return;
+      }
+
       await channel.delete();
     },
   },

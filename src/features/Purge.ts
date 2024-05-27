@@ -12,7 +12,7 @@ export const Purge: Feature = {
       options: [
         {
           name: 'count',
-          description: 'The number of messages to delete',
+          description: 'The number of messages for potential deletion',
           type: ApplicationCommandOptionType.Integer,
           required: true,
           minValue: 1,
@@ -20,7 +20,7 @@ export const Purge: Feature = {
         },
         {
           name: 'user',
-          description: 'The user to delete messages of',
+          description: 'A specific user to delete messages of',
           type: ApplicationCommandOptionType.User,
         },
       ],
