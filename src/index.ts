@@ -76,8 +76,7 @@ const handleInteraction = failable(_handleInteraction);
 async function _handleInteraction(interaction: Interaction): Promise<void> {
   if (
     interaction.channel?.type !== ChannelType.GuildText ||
-    interaction.type !== InteractionType.ApplicationCommand ||
-    !interaction.isChatInputCommand() ||
+    (!interaction.isChatInputCommand() && !interaction.isButton()) ||
     !interaction.guild ||
     !interaction.member ||
     !client.user
@@ -92,12 +91,20 @@ async function _handleInteraction(interaction: Interaction): Promise<void> {
   const guildSf = BigInt(interaction.guild.id);
   const channelSf = BigInt(interaction.channel.id);
   const userSf = BigInt(member.user.id);
+  const name =
+    'commandName' in interaction
+      ? interaction.commandName
+      : interaction.customId;
 
   const feature = (() => {
     for (const feature of Object.values(features)) {
       const info = feature.Interaction;
-      if (info?.commandName !== interaction.commandName) continue;
-      return info;
+      if (!info) continue;
+      if (
+        info.name === name ||
+        (info.name.endsWith('*') && name.startsWith(info.name.slice(0, -1)))
+      )
+        return info;
     }
   })();
 
@@ -117,15 +124,23 @@ async function _handleInteraction(interaction: Interaction): Promise<void> {
     }
   }
 
-  const context = { interaction, guildSf, userSf, channelSf, channel };
-  await feature.handler(context);
+  const context = { guildSf, userSf, channelSf, channel };
+  if (interaction.isChatInputCommand()) {
+    if ('command' in feature) {
+      await feature.command({ ...context, interaction });
+    } else console.warn(feature.name, 'has not implemented', name);
+  } else {
+    if ('button' in feature) {
+      await feature.button({ ...context, interaction });
+    } else console.warn(feature.name, 'has not implemented', name);
+  }
 }
 
-export const IsChannelWhitelisted = async (snowflake: string) => {
-  const record = await prisma.channelWhitelist.findFirst({
-    where: { sf: BigInt(snowflake) },
+export const IsChannelUnmoderated = async (channelSf: bigint) => {
+  const record = await prisma.channelFlags.findFirst({
+    where: { channelSf },
   });
-  return record !== null;
+  return record?.unmoderated === true;
 };
 
 const handleMessage = failable(_handleMessage);
@@ -139,10 +154,10 @@ async function _handleMessage(
     : maybePartial;
   if (message.channel.type !== ChannelType.GuildText) return;
   if (message.author?.bot !== false) return;
-  if (await IsChannelWhitelisted(message.channel.id)) return;
+  const channelSf = BigInt(message.channel.id);
+  if (await IsChannelUnmoderated(channelSf)) return;
   if (!message.guildId) return;
   const guildSf = BigInt(message.guildId);
-  const channelSf = BigInt(message.channel.id);
   const userSf = BigInt(message.author.id);
   const { channel } = message;
   const isEdit = !!newMessage;
@@ -161,7 +176,7 @@ async function _handleMessage(
 
 async function handleAudit(log: GuildAuditLogsEntry, guild: Guild) {
   const entry = (() => {
-    const target = log.target as User;
+    const target = log.target as User | null;
     const executor = log.executor;
     const reason = log.reason ?? 'No reason provided';
     if (log.action === AuditLogEvent.MemberBanAdd)

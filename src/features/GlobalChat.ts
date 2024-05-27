@@ -35,9 +35,9 @@ export const GlobalChat: Feature = {
     }
   },
   Interaction: {
-    commandName: 'global-chat',
+    name: 'global-chat',
     moderatorOnly: true,
-    async handler({ interaction, guildSf, channelSf }) {
+    async command({ interaction, guildSf, channelSf }) {
       await interaction.deferReply();
 
       const existing = await prisma.globalChat.findFirst({

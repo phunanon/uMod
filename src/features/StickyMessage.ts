@@ -25,9 +25,9 @@ export const StickyMessage: Feature = {
     RenewStickyMessageSoon();
   },
   Interaction: {
-    commandName: 'sticky-message',
+    name: 'sticky-message',
     moderatorOnly: true,
-    async handler({ interaction, guildSf, channelSf, channel }) {
+    async command({ interaction, guildSf, channelSf, channel }) {
       await interaction.reply('Creating sticky message...');
 
       const rawContent = interaction.options.get('content', true).value;

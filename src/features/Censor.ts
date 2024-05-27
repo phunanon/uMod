@@ -24,9 +24,9 @@ export const Censor: Feature = {
     });
   },
   Interaction: {
-    commandName: 'censor',
+    name: 'censor',
     moderatorOnly: true,
-    async handler({ guildSf, interaction }) {
+    async command({ guildSf, interaction }) {
       await interaction.deferReply();
 
       const word = interaction.options.getString('word')?.toLowerCase();
@@ -43,7 +43,12 @@ export const Censor: Feature = {
       await interaction.editReply(`New censored word: ${censored}`);
     },
   },
-  async HandleMessage({ guildSf, userSf, channel, message }) {
+  async HandleMessage({ guildSf, userSf,channelSf, channel, message }) {
+    const flags = await prisma.channelFlags.findFirst({
+      where: { channelSf },
+    });
+    if (flags?.censor === false) return;
+
     const words = message.content
       .toLowerCase()
       .replaceAll(/[^a-z ]/g, '')
@@ -86,9 +91,9 @@ export const DeleteCensor: Feature = {
     });
   },
   Interaction: {
-    commandName: 'delete-censor',
+    name: 'delete-censor',
     moderatorOnly: true,
-    async handler({ guildSf, interaction }) {
+    async command({ guildSf, interaction }) {
       await interaction.deferReply();
 
       const unescaped = interaction.options.getString('word');

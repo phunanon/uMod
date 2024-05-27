@@ -25,9 +25,9 @@ export const Note: Feature = {
     });
   },
   Interaction: {
-    commandName: 'note',
+    name: 'note',
     moderatorOnly: true,
-    async handler({ interaction, guildSf, userSf }) {
+    async command({ interaction, guildSf, userSf }) {
       await interaction.deferReply({ ephemeral: true });
 
       const user = interaction.options.getUser('user');
@@ -54,7 +54,7 @@ export const Note: Feature = {
     },
   },
   async HandleAuditLog({ kind, executor, target, reason }, guild) {
-    if (!executor) return;
+    if (!executor || !target) return;
     await prisma.note.create({
       data: {
         guildSf: BigInt(guild.id),
@@ -69,7 +69,7 @@ export const Note: Feature = {
 export const ReadNote: Feature = {
   async Init(commands) {
     await commands.create({
-      name: 'read-note',
+      name: 'notes',
       description: 'Read notes for a user',
       options: [
         {
@@ -82,9 +82,9 @@ export const ReadNote: Feature = {
     });
   },
   Interaction: {
-    commandName: 'read-note',
+    name: 'notes',
     moderatorOnly: true,
-    async handler({ interaction, guildSf }) {
+    async command({ interaction, guildSf }) {
       await interaction.deferReply({ ephemeral: true });
 
       const user = interaction.options.getUser('user');

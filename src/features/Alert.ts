@@ -60,9 +60,9 @@ export const Alert: Feature = {
     });
   },
   Interaction: {
-    commandName: 'alert',
+    name: 'alert',
     moderatorOnly: true,
-    async handler({ interaction, guildSf, channelSf }) {
+    async command({ interaction, guildSf, channelSf }) {
       const { options } = interaction;
       await interaction.deferReply();
 
@@ -138,7 +138,8 @@ export const Alert: Feature = {
   async HandleAuditLog({ kind, executor, target, reason }, guild) {
     const guildSf = BigInt(guild.id);
     const by = executor ? `<@${executor.id}>` : '[unknown]';
-    const content = `${kind} of <@${target.id}> (\`${target.tag}\`) by ${by}: ${reason}`;
+    const of = target ? `<@${target.id}> (\`${target.tag}\`)` : '[unknown]';
+    const content = `${kind} of ${of} by ${by}: ${reason}`;
     await HandleAlert({ guildSf, event: AlertEvent.Audit, content });
   },
 };
@@ -159,9 +160,9 @@ export const DeleteAlert: Feature = {
     });
   },
   Interaction: {
-    commandName: 'delete-alert',
+    name: 'delete-alert',
     moderatorOnly: true,
-    async handler({ interaction, guildSf, channelSf }) {
+    async command({ interaction, guildSf, channelSf }) {
       const { options } = interaction;
       const id = Number(options.get('id')?.value);
 
@@ -192,9 +193,9 @@ export const DeleteAlerts: Feature = {
     });
   },
   Interaction: {
-    commandName: 'delete-alerts',
+    name: 'delete-alerts',
     moderatorOnly: true,
-    async handler({ interaction, guildSf, channelSf }) {
+    async command({ interaction, guildSf, channelSf }) {
       await interaction.deferReply();
       const { count } = await prisma.alert.deleteMany({
         where: { guildSf, channelSf },
@@ -212,9 +213,9 @@ export const RecommendedAlerts: Feature = {
     });
   },
   Interaction: {
-    commandName: 'recommended-alerts',
+    name: 'recommended-alerts',
     moderatorOnly: true,
-    async handler({ interaction, guildSf, channelSf }) {
+    async command({ interaction, guildSf, channelSf }) {
       await interaction.deferReply();
 
       await prisma.alert.createMany({

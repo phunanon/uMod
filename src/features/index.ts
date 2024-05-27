@@ -1,5 +1,6 @@
 import {
   ApplicationCommandManager,
+  ButtonInteraction,
   ChatInputCommandInteraction,
   Guild,
   GuildMember,
@@ -25,12 +26,14 @@ import { Note, ReadNote } from './Note';
 import { ChannelBan } from './ChannelBan';
 import { Censor, DeleteCensor } from './Censor';
 import { BlockGifs } from './BlockGifs';
+import { CreateTicket, TicketsHere, CloseTicket } from './Ticket';
 
 export const features = {
   ...{ PermaRole, KickInviteSpam, Ping, WhitelistChannel, MirrorGuild },
   ...{ Leaderboard, StickyMessage, Echo, Purge, GlobalChat, ActivitySort },
   ...{ Note, ReadNote, ChannelBan, Censor, DeleteCensor },
   ...{ Alert, DeleteAlert, DeleteAlerts, RecommendedAlerts, BlockGifs },
+  ...{ CreateTicket, TicketsHere, CloseTicket },
 };
 
 export type FeatureConfig = {
@@ -38,8 +41,8 @@ export type FeatureConfig = {
   moderatorOnly?: boolean;
 };
 
-export type InteractionContext = {
-  interaction: ChatInputCommandInteraction;
+export type InteractionContext<T> = {
+  interaction: T;
   guildSf: bigint;
   userSf: bigint;
   channelSf: bigint;
@@ -57,7 +60,7 @@ export type MessageContext = {
 
 export type AuditEvent = {
   kind: 'ban' | 'unban' | 'kick' | 'timeout';
-  target: User;
+  target: User | null;
   executor: User | null;
   reason: string;
 };
@@ -67,10 +70,21 @@ export type Feature = {
   Init?: (commands: ApplicationCommandManager) => Promise<void>;
   HandleMessage?: (context: MessageContext) => Promise<void | 'stop'>;
   Interaction?: {
-    commandName: string;
+    /** Wildcard `*` can be put at the end */
+    name: string;
     moderatorOnly: boolean;
-    handler: (context: InteractionContext) => Promise<void>;
-  };
+  } & (
+    | {
+        command: (
+          context: InteractionContext<ChatInputCommandInteraction>,
+        ) => Promise<void>;
+      }
+    | {
+        button: (
+          context: InteractionContext<ButtonInteraction>,
+        ) => Promise<void>;
+      }
+  );
   HandleMemberUpdate?: (
     oldMember: GuildMember | PartialGuildMember,
     newMember: GuildMember,

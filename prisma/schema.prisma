@@ -13,11 +13,6 @@ model PermaRole {
   roleSf BigInt
 }
 
-model ChannelWhitelist {
-  id Int    @id @default(autoincrement())
-  sf BigInt
-}
-
 model GuildMirror {
   id        Int    @id @default(autoincrement())
   guildSf   BigInt
@@ -83,17 +78,16 @@ model Note {
 }
 
 model Censor {
-  id       Int @id @default(autoincrement())
+  id       Int    @id @default(autoincrement())
   guildSf  BigInt
   word     String
   censored String
 }
 
 model ChannelFlags {
-  id        Int    @id @default(autoincrement())
-  guildSf   BigInt
-  channelSf BigInt
-  blockGifs Boolean @default(false)
-  
-  @@unique([guildSf, channelSf])
+  id          Int     @id @default(autoincrement())
+  channelSf   BigInt  @unique
+  unmoderated Boolean @default(false)
+  blockGifs   Boolean @default(false)
+  censor      Boolean @default(true)
 }

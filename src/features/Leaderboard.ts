@@ -9,9 +9,9 @@ export const Leaderboard: Feature = {
     });
   },
   Interaction: {
-    commandName: 'leaderboard',
+    name: 'leaderboard',
     moderatorOnly: false,
-    async handler({ interaction, guildSf }) {
+    async command({ interaction, guildSf }) {
       await interaction.deferReply();
 
       const { id, tag } = interaction.user;

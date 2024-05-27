@@ -25,9 +25,9 @@ export const ChannelBan: Feature = {
     });
   },
   Interaction: {
-    commandName: 'channel-ban',
+    name: 'channel-ban',
     moderatorOnly: true,
-    async handler({ interaction, guildSf, userSf, channel }) {
+    async command({ interaction, guildSf, userSf, channel }) {
       await interaction.deferReply({ ephemeral: true });
 
       const { options } = interaction;

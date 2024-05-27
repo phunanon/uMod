@@ -9,21 +9,20 @@ export const BlockGifs: Feature = {
     });
   },
   Interaction: {
-    commandName: 'block-gifs',
+    name: 'block-gifs',
     moderatorOnly: true,
-    async handler({ interaction, guildSf, channelSf }) {
+    async command({ interaction, channelSf }) {
       await interaction.deferReply();
-      const guildSf_channelSf = { guildSf, channelSf };
 
-      const existing = await prisma.channelFlags.findUnique({
-        where: { guildSf_channelSf },
+      const flags = await prisma.channelFlags.findUnique({
+        where: { channelSf },
       });
 
-      const blockGifs = existing?.blockGifs ? false : true;
+      const blockGifs = !flags?.blockGifs;
 
       await prisma.channelFlags.upsert({
-        where: { guildSf_channelSf },
-        create: { guildSf, channelSf, blockGifs: true },
+        where: { channelSf },
+        create: { channelSf, blockGifs },
         update: { blockGifs },
       });
 
@@ -32,11 +31,9 @@ export const BlockGifs: Feature = {
       );
     },
   },
-  async HandleMessage({ guildSf, channelSf, message }) {
-    const guildSf_channelSf = { guildSf, channelSf };
-
+  async HandleMessage({ channelSf, message }) {
     const existing = await prisma.channelFlags.findUnique({
-      where: { guildSf_channelSf },
+      where: { channelSf },
     });
 
     if (!existing?.blockGifs) return;

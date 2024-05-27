@@ -9,9 +9,9 @@ export const ActivitySort: Feature = {
     });
   },
   Interaction: {
-    commandName: 'activity-sort',
+    name: 'activity-sort',
     moderatorOnly: true,
-    async handler({ interaction, guildSf, channel }) {
+    async command({ interaction, guildSf, channel }) {
       await interaction.deferReply();
 
       if (!channel.parentId) {

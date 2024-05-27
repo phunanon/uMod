@@ -11,9 +11,9 @@ export const MirrorGuild: Feature = {
   },
   HandleMessage,
   Interaction: {
-    commandName: 'mirror-guild',
+    name: 'mirror-guild',
     moderatorOnly: true,
-    async handler({ interaction, guildSf, channelSf }) {
+    async command({ interaction, guildSf, channelSf }) {
       await interaction.deferReply();
 
       const where = { guildSf };

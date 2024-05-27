@@ -27,9 +27,9 @@ export const Purge: Feature = {
     });
   },
   Interaction: {
-    commandName: 'purge',
+    name: 'purge',
     moderatorOnly: true,
-    async handler({ interaction, channel, guildSf, userSf }) {
+    async command({ interaction, channel, guildSf, userSf }) {
       await interaction.reply('Deleting messages...');
 
       const limit = interaction.options.get('count', true).value;

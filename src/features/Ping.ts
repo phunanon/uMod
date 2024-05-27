@@ -5,9 +5,9 @@ export const Ping: Feature = {
     await commands.create({ name: 'ping', description: 'Replies with pong!' });
   },
   Interaction: {
-    commandName: 'ping',
+    name: 'ping',
     moderatorOnly: false,
-    async handler({ interaction }) {
+    async command({ interaction }) {
       await interaction.reply('Pong!');
     },
   },

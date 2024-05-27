@@ -18,9 +18,9 @@ export const Echo: Feature = {
     });
   },
   Interaction: {
-    commandName: 'echo',
+    name: 'echo',
     moderatorOnly: false,
-    async handler({ interaction, channel }) {
+    async command({ interaction, channel }) {
       const content = interaction.options.get('content', true).value;
 
       if (typeof content !== 'string') {
