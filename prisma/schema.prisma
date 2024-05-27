@@ -88,3 +88,12 @@ model Censor {
   word     String
   censored String
 }
+
+model ChannelFlags {
+  id        Int    @id @default(autoincrement())
+  guildSf   BigInt
+  channelSf BigInt
+  blockGifs Boolean @default(false)
+  
+  @@unique([guildSf, channelSf])
+}

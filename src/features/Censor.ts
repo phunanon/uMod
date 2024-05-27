@@ -54,9 +54,10 @@ export const Censor: Feature = {
 
     if (!censors.length) return;
 
+    const rx = (word: string) =>
+      new RegExp(`\\b${[...word].join('.?')}\\b`, 'gi');
     const content = censors.reduce(
-      (sum, { word, censored }): string =>
-        sum.replaceAll(new RegExp(word, 'gi'), censored),
+      (sum, { word, censored }): string => sum.replaceAll(rx(word), censored),
       message.content,
     );
     await channel.send({

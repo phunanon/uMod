@@ -137,7 +137,8 @@ export const Alert: Feature = {
   },
   async HandleAuditLog({ kind, executor, target, reason }, guild) {
     const guildSf = BigInt(guild.id);
-    const content = `${kind} of <@${target.id}> by <@${executor.id}>: ${reason}`;
+    const by = executor ? `<@${executor.id}>` : '[unknown]';
+    const content = `${kind} of <@${target.id}> (\`${target.tag}\`) by ${by}: ${reason}`;
     await HandleAlert({ guildSf, event: AlertEvent.Audit, content });
   },
 };

@@ -24,12 +24,13 @@ import { Alert, DeleteAlert, DeleteAlerts, RecommendedAlerts } from './Alert';
 import { Note, ReadNote } from './Note';
 import { ChannelBan } from './ChannelBan';
 import { Censor, DeleteCensor } from './Censor';
+import { BlockGifs } from './BlockGifs';
 
 export const features = {
   ...{ PermaRole, KickInviteSpam, Ping, WhitelistChannel, MirrorGuild },
   ...{ Leaderboard, StickyMessage, Echo, Purge, GlobalChat, ActivitySort },
   ...{ Note, ReadNote, ChannelBan, Censor, DeleteCensor },
-  ...{ Alert, DeleteAlert, DeleteAlerts, RecommendedAlerts },
+  ...{ Alert, DeleteAlert, DeleteAlerts, RecommendedAlerts, BlockGifs },
 };
 
 export type FeatureConfig = {
@@ -57,7 +58,7 @@ export type MessageContext = {
 export type AuditEvent = {
   kind: 'ban' | 'unban' | 'kick' | 'timeout';
   target: User;
-  executor: User;
+  executor: User | null;
   reason: string;
 };
 

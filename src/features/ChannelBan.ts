@@ -28,7 +28,7 @@ export const ChannelBan: Feature = {
     commandName: 'channel-ban',
     moderatorOnly: true,
     async handler({ interaction, guildSf, userSf, channel }) {
-      await interaction.deferReply();
+      await interaction.deferReply({ ephemeral: true });
 
       const { options } = interaction;
       const user = options.getUser('user');
@@ -57,7 +57,7 @@ export const ChannelBan: Feature = {
         AddReactions: false,
       });
 
-      const content = `<@${user.id}> banned from <#${channel.id}>: ${reason}`;
+      const content = `banned from <#${channel.id}>: ${reason}`;
       await HandleAlert({
         event: AlertEvent.Audit,
         userSf,

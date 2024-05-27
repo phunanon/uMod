@@ -162,7 +162,7 @@ async function _handleMessage(
 async function handleAudit(log: GuildAuditLogsEntry, guild: Guild) {
   const entry = (() => {
     const target = log.target as User;
-    const executor = log.executor as User;
+    const executor = log.executor;
     const reason = log.reason ?? 'No reason provided';
     if (log.action === AuditLogEvent.MemberBanAdd)
       return { kind: 'ban', target, executor, reason } as const;

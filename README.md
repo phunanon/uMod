@@ -14,6 +14,7 @@ Simple moderation bot so I can kick Carlbot.
 - **GlobalChat**: mirrors messages between all opted-in guilds
 - **ActivitySort**: sorts channels in a category by recent activity
 - **ChannelBan**: prevents a user from sending messages in a channel
+- **BlockGifs**: deletes messages with gifs from specified channels
 - **Note**: attaches notes to a user that all moderators can see
   - Notes are automatically attached for audit logs (ban, unban, kick, timeout, channel ban)
 - **Alerts**: sends a message to a channel reacting to a specific event
@@ -24,10 +25,8 @@ Simple moderation bot so I can kick Carlbot.
 - **Censor**: deletes messages with blacklisted words or phrases and replaces them with a censored message
 
 Aspirations:
-- Per-channel leaderboards
-- Leaderboard alerts (position changes in the top 10)
 - Different global-chat channels (e.g. tech and math)
-- Auto-timeout for sharing an invite link
+- Auto-timeout for sharing any invite link
 - Ticket system
 
 ## To host it yourself

@@ -54,6 +54,7 @@ export const Note: Feature = {
     },
   },
   async HandleAuditLog({ kind, executor, target, reason }, guild) {
+    if (!executor) return;
     await prisma.note.create({
       data: {
         guildSf: BigInt(guild.id),
