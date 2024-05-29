@@ -5,16 +5,19 @@ export const InviteSpam: Feature = {
   async HandleMessage({ message }) {
     const wordDiscord = message.content.includes('discord.gg');
     const wordEveryone = message.content.includes('@everyone');
-    if (!wordDiscord) return;
+    if (!wordDiscord && !wordEveryone) return;
 
     await message.delete();
-  
+
     const guild = message.guild?.name ?? 'the server';
     const member = message.member;
     if (!member) return;
 
-    if (!wordEveryone) {
-      await member.timeout(1000 * 60 * 5, 'Discord invite');
+    if (wordEveryone !== wordDiscord) {
+      const reason = wordEveryone
+        ? 'Attempted to ping everyone'
+        : 'Attempted to post Discord invite';
+      await member.timeout(1000 * 60 * 5, reason);
       return;
     }
 

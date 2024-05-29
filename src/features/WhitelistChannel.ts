@@ -70,4 +70,8 @@ export const WhitelistChannel: Feature = {
       await interaction.editReply('Invalid type.');
     },
   },
+  async HandleChannelDelete(channel) {
+    const channelSf = BigInt(channel.id);
+    await prisma.channelFlags.deleteMany({ where: { channelSf } });
+  },
 };

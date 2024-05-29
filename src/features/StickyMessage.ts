@@ -24,6 +24,10 @@ export const StickyMessage: Feature = {
     });
     RenewStickyMessageSoon();
   },
+  async HandleChannelDelete(channel) {
+    const channelSf = BigInt(channel.id);
+    await prisma.stickyMessage.deleteMany({ where: { channelSf } });
+  },
   Interaction: {
     name: 'sticky-message',
     moderatorOnly: true,

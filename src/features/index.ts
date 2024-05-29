@@ -2,9 +2,11 @@ import {
   ApplicationCommandManager,
   ButtonInteraction,
   ChatInputCommandInteraction,
+  DMChannel,
   Guild,
   GuildMember,
   Message,
+  NonThreadGuildBasedChannel,
   PartialGuildMember,
   TextChannel,
   User,
@@ -26,14 +28,14 @@ import { Note, ReadNote } from './Note';
 import { ChannelBan } from './ChannelBan';
 import { Censor, DeleteCensor } from './Censor';
 import { BlockGifs } from './BlockGifs';
-import { CreateTicket, TicketsHere, CloseTicket } from './Ticket';
+import { CreateTicket, TicketAdd, TicketsHere, CloseTicket } from './Ticket';
 
 export const features = {
   ...{ PermaRole, InviteSpam, Ping, WhitelistChannel, MirrorGuild },
   ...{ Leaderboard, StickyMessage, Echo, Purge, GlobalChat, ActivitySort },
   ...{ Note, ReadNote, ChannelBan, Censor, DeleteCensor },
   ...{ Alert, DeleteAlert, DeleteAlerts, RecommendedAlerts, BlockGifs },
-  ...{ CreateTicket, TicketsHere, CloseTicket },
+  ...{ CreateTicket, TicketAdd, TicketsHere, CloseTicket },
 };
 
 export type FeatureConfig = {
@@ -94,4 +96,7 @@ export type Feature = {
     member: GuildMember | PartialGuildMember,
   ) => Promise<void>;
   HandleAuditLog?: (entry: AuditEvent, guild: Guild) => Promise<void>;
+  HandleChannelDelete?: (
+    channel: DMChannel | NonThreadGuildBasedChannel,
+  ) => Promise<void>;
 };

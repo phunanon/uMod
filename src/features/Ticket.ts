@@ -122,16 +122,51 @@ export const CreateTicket: Feature = {
 
       await newChannel.send({
         content: `<@&${role}> <@${interaction.user.id}>`,
-        embeds: [
-          {
-            title: 'Ticket created',
-            description: `Ticket created by <@${interaction.user.id}>`,
-          },
-        ],
         components: [row],
       });
 
       await interaction.editReply(`Ticket created: ${newChannel.url}`);
+    },
+  },
+};
+
+export const TicketAdd: Feature = {
+  async Init(commands) {
+    await commands.create({
+      name: 'ticket-add',
+      description: 'Add a user to a ticket',
+      options: [
+        {
+          name: 'user',
+          description: 'The user to add',
+          type: ApplicationCommandOptionType.User,
+          required: true,
+        },
+      ],
+    });
+  },
+  Interaction: {
+    name: 'ticket-add',
+    moderatorOnly: true,
+    async command({ interaction, channel }) {
+      await interaction.deferReply({ ephemeral: true });
+
+      const user = interaction.options.getUser('user');
+      if (!user) {
+        await interaction.editReply('Invalid user.');
+        return;
+      }
+
+      await channel.permissionOverwrites.edit(user.id, { ViewChannel: true });
+
+      await interaction.editReply(`Added <@${user.id}> to the ticket.`);
+
+      setTimeout(async () => {
+        await channel.send({
+          content: `<@${user.id}> added by <@${interaction.user.id}>`,
+          allowedMentions: { users: [user.id] },
+        });
+      }, 1000);
     },
   },
 };

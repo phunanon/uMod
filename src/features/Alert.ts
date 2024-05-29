@@ -142,6 +142,10 @@ export const Alert: Feature = {
     const content = `${kind} of ${of} by ${by}: ${reason}`;
     await HandleAlert({ guildSf, event: AlertEvent.Audit, content });
   },
+  async HandleChannelDelete(channel) {
+    const channelSf = BigInt(channel.id);
+    await prisma.alert.deleteMany({ where: { channelSf } });
+  },
 };
 
 export const DeleteAlert: Feature = {

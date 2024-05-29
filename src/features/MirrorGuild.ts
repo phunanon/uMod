@@ -10,6 +10,10 @@ export const MirrorGuild: Feature = {
     });
   },
   HandleMessage,
+  async HandleChannelDelete(channel) {
+    const channelSf = BigInt(channel.id);
+    await prisma.guildMirror.deleteMany({ where: { channelSf } });
+  },
   Interaction: {
     name: 'mirror-guild',
     moderatorOnly: true,

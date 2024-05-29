@@ -7,7 +7,6 @@ import {
   Guild,
   GuildAuditLogsEntry,
   Interaction,
-  InteractionType,
   Message,
   PartialMessage,
   User,
@@ -24,7 +23,8 @@ client.once('ready', async () => {
     .on('messageCreate', handleMessage)
     .on('messageUpdate', handleMessage)
     .on('interactionCreate', handleInteraction)
-    .on('guildAuditLogEntryCreate', handleAudit);
+    .on('guildAuditLogEntryCreate', handleAudit)
+    .on('channelDelete', handleEvent('HandleChannelDelete'));
 
   const inits = Object.entries(features).flatMap(([name, feature]) =>
     feature.Init ? [[name, feature.Init] as const] : [],
@@ -61,7 +61,13 @@ function failable<T extends (...args: any[]) => Promise<void>>(fn: T) {
 }
 
 const handleEvent =
-  <T extends 'HandleMemberUpdate' | 'HandleMemberAdd' | 'HandleMemberRemove'>(
+  <
+    T extends
+      | 'HandleMemberUpdate'
+      | 'HandleMemberAdd'
+      | 'HandleMemberRemove'
+      | 'HandleChannelDelete',
+  >(
     fn: T,
   ) =>
   async (...args: Parameters<NonNullable<Feature[T]>>): Promise<void> => {
