@@ -10,7 +10,7 @@ A moderation bot I made so I could kick Carlbot, but which now has now become qu
 - **Ping**: replies with "Pong!"
 - **WhitelistChannel**: disables different kinds of moderation for a channel
 - **StickyMessage**: periodically resends a message to a channel
-- **Echo**: repeats a message in a channel, anonymously
+- **Confess**: repeats a message in a channel, anonymously
 - **Purge**: deletes a number of messages in a channel
 - **GlobalChat**: mirrors messages between all opted-in guilds
 - **ActivitySort**: sorts channels in a category by recent activity
@@ -28,7 +28,6 @@ A moderation bot I made so I could kick Carlbot, but which now has now become qu
 Aspirations:
 
 - Different global-chat channels (e.g. tech and math)
-- Audit echoes
 - Open ticket for particular user
 
 ## To host it yourself

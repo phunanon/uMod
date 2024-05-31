@@ -19,7 +19,7 @@ import { WhitelistChannel } from './WhitelistChannel';
 import { MirrorGuild } from './MirrorGuild';
 import { Leaderboard } from './Leaderboard';
 import { StickyMessage } from './StickyMessage';
-import { Echo } from './Echo';
+import { Confess, ConfessMute } from './Confess';
 import { Purge } from './Purge';
 import { GlobalChat } from './GlobalChat';
 import { ActivitySort } from './ActivitySort';
@@ -32,8 +32,8 @@ import { CreateTicket, TicketAdd, TicketsHere, CloseTicket } from './Ticket';
 
 export const features = {
   ...{ PermaRole, InviteSpam, Ping, WhitelistChannel, MirrorGuild },
-  ...{ Leaderboard, StickyMessage, Echo, Purge, GlobalChat, ActivitySort },
-  ...{ Note, ReadNote, ChannelBan, Censor, DeleteCensor },
+  ...{ Leaderboard, StickyMessage, Purge, GlobalChat, ActivitySort },
+  ...{ Confess, ConfessMute, Note, ReadNote, ChannelBan, Censor, DeleteCensor },
   ...{ Alert, DeleteAlert, DeleteAlerts, RecommendedAlerts, BlockGifs },
   ...{ CreateTicket, TicketAdd, TicketsHere, CloseTicket },
 };

@@ -91,3 +91,9 @@ model ChannelFlags {
   blockGifs   Boolean @default(false)
   censor      Boolean @default(true)
 }
+
+model UserFlags {
+  id          Int     @id @default(autoincrement())
+  userSf      BigInt  @unique
+  confessMute Boolean @default(false)
+}

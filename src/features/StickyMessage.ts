@@ -32,7 +32,10 @@ export const StickyMessage: Feature = {
     name: 'sticky-message',
     moderatorOnly: true,
     async command({ interaction, guildSf, channelSf, channel }) {
-      await interaction.reply('Creating sticky message...');
+      await interaction.reply({
+        content: 'Creating sticky message...',
+        ephemeral: true,
+      });
 
       const rawContent = interaction.options.get('content', true).value;
       const renewalSeconds = interaction.options.get('renewal', false)?.value;
@@ -55,7 +58,7 @@ export const StickyMessage: Feature = {
       const data = { guildSf, channelSf, renewAt, content, renewalSeconds, sf };
       await prisma.stickyMessage.create({ data });
 
-      await interaction.editReply('Sticky message created or updated.');
+      await interaction.editReply('Sticky message created.');
     },
   },
 };
@@ -67,6 +70,7 @@ const RenewStickyMessageSoon = () => {
     } catch (e) {
       console.error(e);
     }
+    RenewStickyMessageSoon();
   }, 5_000);
 };
 
@@ -109,8 +113,6 @@ const RenewStickyMessages = async () => {
       console.log('StickyMessage', sticky, e);
     }
   }
-
-  RenewStickyMessageSoon();
 };
 
 const calcRenewAt = (sec: number) => new Date(Date.now() + sec * 1_000);

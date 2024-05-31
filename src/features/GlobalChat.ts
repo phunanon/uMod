@@ -29,7 +29,11 @@ export const GlobalChat: Feature = {
       const nickname =
         member.displayName ?? member.nickname ?? message.author.tag;
       const asterisk = isEdit ? '* ' : '';
-      const content = `**${nickname}**: ${asterisk}${message.content}`;
+      const truncated =
+        message.content.length > 1500
+          ? `${message.content.slice(0, 1500)}...`
+          : message.content;
+      const content = `**${nickname}**: ${asterisk}${truncated}`;
       const files = message.attachments.map(a => a.url);
       await channel.send({ content, files, allowedMentions: { parse: [] } });
     }
