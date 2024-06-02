@@ -49,10 +49,12 @@ async function HandleMessage({ message, guildSf }: MessageContext) {
   const author = message.author;
   if (!author) return;
 
-  const content = message.content ?? '[No content]';
+  const content = message.content || '[No content]';
+  const truncated =
+    content.length > 1000 ? content.slice(0, 1000) + '...' : content;
 
   await channel.send({
-    content: `**${author.tag}** ${message.url} ||${author.id}||\n${content}`,
+    content: `**${author.tag}** ${message.url} ||${author.id}||\n${truncated}`,
     files: message.attachments.map(a => a.url),
     allowedMentions: { parse: [] },
   });

@@ -24,6 +24,7 @@ A moderation bot I made so I could kick Carlbot, but which now has now become qu
   - Optionally with a custom alert message with tokens: `$userId $content`
   - Also **DeleteAlert**, **DeleteAlerts**, and **RecommendedAlerts**
 - **Censor**: deletes messages with blacklisted words or phrases and replaces them with a censored message
+- **RoleList**: maintains a message with a list of members with a role
 
 Aspirations:
 

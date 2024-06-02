@@ -29,6 +29,7 @@ import { ChannelBan } from './ChannelBan';
 import { Censor, DeleteCensor } from './Censor';
 import { BlockGifs } from './BlockGifs';
 import { CreateTicket, TicketAdd, TicketsHere, CloseTicket } from './Ticket';
+import { RoleList, RoleListAddRole, RoleListRemoveRole } from './RoleList';
 
 export const features = {
   ...{ PermaRole, InviteSpam, Ping, WhitelistChannel, MirrorGuild },
@@ -36,6 +37,7 @@ export const features = {
   ...{ Confess, ConfessMute, Note, ReadNote, ChannelBan, Censor, DeleteCensor },
   ...{ Alert, DeleteAlert, DeleteAlerts, RecommendedAlerts, BlockGifs },
   ...{ CreateTicket, TicketAdd, TicketsHere, CloseTicket },
+  ...{ RoleList, RoleListAddRole, RoleListRemoveRole },
 };
 
 export type FeatureConfig = {
