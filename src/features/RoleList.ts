@@ -146,24 +146,23 @@ const UpdateRoleList = async (
   guild: Guild,
   mode: { message: Message } | { channel: TextBasedChannel; addable: boolean },
 ) => {
-  const role = await guild.roles.fetch(`${roleSf}`);
-  if (!role) return;
-  const members = role.members;
-  const list = members.map(m => `<@${m.id}>`).join(' ');
-  const count = members.size;
+  const members = await guild.members.fetch();
+  const withRole = members.filter(m => m.roles.cache.has(`${roleSf}`));
+  const list = withRole.map(m => `<@${m.id}>`).join(' ');
+  const count = withRole.size;
   const payload: BaseMessageOptions = {
-    content: `**${count} members with the role <@&${role.id}>:**\n.\n${list}\n.`,
+    content: `**${count} members with the role <@&${roleSf}>:**\n.\n${list}\n.`,
     allowedMentions: { parse: [] },
     components: [],
   };
   const makeAddRow = () =>
     new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder()
-        .setCustomId(`add-role-${role.id}`)
+        .setCustomId(`add-role-${roleSf}`)
         .setLabel('Give the role to me')
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
-        .setCustomId(`remove-role-${role.id}`)
+        .setCustomId(`remove-role-${roleSf}`)
         .setLabel('Take the role from me')
         .setStyle(ButtonStyle.Danger),
     );

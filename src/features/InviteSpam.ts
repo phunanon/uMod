@@ -3,7 +3,7 @@ import { Feature } from '.';
 
 export const InviteSpam: Feature = {
   async HandleMessage({ message }) {
-    const wordDiscord = new RegExp(/discord\.(gg|com)/gi).test(message.content);
+    const wordDiscord = new RegExp(/discord\.(gg|com)(?!\/channel)/gi).test(message.content);
     const wordEveryone = message.content.includes('@everyone');
     if (!wordDiscord && !wordEveryone) return;
 
