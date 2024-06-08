@@ -44,7 +44,7 @@ export const Confess: Feature = {
       await interaction.editReply('Your message should be posted shortly.');
 
       const id = encryption.encrypt(userSf);
-      const content = `${message}\n||${id}||`;
+      const content = `${message}\n||\`${id}\`||`;
 
       await channel.send({ content, allowedMentions: { parse: [] } });
 

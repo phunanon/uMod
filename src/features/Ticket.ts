@@ -6,6 +6,7 @@ import {
   PermissionsBitField,
 } from 'discord.js';
 import { Feature } from '.';
+import { prisma } from '../infrastructure';
 
 export const TicketsHere: Feature = {
   async Init(commands) {
@@ -111,6 +112,10 @@ export const CreateTicket: Feature = {
             allow: [PermissionsBitField.Flags.ViewChannel],
           },
         ],
+      });
+
+      await prisma.channelFlags.create({
+        data: { channelSf: BigInt(newChannel.id), censor: false },
       });
 
       const row = new ActionRowBuilder<ButtonBuilder>().addComponents(

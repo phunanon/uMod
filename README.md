@@ -6,6 +6,7 @@ A moderation bot I made so I could kick Carlbot, but which now has now become qu
 - **InviteSpam**: auto-timeout users who post invites, and kick those who post invites and ping @everyone
 - **Leaderboard**: keeps track of user messages and ranks them
 - **Tickets**: a ticket system for users to ask for help
+  - Allows adding users to the ticket
 - **MirrorGuild**: mirrors messages from entire guild into one channel
 - **Ping**: replies with "Pong!"
 - **WhitelistChannel**: disables different kinds of moderation for a channel
@@ -29,7 +30,8 @@ A moderation bot I made so I could kick Carlbot, but which now has now become qu
 Aspirations:
 
 - Different global-chat channels (e.g. tech and math)
-- Open ticket for particular user
+- Auto-close ticket after a day of inactivity
+- Mute-for-mute
 
 ## To host it yourself
 
