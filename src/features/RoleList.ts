@@ -105,11 +105,9 @@ export const RoleListAddRole: Feature = {
   Interaction: {
     name: 'add-role-*',
     moderatorOnly: false,
-    async button({ interaction, userSf }) {
+    async button({ interaction, userSf, guild }) {
       await interaction.deferReply({ ephemeral: true });
       const roleSf = BigInt(interaction.customId.split('-').pop()!);
-      const guild = interaction.guild;
-      if (!guild) return;
       const member = await guild.members.fetch(`${userSf}`);
       if (!member) return;
       const role = await guild.roles.fetch(`${roleSf}`);

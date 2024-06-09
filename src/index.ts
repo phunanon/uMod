@@ -130,7 +130,7 @@ async function _handleInteraction(interaction: Interaction): Promise<void> {
     }
   }
 
-  const context = { guildSf, userSf, channelSf, channel };
+  const context = { guildSf, userSf, channelSf, channel, guild };
   if (interaction.isChatInputCommand()) {
     if ('command' in feature) {
       await feature.command({ ...context, interaction });

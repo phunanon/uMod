@@ -31,6 +31,7 @@ import { BlockGifs } from './BlockGifs';
 import { CreateTicket, TicketAdd, TicketsHere, CloseTicket } from './Ticket';
 import { RoleList, RoleListAddRole, RoleListRemoveRole } from './RoleList';
 import { SingleMessage, DeleteSingleMessage } from './SingleMessage';
+import { MutualTimeout } from './MutualTimeout';
 
 export const features = {
   ...{ PermaRole, InviteSpam, Ping, WhitelistChannel, MirrorGuild },
@@ -39,7 +40,7 @@ export const features = {
   ...{ Alert, DeleteAlert, DeleteAlerts, RecommendedAlerts, BlockGifs },
   ...{ CreateTicket, TicketAdd, TicketsHere, CloseTicket },
   ...{ RoleList, RoleListAddRole, RoleListRemoveRole },
-  ...{ SingleMessage, DeleteSingleMessage },
+  ...{ SingleMessage, DeleteSingleMessage, MutualTimeout },
 };
 
 export type FeatureConfig = {
@@ -53,6 +54,7 @@ export type InteractionContext<T> = {
   userSf: bigint;
   channelSf: bigint;
   channel: TextChannel;
+  guild: Guild;
 };
 
 export type MessageContext = {

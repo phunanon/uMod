@@ -61,7 +61,7 @@ export const CreateTicket: Feature = {
   Interaction: {
     name: 'create_ticket_*',
     moderatorOnly: false,
-    async button({ interaction, channel }) {
+    async button({ interaction, channel, guild }) {
       await interaction.deferReply({ ephemeral: true });
 
       const category = await channel.parent?.fetch();
@@ -73,11 +73,6 @@ export const CreateTicket: Feature = {
         return;
       }
 
-      const guild = await interaction.guild?.fetch();
-      if (!guild) {
-        await interaction.editReply('Error: could not fetch guild.');
-        return;
-      }
       const role = interaction.customId.split('_')[2];
       if (!role) {
         await interaction.editReply('Error: invalid role.');

@@ -27,7 +27,7 @@ export const ChannelBan: Feature = {
   Interaction: {
     name: 'channel-ban',
     moderatorOnly: true,
-    async command({ interaction, guildSf, userSf, channel }) {
+    async command({ interaction, guildSf, userSf, channel, guild }) {
       await interaction.deferReply({ ephemeral: true });
 
       const { options } = interaction;
@@ -36,13 +36,6 @@ export const ChannelBan: Feature = {
 
       if (!user || !reason) {
         await interaction.editReply('Invalid user or reason.');
-        return;
-      }
-
-      const guild = interaction.guild;
-
-      if (!guild) {
-        await interaction.editReply('Guild not found, for some reason.');
         return;
       }
 
