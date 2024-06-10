@@ -10,6 +10,7 @@ A moderation bot I made so I could kick Carlbot, but which now has now become qu
   - **SingleMessage**: enforces one message per user in a channel
   - **BlockGifs**: deletes messages with gifs from specified channels
   - **Censor**: deletes messages with blacklisted words or phrases and replaces them with a censored message
+  - **PingProtect**: warn then timeout users who ping a user who has chosen to be protected
 - Manual Moderation
   - **Tickets**: a ticket system for users to ask for help
     - Allows adding users to the ticket

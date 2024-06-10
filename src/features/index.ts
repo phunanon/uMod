@@ -32,6 +32,8 @@ import { CreateTicket, TicketAdd, TicketsHere, CloseTicket } from './Ticket';
 import { RoleList, RoleListAddRole, RoleListRemoveRole } from './RoleList';
 import { SingleMessage, DeleteSingleMessage } from './SingleMessage';
 import { MutualTimeout } from './MutualTimeout';
+import { PingSpam } from './PingSpam';
+import { PingProtect } from './PingProtect';
 
 export const features = {
   ...{ PermaRole, InviteSpam, Ping, WhitelistChannel, MirrorGuild },
@@ -41,6 +43,7 @@ export const features = {
   ...{ CreateTicket, TicketAdd, TicketsHere, CloseTicket },
   ...{ RoleList, RoleListAddRole, RoleListRemoveRole },
   ...{ SingleMessage, DeleteSingleMessage, MutualTimeout },
+  ...{ PingSpam, PingProtect },
 };
 
 export type FeatureConfig = {
@@ -58,11 +61,12 @@ export type InteractionContext<T> = {
 };
 
 export type MessageContext = {
+  guild: Guild;
+  channel: TextChannel;
   message: Message;
   guildSf: bigint;
   channelSf: bigint;
   userSf: bigint;
-  channel: TextChannel;
   isEdit: boolean;
 };
 

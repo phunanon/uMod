@@ -142,6 +142,7 @@ export const Alert: Feature = {
     });
   },
   async HandleAuditLog({ kind, executor, target, reason }, guild) {
+    if (reason.includes('Pinging protected')) return;
     const guildSf = BigInt(guild.id);
     const by = executor ? `<@${executor.id}>` : '[unknown]';
     const of = target ? `<@${target.id}> (\`${target.tag}\`)` : '[unknown]';

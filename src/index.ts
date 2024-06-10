@@ -162,12 +162,16 @@ async function _handleMessage(
   if (message.author?.bot !== false) return;
   const channelSf = BigInt(message.channel.id);
   if (await IsChannelUnmoderated(channelSf)) return;
-  if (!message.guildId) return;
+  if (!message.guildId || !message.guild) return;
+  const { guild, channel } = message;
   const guildSf = BigInt(message.guildId);
   const userSf = BigInt(message.author.id);
-  const { channel } = message;
   const isEdit = !!newMessage;
-  const context = { message, guildSf, channelSf, userSf, channel, isEdit };
+  const context = {
+    ...{ guild, channel, message },
+    ...{ guildSf, channelSf, userSf },
+    isEdit,
+  };
 
   for (const [name, feature] of Object.entries(features)) {
     const { HandleMessage } = feature;
@@ -192,11 +196,15 @@ async function handleAudit(log: GuildAuditLogsEntry, guild: Guild) {
     if (log.action === AuditLogEvent.MemberKick)
       return { kind: 'kick', target, executor, reason } as const;
     if (log.action === AuditLogEvent.MemberUpdate) {
-      const isTimeout = log.changes.some(
+      const timeout = log.changes.find(
         change => change.key === 'communication_disabled_until',
       );
-      if (isTimeout) {
-        return { kind: 'timeout', target, executor, reason } as const;
+      if (timeout) {
+        const durationMs =
+          new Date(`${timeout.new}`).getTime() - new Date().getTime();
+        const durationMin = Math.ceil(durationMs / 60_000);
+        const r = `${durationMin}m: ${reason}`;
+        return { kind: 'timeout', target, executor, reason: r } as const;
       }
     }
   })();
