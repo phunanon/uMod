@@ -31,7 +31,7 @@ import { BlockGifs } from './BlockGifs';
 import { CreateTicket, TicketAdd, TicketsHere, CloseTicket } from './Ticket';
 import { RoleList, RoleListAddRole, RoleListRemoveRole } from './RoleList';
 import { SingleMessage, DeleteSingleMessage } from './SingleMessage';
-import { MutualTimeout } from './MutualTimeout';
+// import { MutualTimeout } from './MutualTimeout';
 import { PingSpam } from './PingSpam';
 import { PingProtect } from './PingProtect';
 
@@ -42,7 +42,7 @@ export const features = {
   ...{ Alert, DeleteAlert, DeleteAlerts, RecommendedAlerts, BlockGifs },
   ...{ CreateTicket, TicketAdd, TicketsHere, CloseTicket },
   ...{ RoleList, RoleListAddRole, RoleListRemoveRole },
-  ...{ SingleMessage, DeleteSingleMessage, MutualTimeout },
+  ...{ SingleMessage, DeleteSingleMessage, /* MutualTimeout */ },
   ...{ PingSpam, PingProtect },
 };
 

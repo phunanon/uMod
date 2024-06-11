@@ -69,7 +69,7 @@ async function handle(message: Message, userSf: bigint, aboutSf: bigint) {
   } else {
     await prisma.pingProtectWarns.create({ data: userSf_aboutSf });
     await message.reply({
-      content: `<@${aboutSf}> is ping-protected (\`/ping-protect\`). **If you ping them again you will be timed-out.**`,
+      content: `<@${aboutSf}> has \`/ping-protect\`. **If you ping them again you will be timed-out.**`,
       allowedMentions: { parse: [] },
     });
   }

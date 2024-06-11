@@ -1,4 +1,4 @@
-import { ApplicationCommandOptionType } from 'discord.js';
+import { ApplicationCommandOptionType, GuildMember } from 'discord.js';
 import { Feature } from '.';
 
 export const MutualTimeout: Feature = {
@@ -6,7 +6,7 @@ export const MutualTimeout: Feature = {
     await commands.create({
       name: 'mutual-timeout',
       description:
-        'Timeout someone for five minutes, but simultaneously timeout yourself for ten minutes.',
+        'Timeout someone for five minutes, but simultaneously timeout yourself for one hour.',
       options: [
         {
           type: ApplicationCommandOptionType.User,
@@ -28,11 +28,28 @@ export const MutualTimeout: Feature = {
         const userMember = await guild.members.fetch(`${userSf}`);
         const targetMember = await guild.members.fetch(user.id);
 
+        if (userMember.id === targetMember.id) {
+          await interaction.editReply("You can't timeout yourself.");
+          return;
+        }
+        if (isTimed(userMember)) {
+          await interaction.editReply(
+            "You're already timed out. You can't timeout someone else until your timeout is over.",
+          );
+          return;
+        }
+        if (isTimed(targetMember)) {
+          await interaction.editReply(
+            "The user you're trying to timeout is already timed out.",
+          );
+          return;
+        }
+
         await targetMember.timeout(300_000, `/mutual-timeout by <@${userSf}>.`);
-        await userMember.timeout(600_000, `/mutual-timeout penalty`);
+        await userMember.timeout(3_600_000, `/mutual-timeout penalty`);
 
         await interaction.editReply(
-          `<@${userSf}> timed out <@${user.id}> for five minutes, in return for a ten minute timeout :saluting_face:`,
+          `<@${userSf}> timed out <@${user.id}> for five minutes, in return for a one hour timeout :saluting_face:`,
         );
       } catch (e) {
         await interaction.editReply(
@@ -42,3 +59,6 @@ export const MutualTimeout: Feature = {
     },
   },
 };
+
+const isTimed = ({ communicationDisabledUntil }: GuildMember) =>
+  communicationDisabledUntil && communicationDisabledUntil > new Date();

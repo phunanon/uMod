@@ -35,11 +35,13 @@ A moderation bot I made so I could kick Carlbot, but which now has now become qu
   - **ActivitySort**: sorts channels in a category by recent activity
   - **RoleList**: maintains a message with a list of members with a role
   - **MutualTimeout**: allows anybody to mute another user but only if they are muted in return
+    - Disabled in code by default
 
 Aspirations:
 
 - Different global-chat channels (e.g. tech and math)
 - Auto-close ticket after a day of inactivity
+- Confess IDs are unique per confession
 
 ## To host it yourself
 
