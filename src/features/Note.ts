@@ -55,6 +55,7 @@ export const Note: Feature = {
   },
   async HandleAuditLog({ kind, executor, target, reason }, guild) {
     if (!executor || !target) return;
+    if (reason.includes("Pinging protected user")) return;
     await prisma.note.create({
       data: {
         guildSf: BigInt(guild.id),

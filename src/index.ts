@@ -4,6 +4,7 @@ import { Feature, features } from './features';
 import {
   AuditLogEvent,
   ChannelType,
+  ClientUser,
   Guild,
   GuildAuditLogsEntry,
   Interaction,
@@ -120,10 +121,7 @@ async function _handleInteraction(interaction: Interaction): Promise<void> {
   }
 
   if (feature.moderatorOnly) {
-    const id = member.user.id;
-    const me = await guild.members.fetch(client.user.id);
-    const them = await guild.members.fetch(id);
-    const notMod = them.roles.highest.position < me.roles.highest.position;
+    const notMod = !(await CheckIfMod(client.user, guild, userSf));
     if (notMod) {
       await interaction.reply('You must be a moderator to use this command!');
       return;
@@ -220,3 +218,13 @@ async function handleAudit(log: GuildAuditLogsEntry, guild: Guild) {
     }
   }
 }
+
+export const CheckIfMod = async (
+  user: ClientUser,
+  guild: Guild,
+  userSf: bigint,
+) => {
+  const them = await guild.members.fetch(`${userSf}`);
+  const me = await guild.members.fetch(user.id);
+  return them.roles.highest.position >= me.roles.highest.position;
+};

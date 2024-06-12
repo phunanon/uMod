@@ -13,6 +13,15 @@ model PermaRole {
   roleSf BigInt
 }
 
+model ChannelBan {
+  id        Int    @id @default(autoincrement())
+  userSf    BigInt
+  guildSf   BigInt
+  channelSf BigInt
+
+  @@unique([userSf, guildSf, channelSf])
+}
+
 model GuildMirror {
   id        Int    @id @default(autoincrement())
   guildSf   BigInt
@@ -109,9 +118,9 @@ model UserFlags {
 }
 
 model PingProtectWarns {
-  id       Int      @id @default(autoincrement())
-  userSf   BigInt
-  aboutSf  BigInt
+  id      Int    @id @default(autoincrement())
+  userSf  BigInt
+  aboutSf BigInt
 
   @@unique([userSf, aboutSf])
 }

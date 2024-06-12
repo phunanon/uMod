@@ -27,7 +27,7 @@ export const ChannelBan: Feature = {
   Interaction: {
     name: 'channel-ban',
     moderatorOnly: true,
-    async command({ interaction, guildSf, userSf, channel, guild }) {
+    async command({ interaction, guildSf, userSf, channelSf, channel, guild }) {
       await interaction.deferReply({ ephemeral: true });
 
       const { options } = interaction;
@@ -46,9 +46,10 @@ export const ChannelBan: Feature = {
       }
 
       await channel.permissionOverwrites.create(user.id, {
-        SendMessages: false,
-        AddReactions: false,
+        ViewChannel: false,
       });
+
+      await prisma.channelBan.create({ data: { guildSf, userSf, channelSf } });
 
       const content = `banned from <#${channel.id}>: ${reason}`;
       await HandleAlert({
@@ -65,5 +66,22 @@ export const ChannelBan: Feature = {
         `User <@${user.id}> banned from <#${channel.id}>.`,
       );
     },
+  },
+  /** Restore channel bans if any are stored */
+  async HandleMemberAdd(member) {
+    const guildSf = BigInt(member.guild.id);
+    const userSf = BigInt(member.id);
+    const channelBans = await prisma.channelBan.findMany({
+      select: { channelSf: true },
+      where: { guildSf, userSf },
+    });
+    const channels = await member.guild.channels.fetch();
+    for (const { channelSf } of channelBans) {
+      const channel = channels.get(`${channelSf}`);
+      if (!channel) continue;
+      await channel.permissionOverwrites.create(member.id, {
+        ViewChannel: false,
+      });
+    }
   },
 };
