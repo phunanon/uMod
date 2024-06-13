@@ -62,8 +62,8 @@ model RoleList {
 
 model GlobalChat {
   id        Int    @id @default(autoincrement())
-  guildSf   BigInt @unique
-  channelSf BigInt
+  room      String @default("General")
+  channelSf BigInt @unique
 }
 
 model ActivitySort {

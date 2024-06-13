@@ -21,7 +21,7 @@ import { Leaderboard } from './Leaderboard';
 import { StickyMessage } from './StickyMessage';
 import { Confess, ConfessMute } from './Confess';
 import { Purge } from './Purge';
-import { GlobalChat } from './GlobalChat';
+import { GlobalChat, GlobalChatList } from './GlobalChat';
 import { ActivitySort } from './ActivitySort';
 import { Alert, DeleteAlert, DeleteAlerts, RecommendedAlerts } from './Alert';
 import { Note, ReadNote } from './Note';
@@ -37,13 +37,13 @@ import { PingProtect } from './PingProtect';
 
 export const features = {
   ...{ PermaRole, InviteSpam, Ping, WhitelistChannel, MirrorGuild },
-  ...{ Leaderboard, StickyMessage, Purge, GlobalChat, ActivitySort },
+  ...{ Leaderboard, StickyMessage, Purge, ActivitySort },
   ...{ Confess, ConfessMute, Note, ReadNote, ChannelBan, Censor, DeleteCensor },
   ...{ Alert, DeleteAlert, DeleteAlerts, RecommendedAlerts, BlockGifs },
   ...{ CreateTicket, TicketAdd, TicketsHere, CloseTicket },
   ...{ RoleList, RoleListAddRole, RoleListRemoveRole },
-  ...{ SingleMessage, DeleteSingleMessage, /* MutualTimeout */ },
-  ...{ PingSpam, PingProtect },
+  ...{ SingleMessage, DeleteSingleMessage /* MutualTimeout */ },
+  ...{ PingSpam, PingProtect, GlobalChat, GlobalChatList },
 };
 
 export type FeatureConfig = {
