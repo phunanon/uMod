@@ -50,8 +50,8 @@ export const PingProtect: Feature = {
       });
     },
   },
-  async HandleMessage({ message, guild, userSf, isEdit }) {
-    if (!message.mentions.users.size || isEdit) return;
+  async HandleMessage({ message, guild, userSf, isEdit, isMod }) {
+    if (!message.mentions.users.size || isEdit || isMod) return;
     const users = message.mentions.users.filter(
       user => !user.bot && user.id !== message.author.id,
     );
@@ -72,8 +72,6 @@ async function handle(
     where: { userSf: aboutSf },
   });
   if (!flags?.pingProtect) return;
-
-  if (client.user && (await CheckIfMod(client.user, guild, userSf))) return;
 
   const userSf_aboutSf = { userSf, aboutSf };
   const warned = await prisma.pingProtectWarns.findUnique({

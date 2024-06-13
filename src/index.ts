@@ -161,14 +161,17 @@ async function _handleMessage(
   const channelSf = BigInt(message.channel.id);
   if (await IsChannelUnmoderated(channelSf)) return;
   if (!message.guildId || !message.guild) return;
+  if (!client.user) return;
   const { guild, channel } = message;
   const guildSf = BigInt(message.guildId);
   const userSf = BigInt(message.author.id);
   const isEdit = !!newMessage;
+  const isMod = await CheckIfMod(client.user, guild, userSf);
   const context = {
     ...{ guild, channel, message },
     ...{ guildSf, channelSf, userSf },
     isEdit,
+    isMod,
   };
 
   for (const [name, feature] of Object.entries(features)) {

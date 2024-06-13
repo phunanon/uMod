@@ -68,6 +68,7 @@ export type MessageContext = {
   channelSf: bigint;
   userSf: bigint;
   isEdit: boolean;
+  isMod: boolean;
 };
 
 export type AuditEvent = {

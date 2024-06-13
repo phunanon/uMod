@@ -2,7 +2,9 @@ import { log } from '../infrastructure';
 import { Feature } from '.';
 
 export const InviteSpam: Feature = {
-  async HandleMessage({ message }) {
+  async HandleMessage({ message, isMod }) {
+    if (isMod) return;
+
     const wordDiscord = new RegExp(
       /discord\.(gg|com)(?!\/channel|\/events)/gi,
     ).test(message.content);
