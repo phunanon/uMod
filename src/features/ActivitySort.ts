@@ -38,8 +38,7 @@ export const ActivitySort: Feature = {
       await interaction.editReply('Activity sort enabled');
     },
   },
-  async HandleMessage({ guildSf, channel, isEdit }) {
-    if (isEdit) return;
+  async HandleMessageCreate({ guildSf, channel }) {
     const category = channel.parent?.id;
 
     if (!category || !channel.position) return;

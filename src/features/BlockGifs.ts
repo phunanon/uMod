@@ -31,7 +31,8 @@ export const BlockGifs: Feature = {
       );
     },
   },
-  async HandleMessage({ channelSf, message }) {
+  async HandleMessage({ channelSf, message, isDelete }) {
+    if (isDelete) return;
     const existing = await prisma.channelFlags.findUnique({
       where: { channelSf },
     });

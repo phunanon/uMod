@@ -1,6 +1,6 @@
 import { ChannelType } from 'discord.js';
 import { client, prisma } from '../infrastructure';
-import { Feature, MessageContext } from '.';
+import { Feature, MsgCtx } from '.';
 
 export const MirrorGuild: Feature = {
   async Init(commands) {
@@ -36,7 +36,7 @@ export const MirrorGuild: Feature = {
   },
 };
 
-async function HandleMessage({ message, guildSf }: MessageContext) {
+async function HandleMessage({ message, guildSf }: MsgCtx) {
   const mirror = await prisma.guildMirror.findFirst({ where: { guildSf } });
 
   if (!mirror) return;

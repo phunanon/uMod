@@ -122,8 +122,8 @@ export const Alert: Feature = {
       content,
     });
   },
-  async HandleMessage({ message, guildSf, userSf }) {
-    if (!message.content) return;
+  async HandleMessage({ message, guildSf, userSf, isDelete }) {
+    if (!message.content || isDelete) return;
     const roles = await (async () => {
       try {
         const member = await message.guild?.members.fetch(message.author.id);

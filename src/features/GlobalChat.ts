@@ -3,7 +3,7 @@ import { Feature } from '.';
 import { prisma } from '../infrastructure';
 
 const bufferLen = 10_000;
-const m2m: { channelId: string; messageId: string }[][] = [];
+const m2m: { channelId: string; msgId: string }[][] = [];
 let m2mIndex = 0;
 
 export const GlobalChat: Feature = {
@@ -21,20 +21,42 @@ export const GlobalChat: Feature = {
       ],
     });
   },
-  async HandleMessage({ message, channelSf, guild, isEdit }) {
-    const existing = await prisma.globalChat.findFirst({
+  async HandleMessage({ message, channelSf, guild, isEdit, isDelete }) {
+    const chat = await prisma.globalChat.findFirst({
       where: { channelSf },
     });
 
-    if (!existing) return;
+    if (!chat) return;
 
     const guilds = await prisma.globalChat.findMany({
-      where: { NOT: { channelSf }, room: existing.room },
+      where: { NOT: { channelSf }, room: chat.room },
     });
+    const associations = m2m.find(m =>
+      m.some(({ msgId }) => msgId === message.id),
+    );
 
     const member = await guild.members.fetch(message.author.id);
     const nickname =
       member.displayName ?? member.nickname ?? message.author.tag;
+
+    if (isDelete) {
+      if (associations) {
+        for (const { channelId, msgId } of associations) {
+          if (msgId === message.id) continue;
+          try {
+            const channel = await message.client.channels.fetch(channelId);
+            if (channel?.type !== ChannelType.GuildText) continue;
+            await channel.messages.edit(
+              msgId,
+              `**${nickname}**: [deleted]`,
+            );
+          } catch (e) {
+            console.log(e);
+          }
+        }
+      }
+      return;
+    }
     const truncated =
       message.content.length > 1500
         ? `${message.content.slice(0, 1500)}...`
@@ -44,11 +66,8 @@ export const GlobalChat: Feature = {
     const payload = { content, files, allowedMentions: { parse: [] } };
 
     const mids: (typeof m2m)[0] = [
-      { channelId: message.channel.id, messageId: message.id },
+      { channelId: message.channel.id, msgId: message.id },
     ];
-    const associations = m2m.find(m =>
-      m.some(({ messageId }) => messageId === message.id),
-    );
     for (const { channelSf } of guilds) {
       const channel = await (async () => {
         try {
@@ -64,19 +83,17 @@ export const GlobalChat: Feature = {
 
       if (isEdit) {
         if (associations) {
-          for (const { messageId } of associations) {
-            if (messageId === message.id) continue;
+          for (const { msgId } of associations) {
+            if (msgId === message.id) continue;
             try {
-              await channel.messages
-                .fetch(messageId)
-                .then(msg => msg.edit(payload));
+              await channel.messages.edit(msgId, payload);
             } catch (e) {}
           }
           continue;
         }
       } else {
         const msg = await channel.send(payload);
-        mids.push({ channelId: channel.id, messageId: msg.id });
+        mids.push({ channelId: channel.id, msgId: msg.id });
       }
     }
 

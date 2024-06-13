@@ -60,7 +60,7 @@ export type InteractionContext<T> = {
   guild: Guild;
 };
 
-export type MessageContext = {
+export type MsgCtx = {
   guild: Guild;
   channel: TextChannel;
   message: Message;
@@ -68,8 +68,10 @@ export type MessageContext = {
   channelSf: bigint;
   userSf: bigint;
   isEdit: boolean;
+  isDelete: boolean;
   isMod: boolean;
 };
+type NarrowMsgCtx = Omit<MsgCtx, 'isEdit' | 'isDelete'>;
 
 export type AuditEvent = {
   kind: 'ban' | 'unban' | 'kick' | 'timeout';
@@ -81,7 +83,6 @@ export type AuditEvent = {
 export type Feature = {
   /** Call is guaranteed but not necessarily prior to other handlers. */
   Init?: (commands: ApplicationCommandManager) => Promise<void>;
-  HandleMessage?: (context: MessageContext) => Promise<void | 'stop'>;
   Interaction?: {
     /** Wildcard `*` can be put at the end */
     name: string;
@@ -110,4 +111,10 @@ export type Feature = {
   HandleChannelDelete?: (
     channel: DMChannel | NonThreadGuildBasedChannel,
   ) => Promise<void>;
-};
+} & (
+  | { HandleMessage: (context: MsgCtx) => Promise<void | 'stop'> }
+  | { HandleMessageCreate: (context: NarrowMsgCtx) => Promise<void | 'stop'> }
+  | { HandleMessageUpdate: (context: NarrowMsgCtx) => Promise<void | 'stop'> }
+  | { HandleMessageDelete: (context: NarrowMsgCtx) => Promise<void | 'stop'> }
+  | {}
+);

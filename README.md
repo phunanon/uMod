@@ -43,6 +43,8 @@ Aspirations:
 - Different global-chat channels (e.g. tech and math)
 - Auto-close ticket after a day of inactivity
 - Confess IDs are unique per confession
+- Global chat replies, reacts, first message introduction
+- bottom-of-roles-list check
 
 ## To host it yourself
 

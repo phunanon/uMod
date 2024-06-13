@@ -21,8 +21,9 @@ client.once('ready', async () => {
     .on('guildMemberUpdate', handleEvent('HandleMemberUpdate'))
     .on('guildMemberAdd', handleEvent('HandleMemberAdd'))
     .on('guildMemberRemove', handleEvent('HandleMemberRemove'))
-    .on('messageCreate', handleMessage)
-    .on('messageUpdate', handleMessage)
+    .on('messageCreate', handleMessage('create'))
+    .on('messageUpdate', handleMessage('update'))
+    .on('messageDelete', handleMessage('delete'))
     .on('interactionCreate', handleInteraction)
     .on('guildAuditLogEntryCreate', handleAudit)
     .on('channelDelete', handleEvent('HandleChannelDelete'));
@@ -147,42 +148,50 @@ export const IsChannelUnmoderated = async (channelSf: bigint) => {
   return record?.unmoderated === true;
 };
 
-const handleMessage = failable(_handleMessage);
-async function _handleMessage(
-  oldMessage: Message | PartialMessage,
-  newMessage?: Message | PartialMessage,
-): Promise<void> {
-  const maybePartial = newMessage ?? oldMessage;
-  const message = maybePartial.partial
-    ? await maybePartial.fetch()
-    : maybePartial;
-  if (message.channel.type !== ChannelType.GuildText) return;
-  if (message.author?.bot !== false) return;
-  const channelSf = BigInt(message.channel.id);
-  if (await IsChannelUnmoderated(channelSf)) return;
-  if (!message.guildId || !message.guild) return;
-  if (!client.user) return;
-  const { guild, channel } = message;
-  const guildSf = BigInt(message.guildId);
-  const userSf = BigInt(message.author.id);
-  const isEdit = !!newMessage;
-  const isMod = await CheckIfMod(client.user, guild, userSf);
-  const context = {
-    ...{ guild, channel, message },
-    ...{ guildSf, channelSf, userSf },
-    isEdit,
-    isMod,
-  };
+function handleMessage(kind: 'create' | 'update' | 'delete') {
+  async function handle(
+    oldMessage: Message | PartialMessage,
+    newMessage?: Message | PartialMessage,
+  ): Promise<void> {
+    const maybePartial = newMessage ?? oldMessage;
+    const message = maybePartial.partial
+      ? await maybePartial.fetch()
+      : maybePartial;
+    if (message.channel.type !== ChannelType.GuildText) return;
+    if (message.author?.bot !== false) return;
+    const channelSf = BigInt(message.channel.id);
+    if (await IsChannelUnmoderated(channelSf)) return;
+    if (!message.guildId || !message.guild) return;
+    if (!client.user) return;
+    const { guild, channel } = message;
+    const guildSf = BigInt(message.guildId);
+    const userSf = BigInt(message.author.id);
+    const isEdit = kind === 'update';
+    const isDelete = kind === 'delete';
+    const isMod = await CheckIfMod(client.user, guild, userSf);
+    const context = {
+      ...{ guild, channel, message },
+      ...{ guildSf, channelSf, userSf },
+      ...{ isEdit, isDelete, isMod },
+    };
 
-  for (const [name, feature] of Object.entries(features)) {
-    const { HandleMessage } = feature;
-    try {
-      const signal = await HandleMessage?.(context);
-      if (signal === 'stop') break;
-    } catch (error) {
-      console.error(name, error);
+    for (const [name, feature] of Object.entries(features)) {
+      const handler = (() => {
+        if (isEdit && 'HandleMessageUpdate' in feature)
+          return feature.HandleMessageUpdate;
+        if (isDelete && 'HandleMessageDelete' in feature)
+          return feature.HandleMessageDelete;
+        if ('HandleMessage' in feature) return feature.HandleMessage;
+      })();
+      try {
+        const signal = await handler?.(context);
+        if (signal === 'stop') break;
+      } catch (error) {
+        console.error(name, error);
+      }
     }
   }
+  return failable(handle);
 }
 
 async function handleAudit(log: GuildAuditLogsEntry, guild: Guild) {

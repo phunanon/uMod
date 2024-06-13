@@ -43,11 +43,21 @@ export const SingleMessage: Feature = {
       );
     },
   },
-  async HandleMessage({ message, channel, channelSf }) {
+  async HandleMessage(ctx) {
+    const { message, channel, channelSf, userSf, isEdit, isDelete } = ctx;
+    if (isEdit) return;
+
     const where = { channelSf, singleMessage: { not: null } };
     const { singleMessage } =
       (await prisma.channelFlags.findFirst({ where })) ?? {};
     if (!singleMessage) return;
+
+    if (isDelete) {
+      await channel.permissionOverwrites.edit(`${userSf}`, {
+        SendMessages: true,
+      });
+      return;
+    }
 
     const { author } = message;
 
@@ -102,7 +112,7 @@ export const DeleteSingleMessage: Feature = {
       const { singleMessage } =
         (await prisma.channelFlags.findFirst({ where })) ?? {};
       if (!singleMessage) {
-        await interaction.editReply('There is no message to delete.');
+        await interaction.editReply('Feature not supported in this channel.');
         return;
       }
 

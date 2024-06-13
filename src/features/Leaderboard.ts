@@ -51,7 +51,7 @@ export const Leaderboard: Feature = {
       await interaction.editReply('.\n' + leaderboard.join('\n'));
     },
   },
-  async HandleMessage({ message, guildSf }) {
+  async HandleMessageCreate({ message, guildSf }) {
     const { id, tag } = message.author;
     const member = await getMember(tag, id, guildSf);
 

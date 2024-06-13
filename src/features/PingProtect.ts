@@ -50,24 +50,19 @@ export const PingProtect: Feature = {
       });
     },
   },
-  async HandleMessage({ message, guild, userSf, isEdit, isMod }) {
-    if (!message.mentions.users.size || isEdit || isMod) return;
+  async HandleMessage({ message, userSf, isDelete, isMod }) {
+    if (!message.mentions.users.size || isDelete || isMod) return;
     const users = message.mentions.users.filter(
       user => !user.bot && user.id !== message.author.id,
     );
 
     for (const user of users.values()) {
-      await handle(guild, message, userSf, BigInt(user.id));
+      await handle(message, userSf, BigInt(user.id));
     }
   },
 };
 
-async function handle(
-  guild: Guild,
-  message: Message,
-  userSf: bigint,
-  aboutSf: bigint,
-) {
+async function handle(message: Message, userSf: bigint, aboutSf: bigint) {
   const flags = await prisma.userFlags.findUnique({
     where: { userSf: aboutSf },
   });

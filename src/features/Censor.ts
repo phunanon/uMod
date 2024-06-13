@@ -43,7 +43,10 @@ export const Censor: Feature = {
       await interaction.editReply(`New censored word: ${censored}`);
     },
   },
-  async HandleMessage({ guildSf, userSf,channelSf, channel, message }) {
+  async HandleMessage(ctx) {
+    const { channel, message, guildSf, userSf, channelSf, isDelete } = ctx;
+    if (isDelete) return;
+
     const flags = await prisma.channelFlags.findFirst({
       where: { channelSf },
     });
