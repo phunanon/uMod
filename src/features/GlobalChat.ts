@@ -3,7 +3,7 @@ import { Feature } from '.';
 import { prisma } from '../infrastructure';
 
 const bufferLen = 10_000;
-const m2m: { channelId: string; msgId: string }[][] = [];
+const m2m: { channelId: string; messageId: string }[][] = [];
 let m2mIndex = 0;
 
 export const GlobalChat: Feature = {
@@ -32,7 +32,7 @@ export const GlobalChat: Feature = {
       where: { NOT: { channelSf }, room: chat.room },
     });
     const associations = m2m.find(m =>
-      m.some(({ msgId }) => msgId === message.id),
+      m.some(({ messageId }) => messageId === message.id),
     );
 
     const member = await guild.members.fetch(message.author.id);
@@ -41,13 +41,13 @@ export const GlobalChat: Feature = {
 
     if (isDelete) {
       if (associations) {
-        for (const { channelId, msgId } of associations) {
-          if (msgId === message.id) continue;
+        for (const { channelId, messageId } of associations) {
+          if (messageId === message.id) continue;
           try {
             const channel = await message.client.channels.fetch(channelId);
             if (channel?.type !== ChannelType.GuildText) continue;
             await channel.messages.edit(
-              msgId,
+              messageId,
               `**${nickname}**: [deleted]`,
             );
           } catch (e) {
@@ -66,7 +66,7 @@ export const GlobalChat: Feature = {
     const payload = { content, files, allowedMentions: { parse: [] } };
 
     const mids: (typeof m2m)[0] = [
-      { channelId: message.channel.id, msgId: message.id },
+      { channelId: message.channel.id, messageId: message.id },
     ];
     for (const { channelSf } of guilds) {
       const channel = await (async () => {
@@ -83,17 +83,28 @@ export const GlobalChat: Feature = {
 
       if (isEdit) {
         if (associations) {
-          for (const { msgId } of associations) {
-            if (msgId === message.id) continue;
+          for (const { messageId } of associations) {
+            if (messageId === message.id) continue;
             try {
-              await channel.messages.edit(msgId, payload);
+              await channel.messages.edit(messageId, payload);
             } catch (e) {}
           }
           continue;
         }
       } else {
-        const msg = await channel.send(payload);
-        mids.push({ channelId: channel.id, msgId: msg.id });
+        const reply = await (async () => {
+          const msgId = message.reference?.messageId;
+          if (!msgId) return;
+          const association = m2m
+            .find(m => m.some(({ messageId }) => messageId === msgId))
+            ?.find(({ channelId }) => channelId === channel.id);
+          const messageReference = association
+            ? await channel.messages.fetch(association.messageId)
+            : null;
+          return messageReference ? { messageReference } : undefined;
+        })();
+        const msg = await channel.send({ ...payload, reply });
+        mids.push({ channelId: channel.id, messageId: msg.id });
       }
     }
 
