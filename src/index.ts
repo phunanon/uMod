@@ -1,9 +1,8 @@
 import * as dotenv from 'dotenv';
-import { client, log, prisma } from './infrastructure';
+import { client, isGoodChannel, log, prisma } from './infrastructure';
 import { Feature, features } from './features';
 import {
   AuditLogEvent,
-  ChannelType,
   ClientUser,
   Guild,
   GuildAuditLogsEntry,
@@ -21,6 +20,7 @@ client.once('ready', async () => {
     .on('guildMemberUpdate', handleEvent('HandleMemberUpdate'))
     .on('guildMemberAdd', handleEvent('HandleMemberAdd'))
     .on('guildMemberRemove', handleEvent('HandleMemberRemove'))
+    .on('voiceStateUpdate', handleEvent('HandleVoiceStateUpdate'))
     .on('messageCreate', handleMessage('create'))
     .on('messageUpdate', handleMessage('update'))
     .on('messageDelete', handleMessage('delete'))
@@ -68,7 +68,8 @@ const handleEvent =
       | 'HandleMemberUpdate'
       | 'HandleMemberAdd'
       | 'HandleMemberRemove'
-      | 'HandleChannelDelete',
+      | 'HandleChannelDelete'
+      | 'HandleVoiceStateUpdate',
   >(
     fn: T,
   ) =>
@@ -82,11 +83,12 @@ const handleEvent =
 
 const handleInteraction = failable(_handleInteraction);
 async function _handleInteraction(interaction: Interaction): Promise<void> {
+  const { channel, guild, member } = interaction;
   if (
-    interaction.channel?.type !== ChannelType.GuildText ||
+    !isGoodChannel(channel) ||
     (!interaction.isChatInputCommand() && !interaction.isButton()) ||
-    !interaction.guild ||
-    !interaction.member ||
+    !guild ||
+    !member ||
     !client.user
   ) {
     if (interaction.isRepliable()) {
@@ -95,9 +97,8 @@ async function _handleInteraction(interaction: Interaction): Promise<void> {
     return;
   }
 
-  const { channel, guild, member } = interaction;
-  const guildSf = BigInt(interaction.guild.id);
-  const channelSf = BigInt(interaction.channel.id);
+  const guildSf = BigInt(guild.id);
+  const channelSf = BigInt(channel.id);
   const userSf = BigInt(member.user.id);
   const name =
     'commandName' in interaction
@@ -157,8 +158,8 @@ function handleMessage(kind: 'create' | 'update' | 'delete') {
         return maybePartial.partial ? await maybePartial.fetch() : maybePartial;
       } catch (e) {}
     })();
-    if (!message?.channel.isTextBased()) return;
-    if (!('permissionOverwrites' in message.channel)) return;
+    if (!message) return;
+    if (!isGoodChannel(message.channel)) return;
     if (message.author?.bot !== false) return;
     const channelSf = BigInt(message.channel.id);
     if (await IsChannelUnmoderated(channelSf)) return;

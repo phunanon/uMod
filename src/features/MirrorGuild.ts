@@ -1,5 +1,4 @@
-import { ChannelType } from 'discord.js';
-import { client, prisma } from '../infrastructure';
+import { client, isGoodChannel, prisma } from '../infrastructure';
 import { Feature, MsgCtx } from '.';
 
 export const MirrorGuild: Feature = {
@@ -42,7 +41,7 @@ async function HandleMessage({ message, guildSf }: MsgCtx) {
   if (!mirror) return;
 
   const channel = await client.channels.fetch(`${mirror.channelSf}`);
-  if (!channel || channel.type !== ChannelType.GuildText) return;
+  if (!isGoodChannel(channel)) return;
 
   if (channel.id === message.channel.id) return;
 

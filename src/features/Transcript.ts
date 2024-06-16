@@ -1,17 +1,16 @@
 import {
   ApplicationCommandOptionType,
   ChatInputCommandInteraction,
-  ChannelType,
-  TextChannel,
   AttachmentBuilder,
 } from 'discord.js';
-import { Feature } from '.';
+import { Feature, TextChannels } from '.';
+import { isGoodChannel } from '../infrastructure';
 
 type Job = {
   startedAt: Date;
   interaction: ChatInputCommandInteraction;
-  channel: TextChannel;
-  destination: TextChannel;
+  channel: TextChannels;
+  destination: TextChannels;
   before: string | null;
   messages: string[];
 };
@@ -42,7 +41,7 @@ export const Transcript: Feature = {
       const dest = interaction.options.getChannel('destination', true);
 
       const destination = await guild.channels.fetch(dest.id);
-      if (destination?.type !== ChannelType.GuildText) {
+      if (!isGoodChannel(destination)) {
         await interaction.editReply(
           'The destination channel must be a text channel.',
         );

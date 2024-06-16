@@ -1,11 +1,13 @@
-import { ApplicationCommandOptionType, ChannelType } from 'discord.js';
+import { ApplicationCommandOptionType } from 'discord.js';
 import { Feature } from '.';
-import { client, prisma } from '../infrastructure';
+import { client, prisma, isGoodChannel } from '../infrastructure';
 
 export enum AlertEvent {
   Message = 'message',
   Join = 'join',
   Leave = 'leave',
+  JoinVC = 'join-vc',
+  LeaveVC = 'leave-vc',
   Role = 'role',
   Roles = 'roles',
   Note = 'note',
@@ -24,14 +26,16 @@ export const Alert: Feature = {
           description: 'Based on an event',
           type: ApplicationCommandOptionType.String,
           choices: [
-            { name: 'Message sent', value: 'message' },
-            { name: 'User joins', value: 'join' },
-            { name: 'User leaves', value: 'leave' },
-            { name: 'Role assigned', value: 'role' },
-            { name: 'Roles restored', value: 'roles' },
-            { name: 'Note created', value: 'note' },
-            { name: 'Moderation action', value: 'audit' },
-            { name: 'Membership milestone', value: 'milestone' },
+            { name: 'Message sent', value: AlertEvent.Message },
+            { name: 'User joins server', value: AlertEvent.Join },
+            { name: 'User leaves server', value: AlertEvent.Leave },
+            { name: 'User joins VC', value: AlertEvent.JoinVC },
+            { name: 'User leaves VC', value: AlertEvent.LeaveVC },
+            { name: 'Role assigned', value: AlertEvent.Role },
+            { name: 'Roles restored', value: AlertEvent.Roles },
+            { name: 'Note created', value: AlertEvent.Note },
+            { name: 'Moderation action', value: AlertEvent.Audit },
+            { name: 'Membership milestone', value: AlertEvent.Milestone },
           ],
           required: true,
         },
@@ -146,6 +150,26 @@ export const Alert: Feature = {
     const channelSf = BigInt(channel.id);
     await prisma.alert.deleteMany({ where: { channelSf } });
   },
+  async HandleVoiceStateUpdate(oldState, newState) {
+    if (oldState.channelId === newState.channelId) return;
+    const guildSf = BigInt(newState.guild.id);
+    const userSf = BigInt(newState.id);
+    const from = oldState.channel;
+    const to = newState.channel;
+    const alert = { guildSf, userSf };
+    if (from)
+      await HandleAlert({
+        ...alert,
+        event: AlertEvent.LeaveVC,
+        content: from.name,
+      });
+    if (to)
+      await HandleAlert({
+        ...alert,
+        event: AlertEvent.JoinVC,
+        content: to.name,
+      });
+  },
 };
 
 export const DeleteAlert: Feature = {
@@ -236,6 +260,19 @@ export const RecommendedAlerts: Feature = {
             event: AlertEvent.Leave,
             altReason: '$user left',
           },
+          {
+            guildSf,
+            channelSf,
+            event: AlertEvent.JoinVC,
+            altReason: '$user joined $content',
+          },
+          {
+            guildSf,
+            channelSf,
+            event: AlertEvent.LeaveVC,
+            altReason: '$user left $content',
+          },
+          { guildSf, channelSf, event: AlertEvent.Message },
           { guildSf, channelSf, event: AlertEvent.Role },
           { guildSf, channelSf, event: AlertEvent.Roles },
           { guildSf, channelSf, event: AlertEvent.Note },
@@ -266,6 +303,8 @@ export const HandleAlert = async (i: HandleInfo) => {
       AlertEvent.Role,
       AlertEvent.Roles,
       AlertEvent.Milestone,
+      AlertEvent.JoinVC,
+      AlertEvent.LeaveVC,
     ].includes(i.event);
   const alerts = await prisma.alert.findMany({
     where: {
@@ -284,7 +323,7 @@ export const HandleAlert = async (i: HandleInfo) => {
     const regex = pattern ? new RegExp(pattern, 'i') : null;
     if (regex && i.content && !regex.test(i.content)) continue;
     const channel = await client.channels.fetch(`${channelSf}`);
-    if (!channel || channel.type !== ChannelType.GuildText) continue;
+    if (!isGoodChannel(channel)) continue;
 
     const altReason = a.altReason
       ?.replaceAll(/\$content/g, i.content ?? '[no content]')

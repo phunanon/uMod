@@ -41,12 +41,10 @@ A moderation bot I made so I could kick Carlbot, but which now has now become qu
 
 Aspirations:
 
-- Different global-chat channels (e.g. tech and math)
 - Auto-close ticket after a day of inactivity
 - Confess IDs are unique per confession
 - Global chat reacts, first message introduction
 - bottom-of-roles-list check
-- vc join-leave alerts
 
 ## To host it yourself
 

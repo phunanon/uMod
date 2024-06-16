@@ -6,13 +6,12 @@ import {
   Guild,
   GuildMember,
   Message,
-  NewsChannel,
   NonThreadGuildBasedChannel,
   PartialGuildMember,
-  StageChannel,
   TextChannel,
   User,
   VoiceChannel,
+  VoiceState,
 } from 'discord.js';
 
 import { PermaRole } from './PermaRole';
@@ -55,21 +54,23 @@ export type FeatureConfig = {
   moderatorOnly?: boolean;
 };
 
+export type TextChannels = TextChannel | VoiceChannel;
+
 export type InteractionCtx<T> = {
   interaction: T;
   guildSf: bigint;
   userSf: bigint;
   channelSf: bigint;
-  channel: TextChannel;
+  channel: TextChannels;
   guild: Guild;
   member: GuildMember;
 };
 
 export type MsgCtx = {
   guild: Guild;
-  channel: NewsChannel | StageChannel | TextChannel | VoiceChannel;
+  channel: TextChannels;
   message: Message;
-   member: GuildMember;
+  member: GuildMember;
   guildSf: bigint;
   channelSf: bigint;
   userSf: bigint;
@@ -100,9 +101,7 @@ export type Feature = {
         ) => Promise<void>;
       }
     | {
-        button: (
-          context: InteractionCtx<ButtonInteraction>,
-        ) => Promise<void>;
+        button: (context: InteractionCtx<ButtonInteraction>) => Promise<void>;
       }
   );
   HandleMemberUpdate?: (
@@ -112,6 +111,10 @@ export type Feature = {
   HandleMemberAdd?: (member: GuildMember) => Promise<void>;
   HandleMemberRemove?: (
     member: GuildMember | PartialGuildMember,
+  ) => Promise<void>;
+  HandleVoiceStateUpdate?: (
+    oldState: VoiceState,
+    newState: VoiceState,
   ) => Promise<void>;
   HandleAuditLog?: (entry: AuditEvent, guild: Guild) => Promise<void>;
   HandleChannelDelete?: (
