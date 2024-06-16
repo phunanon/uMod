@@ -175,18 +175,12 @@ export const CloseTicket: Feature = {
   Interaction: {
     name: 'close_ticket_*',
     moderatorOnly: false,
-    async button({ interaction, channel, userSf }) {
+    async button({ interaction, channel, member }) {
       await interaction.deferReply({ ephemeral: true });
 
       const role = interaction.customId.split('_')[2];
       if (!role) {
         await interaction.editReply('Error: invalid ticket.');
-        return;
-      }
-
-      const member = await interaction.guild?.members.fetch(`${userSf}`);
-      if (!member) {
-        await interaction.editReply('Error: could not fetch member.');
         return;
       }
 

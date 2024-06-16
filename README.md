@@ -37,6 +37,7 @@ A moderation bot I made so I could kick Carlbot, but which now has now become qu
   - **RoleList**: maintains a message with a list of members with a role
   - **MutualTimeout**: allows anybody to mute another user but only if they are muted in return
     - Disabled in code by default
+  - **Transcript**: sends a plaintext transcript of a channel to a channel
 
 Aspirations:
 
@@ -45,6 +46,7 @@ Aspirations:
 - Confess IDs are unique per confession
 - Global chat reacts, first message introduction
 - bottom-of-roles-list check
+- vc join-leave alerts
 
 ## To host it yourself
 

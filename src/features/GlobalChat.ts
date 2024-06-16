@@ -21,7 +21,7 @@ export const GlobalChat: Feature = {
       ],
     });
   },
-  async HandleMessage({ message, channelSf, guild, isEdit, isDelete }) {
+  async HandleMessage({ message, channelSf, isEdit, isDelete, member }) {
     const chat = await prisma.globalChat.findFirst({
       where: { channelSf },
     });
@@ -35,7 +35,6 @@ export const GlobalChat: Feature = {
       m.some(({ messageId }) => messageId === message.id),
     );
 
-    const member = await guild.members.fetch(message.author.id);
     const nickname =
       member.displayName ?? member.nickname ?? message.author.tag;
 

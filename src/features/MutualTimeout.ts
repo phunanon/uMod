@@ -20,19 +20,18 @@ export const MutualTimeout: Feature = {
   Interaction: {
     name: 'mutual-timeout',
     moderatorOnly: false,
-    async command({ interaction, userSf, guild }) {
+    async command({ interaction, guild, member, userSf }) {
       await interaction.deferReply();
 
       try {
         const user = interaction.options.getUser('user', true);
-        const userMember = await guild.members.fetch(`${userSf}`);
         const targetMember = await guild.members.fetch(user.id);
 
-        if (userMember.id === targetMember.id) {
+        if (member.id === targetMember.id) {
           await interaction.editReply("You can't timeout yourself.");
           return;
         }
-        if (isTimed(userMember)) {
+        if (isTimed(member)) {
           await interaction.editReply(
             "You're already timed out. You can't timeout someone else until your timeout is over.",
           );
@@ -46,7 +45,7 @@ export const MutualTimeout: Feature = {
         }
 
         await targetMember.timeout(300_000, `/mutual-timeout by <@${userSf}>.`);
-        await userMember.timeout(3_600_000, `/mutual-timeout penalty`);
+        await member.timeout(3_600_000, `/mutual-timeout penalty`);
 
         await interaction.editReply(
           `<@${userSf}> timed out <@${user.id}> for five minutes, in return for a one hour timeout :saluting_face:`,

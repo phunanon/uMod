@@ -121,15 +121,13 @@ async function _handleInteraction(interaction: Interaction): Promise<void> {
     return;
   }
 
-  if (feature.moderatorOnly) {
-    const notMod = !(await CheckIfMod(client.user, guild, userSf));
-    if (notMod) {
-      await interaction.reply('You must be a moderator to use this command!');
-      return;
-    }
+  const details = await FetchDetails(client.user, guild, userSf);
+  if (feature.moderatorOnly && !details.isMod) {
+    await interaction.reply('You must be a moderator to use this command!');
+    return;
   }
 
-  const context = { guildSf, userSf, channelSf, channel, guild };
+  const context = { guildSf, userSf, channelSf, channel, guild, ...details };
   if (interaction.isChatInputCommand()) {
     if ('command' in feature) {
       await feature.command({ ...context, interaction });
@@ -154,10 +152,13 @@ function handleMessage(kind: 'create' | 'update' | 'delete') {
     newMessage?: Message | PartialMessage,
   ): Promise<void> {
     const maybePartial = newMessage ?? oldMessage;
-    const message = maybePartial.partial
-      ? await maybePartial.fetch()
-      : maybePartial;
-    if (message.channel.type !== ChannelType.GuildText) return;
+    const message = await (async () => {
+      try {
+        return maybePartial.partial ? await maybePartial.fetch() : maybePartial;
+      } catch (e) {}
+    })();
+    if (!message?.channel.isTextBased()) return;
+    if (!('permissionOverwrites' in message.channel)) return;
     if (message.author?.bot !== false) return;
     const channelSf = BigInt(message.channel.id);
     if (await IsChannelUnmoderated(channelSf)) return;
@@ -168,11 +169,12 @@ function handleMessage(kind: 'create' | 'update' | 'delete') {
     const userSf = BigInt(message.author.id);
     const isEdit = kind === 'update';
     const isDelete = kind === 'delete';
-    const isMod = await CheckIfMod(client.user, guild, userSf);
+    const details = await FetchDetails(client.user, guild, userSf);
     const context = {
       ...{ guild, channel, message },
       ...{ guildSf, channelSf, userSf },
-      ...{ isEdit, isDelete, isMod },
+      ...{ isEdit, isDelete },
+      ...details,
     };
 
     for (const [name, feature] of Object.entries(features)) {
@@ -231,12 +233,9 @@ async function handleAudit(log: GuildAuditLogsEntry, guild: Guild) {
   }
 }
 
-export const CheckIfMod = async (
-  user: ClientUser,
-  guild: Guild,
-  userSf: bigint,
-) => {
-  const them = await guild.members.fetch(`${userSf}`);
+const FetchDetails = async (user: ClientUser, guild: Guild, userSf: bigint) => {
+  const member = await guild.members.fetch(`${userSf}`);
   const me = await guild.members.fetch(user.id);
-  return them.roles.highest.position >= me.roles.highest.position;
+  const isMod = member.roles.highest.position >= me.roles.highest.position;
+  return { member, isMod };
 };

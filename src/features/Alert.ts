@@ -122,16 +122,9 @@ export const Alert: Feature = {
       content,
     });
   },
-  async HandleMessage({ message, guildSf, userSf, isDelete }) {
+  async HandleMessage({ message, guildSf, userSf, isDelete, member }) {
     if (!message.content || isDelete) return;
-    const roles = await (async () => {
-      try {
-        const member = await message.guild?.members.fetch(message.author.id);
-        return member?.roles.cache.map(role => BigInt(role.id)) ?? undefined;
-      } catch {
-        return;
-      }
-    })();
+    const roles = member.roles.cache.map(role => BigInt(role.id));
     await HandleAlert({
       guildSf,
       userSf,

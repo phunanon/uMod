@@ -2,7 +2,7 @@ import { log } from '../infrastructure';
 import { Feature } from '.';
 
 export const InviteSpam: Feature = {
-  async HandleMessage({ message, isMod, isDelete }) {
+  async HandleMessage({ message, member, isMod, isDelete }) {
     if (isMod || isDelete) return;
 
     const wordDiscord = new RegExp(
@@ -14,8 +14,6 @@ export const InviteSpam: Feature = {
     await message.delete();
 
     const guild = message.guild?.name ?? 'the server';
-    const member = message.member;
-    if (!member) return;
 
     if (wordEveryone !== wordDiscord) {
       const reason = wordEveryone

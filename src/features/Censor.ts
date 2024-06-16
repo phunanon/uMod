@@ -44,8 +44,9 @@ export const Censor: Feature = {
     },
   },
   async HandleMessage(ctx) {
-    const { channel, message, guildSf, userSf, channelSf, isDelete } = ctx;
-    if (isDelete) return;
+    const { channel, message, isDelete, isMod } = ctx;
+    const { guildSf, userSf, channelSf } = ctx;
+    if (isDelete || isMod) return;
 
     const flags = await prisma.channelFlags.findFirst({
       where: { channelSf },

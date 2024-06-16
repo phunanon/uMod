@@ -45,6 +45,15 @@ export const ChannelBan: Feature = {
         return;
       }
 
+      const existing = await prisma.channelBan.findFirst({
+        where: { guildSf, userSf, channelSf },
+      });
+
+      if (existing) {
+        await interaction.editReply('User already banned from this channel.');
+        return;
+      }
+
       await channel.permissionOverwrites.create(user.id, {
         ViewChannel: false,
       });

@@ -6,10 +6,13 @@ import {
   Guild,
   GuildMember,
   Message,
+  NewsChannel,
   NonThreadGuildBasedChannel,
   PartialGuildMember,
+  StageChannel,
   TextChannel,
   User,
+  VoiceChannel,
 } from 'discord.js';
 
 import { PermaRole } from './PermaRole';
@@ -34,10 +37,11 @@ import { SingleMessage, DeleteSingleMessage } from './SingleMessage';
 // import { MutualTimeout } from './MutualTimeout';
 import { PingSpam } from './PingSpam';
 import { PingProtect } from './PingProtect';
+import { Transcript } from './Transcript';
 
 export const features = {
   ...{ PermaRole, InviteSpam, Ping, WhitelistChannel, MirrorGuild },
-  ...{ Leaderboard, StickyMessage, Purge, ActivitySort },
+  ...{ Leaderboard, StickyMessage, Purge, ActivitySort, Transcript },
   ...{ Confess, ConfessMute, Note, ReadNote, ChannelBan, Censor, DeleteCensor },
   ...{ Alert, DeleteAlert, DeleteAlerts, RecommendedAlerts, BlockGifs },
   ...{ CreateTicket, TicketAdd, TicketsHere, CloseTicket },
@@ -51,19 +55,21 @@ export type FeatureConfig = {
   moderatorOnly?: boolean;
 };
 
-export type InteractionContext<T> = {
+export type InteractionCtx<T> = {
   interaction: T;
   guildSf: bigint;
   userSf: bigint;
   channelSf: bigint;
   channel: TextChannel;
   guild: Guild;
+  member: GuildMember;
 };
 
 export type MsgCtx = {
   guild: Guild;
-  channel: TextChannel;
+  channel: NewsChannel | StageChannel | TextChannel | VoiceChannel;
   message: Message;
+   member: GuildMember;
   guildSf: bigint;
   channelSf: bigint;
   userSf: bigint;
@@ -90,12 +96,12 @@ export type Feature = {
   } & (
     | {
         command: (
-          context: InteractionContext<ChatInputCommandInteraction>,
+          context: InteractionCtx<ChatInputCommandInteraction>,
         ) => Promise<void>;
       }
     | {
         button: (
-          context: InteractionContext<ButtonInteraction>,
+          context: InteractionCtx<ButtonInteraction>,
         ) => Promise<void>;
       }
   );

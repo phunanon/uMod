@@ -1,7 +1,6 @@
-import { ApplicationCommandOptionType, Guild, Message } from 'discord.js';
+import { ApplicationCommandOptionType, Message } from 'discord.js';
 import { Feature } from '.';
-import { client, prisma } from '../infrastructure';
-import { CheckIfMod } from '..';
+import { prisma } from '../infrastructure';
 
 export const PingProtect: Feature = {
   async Init(commands) {
@@ -79,7 +78,7 @@ async function handle(message: Message, userSf: bigint, aboutSf: bigint) {
       allowedMentions: { parse: [] },
     });
     await message.member?.timeout(
-      60_000,
+      60_000 * 2,
       `Pinging protected user (<@${aboutSf}>)`,
     );
   } else {
