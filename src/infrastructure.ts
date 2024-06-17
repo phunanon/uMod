@@ -20,6 +20,7 @@ export const client = new Client({
     GatewayIntentBits.MessageContent,
     GatewayIntentBits.GuildModeration,
     GatewayIntentBits.GuildVoiceStates,
+    GatewayIntentBits.GuildMessageTyping,
   ],
   partials: [Partials.Channel, Partials.Message],
   closeTimeout: 6_000,

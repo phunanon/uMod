@@ -9,6 +9,7 @@ import {
   NonThreadGuildBasedChannel,
   PartialGuildMember,
   TextChannel,
+  Typing,
   User,
   VoiceChannel,
   VoiceState,
@@ -116,6 +117,7 @@ export type Feature = {
     oldState: VoiceState,
     newState: VoiceState,
   ) => Promise<void>;
+  HandleTypingStart?: (typing: Typing) => Promise<void>;
   HandleAuditLog?: (entry: AuditEvent, guild: Guild) => Promise<void>;
   HandleChannelDelete?: (
     channel: DMChannel | NonThreadGuildBasedChannel,

@@ -21,6 +21,7 @@ client.once('ready', async () => {
     .on('guildMemberAdd', handleEvent('HandleMemberAdd'))
     .on('guildMemberRemove', handleEvent('HandleMemberRemove'))
     .on('voiceStateUpdate', handleEvent('HandleVoiceStateUpdate'))
+    .on('typingStart', handleEvent('HandleTypingStart'))
     .on('messageCreate', handleMessage('create'))
     .on('messageUpdate', handleMessage('update'))
     .on('messageDelete', handleMessage('delete'))
@@ -69,7 +70,8 @@ const handleEvent =
       | 'HandleMemberAdd'
       | 'HandleMemberRemove'
       | 'HandleChannelDelete'
-      | 'HandleVoiceStateUpdate',
+      | 'HandleVoiceStateUpdate'
+      | 'HandleTypingStart',
   >(
     fn: T,
   ) =>

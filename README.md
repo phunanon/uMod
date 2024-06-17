@@ -29,7 +29,8 @@ A moderation bot I made so I could kick Carlbot, but which now has now become qu
   - **Leaderboard**: keeps track of user messages and ranks them
   - **Confess**: repeats a message in a channel, anonymously
     - Also **ConfessMute**
-  - **GlobalChat**: mirrors messages between guilds using public or private chats
+  - **GlobalChat**: mirrors messages between guilds using public or private rooms
+    - Includes message editing, deleting, and typing indication
 - Useful
   - **Ping**: replies with "Pong!"
   - **StickyMessage**: periodically resends a message to a channel

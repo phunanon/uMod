@@ -1,6 +1,6 @@
-import { ApplicationCommandOptionType, ChannelType } from 'discord.js';
-import { Feature } from '.';
-import { prisma } from '../infrastructure';
+import { ApplicationCommandOptionType } from 'discord.js';
+import { Feature, TextChannels } from '.';
+import { client, isGoodChannel, prisma } from '../infrastructure';
 
 const bufferLen = 10_000;
 const m2m: { channelId: string; messageId: string }[][] = [];
@@ -22,40 +22,15 @@ export const GlobalChat: Feature = {
     });
   },
   async HandleMessage({ message, channelSf, isEdit, isDelete, member }) {
-    const chat = await prisma.globalChat.findFirst({
-      where: { channelSf },
-    });
+    const chats = await GetChatsForChannel(channelSf);
+    if (!chats) return;
 
-    if (!chat) return;
-
-    const guilds = await prisma.globalChat.findMany({
-      where: { NOT: { channelSf }, room: chat.room },
-    });
     const associations = m2m.find(m =>
       m.some(({ messageId }) => messageId === message.id),
     );
 
     const nickname =
       member.displayName ?? member.nickname ?? message.author.tag;
-
-    if (isDelete) {
-      if (associations) {
-        for (const { channelId, messageId } of associations) {
-          if (messageId === message.id) continue;
-          try {
-            const channel = await message.client.channels.fetch(channelId);
-            if (channel?.type !== ChannelType.GuildText) continue;
-            await channel.messages.edit(
-              messageId,
-              `**${nickname}**: [deleted]`,
-            );
-          } catch (e) {
-            console.log(e);
-          }
-        }
-      }
-      return;
-    }
     const truncated =
       message.content.length > 1500
         ? `${message.content.slice(0, 1500)}...`
@@ -67,44 +42,31 @@ export const GlobalChat: Feature = {
     const mids: (typeof m2m)[0] = [
       { channelId: message.channel.id, messageId: message.id },
     ];
-    for (const { channelSf } of guilds) {
-      const channel = await (async () => {
-        try {
-          return await message.client.channels.fetch(`${channelSf}`);
-        } catch (e) {
-          return null;
+    for (const { channel } of chats) {
+      if (isEdit || isDelete) {
+        for (const { messageId } of associations ?? []) {
+          if (messageId === message.id) continue;
+          const msg = isEdit ? payload : `**${nickname}**: [deleted]`;
+          try {
+            await channel.messages.edit(messageId, msg);
+          } catch (e) {}
         }
-      })();
-      if (!channel || channel.type !== ChannelType.GuildText) {
-        await prisma.globalChat.delete({ where: { channelSf } });
         continue;
       }
 
-      if (isEdit) {
-        if (associations) {
-          for (const { messageId } of associations) {
-            if (messageId === message.id) continue;
-            try {
-              await channel.messages.edit(messageId, payload);
-            } catch (e) {}
-          }
-          continue;
-        }
-      } else {
-        const reply = await (async () => {
-          const msgId = message.reference?.messageId;
-          if (!msgId) return;
-          const association = m2m
-            .find(m => m.some(({ messageId }) => messageId === msgId))
-            ?.find(({ channelId }) => channelId === channel.id);
-          const messageReference = association
-            ? await channel.messages.fetch(association.messageId)
-            : null;
-          return messageReference ? { messageReference } : undefined;
-        })();
-        const msg = await channel.send({ ...payload, reply });
-        mids.push({ channelId: channel.id, messageId: msg.id });
-      }
+      const reply = await (async () => {
+        const msgId = message.reference?.messageId;
+        if (!msgId) return;
+        const association = m2m
+          .find(m => m.some(({ messageId }) => messageId === msgId))
+          ?.find(({ channelId }) => channelId === channel.id);
+        const messageReference = association
+          ? await channel.messages.fetch(association.messageId)
+          : null;
+        return messageReference ? { messageReference } : undefined;
+      })();
+      const msg = await channel.send({ ...payload, reply });
+      mids.push({ channelId: channel.id, messageId: msg.id });
     }
 
     if (m2m.length === bufferLen) {
@@ -112,6 +74,13 @@ export const GlobalChat: Feature = {
       m2mIndex = (m2mIndex + 1) % bufferLen;
     } else {
       m2m.push(mids);
+    }
+  },
+  async HandleTypingStart(typing) {
+    if (typing.user.id === client.user?.id) return;
+    const chats = await GetChatsForChannel(BigInt(typing.channel.id));
+    for (const { channel } of chats ?? []) {
+      await channel.sendTyping();
     }
   },
   Interaction: {
@@ -137,6 +106,38 @@ export const GlobalChat: Feature = {
       await interaction.editReply(`Global chat enabled using \`${room}\`.`);
     },
   },
+};
+
+const GetChatsForChannel = async (channelSf: bigint) => {
+  const thisChat = await prisma.globalChat.findMany({
+    where: { channelSf },
+  });
+
+  if (!thisChat.length) return;
+
+  const chats = await prisma.globalChat.findMany({
+    where: { NOT: { channelSf }, room: { in: thisChat.map(c => c.room) } },
+  });
+
+  const chatsWithChannel: ((typeof chats)[0] & { channel: TextChannels })[] =
+    [];
+  for (const { channelSf, ...chat } of chats) {
+    const channel = await (async () => {
+      try {
+        return await client.channels.fetch(`${channelSf}`);
+      } catch (e) {
+        return null;
+      }
+    })();
+    if (!isGoodChannel(channel)) {
+      //TODO: The channel no longer exists, is of the incorrect type, or was just a transient error?
+      //await prisma.globalChat.delete({ where: { channelSf } });
+      continue;
+    }
+    chatsWithChannel.push({ ...chat, channelSf, channel });
+  }
+
+  return chatsWithChannel;
 };
 
 export const GlobalChatList: Feature = {
