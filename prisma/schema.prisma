@@ -124,3 +124,11 @@ model PingProtectWarns {
 
   @@unique([userSf, aboutSf])
 }
+
+model GuildMods {
+  id      Int    @id @default(autoincrement())
+  guildSf BigInt
+  roleSf  BigInt
+
+  @@unique([guildSf, roleSf])
+}

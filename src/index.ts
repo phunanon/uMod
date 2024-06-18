@@ -16,6 +16,11 @@ dotenv.config();
 console.log('Loading...');
 
 client.once('ready', async () => {
+  for (const [_, guild] of client.guilds.cache) {
+    //(await guild.members.fetchMe()).setNickname('µM');
+    process.stdout.write(`${guild.name}  `);
+  }
+
   client
     .on('guildMemberUpdate', handleEvent('HandleMemberUpdate'))
     .on('guildMemberAdd', handleEvent('HandleMemberAdd'))
@@ -124,9 +129,13 @@ async function _handleInteraction(interaction: Interaction): Promise<void> {
     return;
   }
 
-  const details = await FetchDetails(client.user, guild, userSf);
+  const details = await FetchDetails(guild, userSf);
   if (feature.moderatorOnly && !details.isMod) {
-    await interaction.reply('You must be a moderator to use this command!');
+    const { noMods } = details;
+    const content = noMods
+      ? `No moderators have been set up yet! Contact <@${guild.ownerId}> to use \`/guild-mods\` to assign moderators.`
+      : 'You must be a moderator to use this command!';
+    await interaction.reply({ content, allowedMentions: { parse: [] } });
     return;
   }
 
@@ -172,7 +181,7 @@ function handleMessage(kind: 'create' | 'update' | 'delete') {
     const userSf = BigInt(message.author.id);
     const isEdit = kind === 'update';
     const isDelete = kind === 'delete';
-    const details = await FetchDetails(client.user, guild, userSf);
+    const details = await FetchDetails(guild, userSf);
     const context = {
       ...{ guild, channel, message },
       ...{ guildSf, channelSf, userSf },
@@ -186,6 +195,8 @@ function handleMessage(kind: 'create' | 'update' | 'delete') {
           return feature.HandleMessageUpdate;
         if (isDelete && 'HandleMessageDelete' in feature)
           return feature.HandleMessageDelete;
+        if (kind === 'create' && 'HandleMessageCreate' in feature)
+          return feature.HandleMessageCreate;
         if ('HandleMessage' in feature) return feature.HandleMessage;
       })();
       try {
@@ -236,9 +247,13 @@ async function handleAudit(log: GuildAuditLogsEntry, guild: Guild) {
   }
 }
 
-const FetchDetails = async (user: ClientUser, guild: Guild, userSf: bigint) => {
+const FetchDetails = async (guild: Guild, userSf: bigint) => {
+  const isOwner = BigInt(guild.ownerId) === userSf;
+  const roles = await prisma.guildMods.findMany({
+    where: { guildSf: BigInt(guild.id) },
+  });
   const member = await guild.members.fetch(`${userSf}`);
-  const me = await guild.members.fetch(user.id);
-  const isMod = member.roles.highest.position >= me.roles.highest.position;
-  return { member, isMod };
+  const isMod =
+    isOwner || roles.some(role => member.roles.cache.has(`${role.roleSf}`));
+  return { member, isMod, isOwner, noMods: !roles.length };
 };

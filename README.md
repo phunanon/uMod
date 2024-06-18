@@ -25,6 +25,8 @@ A moderation bot I made so I could kick Carlbot, but which now has now become qu
     - Criteria: user ID, role ID, message pattern
     - Optionally with a custom alert message with tokens: `$userId $content`
     - Also **DeleteAlert**, **DeleteAlerts**, and **RecommendedAlerts**
+  - **GuildMods**: assign moderator roles for your guild
+    - Only the guild owner can use this command
 - Fun
   - **Leaderboard**: keeps track of user messages and ranks them
   - **Confess**: repeats a message in a channel, anonymously

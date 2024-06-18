@@ -4,23 +4,14 @@ import { AlertEvent, HandleAlert } from './Alert';
 
 /** Restore roles if somebody leaves and rejoins */
 export const PermaRole: Feature = {
-  /** Add new roles or remove old roles */
-  async HandleMemberUpdate(oldMember, newMember) {
-    const previousRoles = oldMember.roles.cache;
-    const currentRoles = newMember.roles.cache;
-    const addedRoles = currentRoles.filter(role => !previousRoles.has(role.id));
-    const removedRoles = previousRoles.filter(
-      role => !currentRoles.has(role.id),
-    );
-    if (!addedRoles.size && !removedRoles.size) return;
+  async HandleMemberUpdate(_, newMember) {
+    const roles = newMember.roles.cache.map(x => BigInt(x.id));
     const userSf = BigInt(newMember.id);
     await prisma.$transaction([
-      ...addedRoles.map(({ id }) =>
-        prisma.permaRole.create({ data: { userSf, roleSf: BigInt(id) } }),
-      ),
-      ...removedRoles.map(({ id }) =>
-        prisma.permaRole.deleteMany({ where: { userSf, roleSf: BigInt(id) } }),
-      ),
+      prisma.permaRole.deleteMany({ where: { userSf } }),
+      prisma.permaRole.createMany({
+        data: roles.map(roleSf => ({ userSf, roleSf })),
+      }),
     ]);
   },
   /** Restore roles if any are stored */

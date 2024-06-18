@@ -38,6 +38,7 @@ import { SingleMessage, DeleteSingleMessage } from './SingleMessage';
 import { PingSpam } from './PingSpam';
 import { PingProtect } from './PingProtect';
 import { Transcript } from './Transcript';
+import { GuildMods } from './GuildMods';
 
 export const features = {
   ...{ PermaRole, InviteSpam, Ping, WhitelistChannel, MirrorGuild },
@@ -48,6 +49,7 @@ export const features = {
   ...{ RoleList, RoleListAddRole, RoleListRemoveRole },
   ...{ SingleMessage, DeleteSingleMessage /* MutualTimeout */ },
   ...{ PingSpam, PingProtect, GlobalChat, GlobalChatList },
+  ...{ GuildMods },
 };
 
 export type FeatureConfig = {
