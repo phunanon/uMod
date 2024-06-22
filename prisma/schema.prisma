@@ -132,3 +132,14 @@ model GuildMods {
 
   @@unique([guildSf, roleSf])
 }
+
+model Histogram {
+  id      Int      @id @default(autoincrement())
+  since   DateTime @default(now())
+  sf      BigInt
+  weekDay Int
+  dayHour Int
+  count   Int
+
+  @@unique([sf, weekDay, dayHour])
+}

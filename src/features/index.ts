@@ -39,6 +39,7 @@ import { PingSpam } from './PingSpam';
 import { PingProtect } from './PingProtect';
 import { Transcript } from './Transcript';
 import { GuildMods } from './GuildMods';
+import { Histogram } from './Histogram';
 
 export const features = {
   ...{ PermaRole, InviteSpam, Ping, WhitelistChannel, MirrorGuild },
@@ -49,7 +50,7 @@ export const features = {
   ...{ RoleList, RoleListAddRole, RoleListRemoveRole },
   ...{ SingleMessage, DeleteSingleMessage /* MutualTimeout */ },
   ...{ PingSpam, PingProtect, GlobalChat, GlobalChatList },
-  ...{ GuildMods },
+  ...{ GuildMods, Histogram },
 };
 
 export type FeatureConfig = {

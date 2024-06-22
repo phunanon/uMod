@@ -33,6 +33,7 @@ A moderation bot I made so I could kick Carlbot, but which now has now become qu
     - Also **ConfessMute**
   - **GlobalChat**: mirrors messages between guilds using public or private rooms
     - Includes message editing, deleting, and typing indication
+  - **Histogram**: generates a histogram of hourly and week daily message counts for a user or the guild
 - Useful
   - **Ping**: replies with "Pong!"
   - **StickyMessage**: periodically resends a message to a channel
@@ -47,8 +48,13 @@ Aspirations:
 - Auto-close ticket after a day of inactivity
 - Confess IDs are unique per confession
 - Global chat reacts, first message introduction
-- bottom-of-roles-list check
 - caching for various things
+- bump reminder
+- fix media double-send in guild mirroring
+- auto role
+- global chat mute message context function
+- fight mode (blocked out of all channels except one for an hour)
+- /timestamp
 
 ## To host it yourself
 
