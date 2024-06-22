@@ -13,6 +13,7 @@ export enum AlertEvent {
   Note = 'note',
   Audit = 'audit',
   Milestone = 'milestone',
+  FirstMessage = 'first-message',
 }
 
 export const Alert: Feature = {
@@ -36,6 +37,7 @@ export const Alert: Feature = {
             { name: 'Note created', value: AlertEvent.Note },
             { name: 'Moderation action', value: AlertEvent.Audit },
             { name: 'Membership milestone', value: AlertEvent.Milestone },
+            { name: 'First message sent', value: AlertEvent.FirstMessage },
           ],
           required: true,
         },
@@ -57,7 +59,8 @@ export const Alert: Feature = {
         },
         {
           name: 'alt-reason',
-          description: "Tokens: $content, $url, $user (won't ping)",
+          description:
+            "Tokens: $content, $url, $tag, $user (won't ping), $ping; \\n for newline",
           type: ApplicationCommandOptionType.String,
         },
       ],
@@ -74,7 +77,9 @@ export const Alert: Feature = {
       const userSf = nBigInt(options.get('user')?.user?.id);
       const roleSf = nBigInt(options.get('role')?.role?.id);
       const pattern = options.getString('pattern');
-      const altReason = options.getString('alt-reason');
+      const altReason = options
+        .getString('alt-reason')
+        ?.replaceAll('\\n', '\n');
 
       if (!event) {
         await interaction.editReply('An event must be provided.');
@@ -97,13 +102,15 @@ export const Alert: Feature = {
   async HandleMemberRemove(member) {
     const guildSf = BigInt(member.guild.id);
     const userSf = BigInt(member.id);
+    const { tag } = member.user;
     const roles = member.roles.cache.map(role => BigInt(role.id));
-    await HandleAlert({ guildSf, userSf, event: AlertEvent.Leave, roles });
+    await HandleAlert({ guildSf, userSf, tag, event: AlertEvent.Leave, roles });
   },
   async HandleMemberAdd(member) {
     const guildSf = BigInt(member.guild.id);
     const userSf = BigInt(member.id);
-    await HandleAlert({ guildSf, userSf, event: AlertEvent.Join });
+    const { tag } = member.user;
+    await HandleAlert({ guildSf, userSf, tag, event: AlertEvent.Join });
     const count = member.guild.memberCount;
     if ((count < 100 && !(count % 10)) || count % 100 === 0) {
       const content = `${count} members :tada:`;
@@ -121,22 +128,40 @@ export const Alert: Feature = {
     await HandleAlert({
       guildSf,
       userSf,
+      tag: newMember.user.tag,
       event: AlertEvent.Role,
       roles,
       content,
     });
   },
-  async HandleMessage({ message, guildSf, userSf, isDelete, member }) {
-    if (!message.content || isDelete) return;
+  async HandleMessageCreate({ message, guildSf, userSf, member }) {
+    if (!message.content) return;
     const roles = member.roles.cache.map(role => BigInt(role.id));
+
     await HandleAlert({
       guildSf,
       userSf,
+      tag: member.user.tag,
       event: AlertEvent.Message,
       roles,
       content: message.content,
       url: message.url,
     });
+
+    const stats = await prisma.member.findFirst({
+      where: { guildSf, sf: userSf },
+      select: { numMessages: true },
+    });
+    if (stats?.numMessages === 1) {
+      await HandleAlert({
+        guildSf,
+        userSf,
+        tag: member.user.tag,
+        event: AlertEvent.FirstMessage,
+        roles,
+        url: message.url,
+      });
+    }
   },
   async HandleAuditLog({ kind, executor, target, reason }, guild) {
     if (reason.includes('Pinging protected')) return;
@@ -156,7 +181,11 @@ export const Alert: Feature = {
     const userSf = BigInt(newState.id);
     const from = oldState.channel;
     const to = newState.channel;
-    const alert = { guildSf, userSf };
+    const alert = {
+      guildSf,
+      userSf,
+      tag: newState.member?.user.tag,
+    };
     if (from)
       await HandleAlert({
         ...alert,
@@ -252,25 +281,25 @@ export const RecommendedAlerts: Feature = {
             guildSf,
             channelSf,
             event: AlertEvent.Join,
-            altReason: '$user joined',
+            altReason: '$user ($tag) joined',
           },
           {
             guildSf,
             channelSf,
             event: AlertEvent.Leave,
-            altReason: '$user left',
+            altReason: '$user ($tag) left',
           },
           {
             guildSf,
             channelSf,
             event: AlertEvent.JoinVC,
-            altReason: '$user joined $content',
+            altReason: '$user ($tag) joined $content',
           },
           {
             guildSf,
             channelSf,
             event: AlertEvent.LeaveVC,
-            altReason: '$user left $content',
+            altReason: '$user ($tag) left $content',
           },
           { guildSf, channelSf, event: AlertEvent.Message },
           { guildSf, channelSf, event: AlertEvent.Role },
@@ -290,6 +319,7 @@ type HandleInfo = {
   event: AlertEvent;
   guildSf: bigint;
   userSf?: bigint;
+  tag?: string;
   roles?: bigint[];
   content?: string | null;
   url?: string;
@@ -324,17 +354,22 @@ export const HandleAlert = async (i: HandleInfo) => {
     if (regex && i.content && !regex.test(i.content)) continue;
     const channel = await client.channels.fetch(`${channelSf}`);
     if (!isGoodChannel(channel)) continue;
+    const uSf = userSf ?? i.userSf ?? null;
 
     const altReason = a.altReason
       ?.replaceAll(/\$content/g, i.content ?? '[no content]')
-      .replaceAll(/\$user/g, `<@${i.userSf}>`)
+      .replaceAll(/\$user/g, uSf ? `<@${uSf}>` : '[unknown $user]')
+      .replaceAll(/\$ping/g, uSf ? `<@${uSf}>` : '[unknown $ping]')
+      .replaceAll(/\$tag/g, i.tag ?? '[unknown $tag]')
       .replaceAll(/\$url/g, i.url ?? '[no URL]');
-    const info = alertInfo(event, userSf ?? i.userSf ?? null, roleSf, pattern);
+    const info = alertInfo(event, uSf, roleSf, pattern);
+    const allowedMentions =
+      a.altReason && uSf ? { users: [`${uSf}`] } : { parse: [] };
     const content =
       `||${a.id}|| ` +
       (altReason || info) +
       (requireContent ? `: ${i.content}` : '');
-    await channel.send({ content, allowedMentions: { parse: [] } });
+    await channel.send({ content, allowedMentions });
   }
 };
 

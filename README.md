@@ -21,7 +21,7 @@ A moderation bot I made so I could kick Carlbot, but which now has now become qu
   - **ChannelBan**: prevents a user from sending messages in a channel
     - these are automatically restored if the user leaves and joins again
   - **Alerts**: sends a message to a channel reacting to a specific event
-    - Events: join, leave, role assignment, role restoration, moderation note, moderator action (ban, unban, kick, timeout, channel ban)
+    - Events: join, leave, role assignment, role restoration, moderation note, moderator action (ban, unban, kick, timeout, channel ban), first message in server, join VC, leave VC, membership milestone
     - Criteria: user ID, role ID, message pattern
     - Optionally with a custom alert message with tokens: `$userId $content`
     - Also **DeleteAlert**, **DeleteAlerts**, and **RecommendedAlerts**
@@ -48,6 +48,7 @@ Aspirations:
 - Confess IDs are unique per confession
 - Global chat reacts, first message introduction
 - bottom-of-roles-list check
+- caching for various things
 
 ## To host it yourself
 

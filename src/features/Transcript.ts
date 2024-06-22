@@ -90,7 +90,7 @@ const tick = async () => {
     }
   })();
 
-  if (!dest || messages.length % 500) return;
+  if (!dest && (messages.length % 500)) return;
 
   const numMsg = messages.length.toLocaleString();
   const elapsedMs = new Date().getTime() - job.startedAt.getTime();

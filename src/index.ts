@@ -3,7 +3,6 @@ import { client, isGoodChannel, log, prisma } from './infrastructure';
 import { Feature, features } from './features';
 import {
   AuditLogEvent,
-  ClientUser,
   Guild,
   GuildAuditLogsEntry,
   Interaction,
@@ -11,7 +10,10 @@ import {
   PartialMessage,
   User,
 } from 'discord.js';
+import { assert } from 'console';
 dotenv.config();
+const { DISCORD_TOKEN } = process.env;
+assert(DISCORD_TOKEN, 'DISCORD_TOKEN must be set in .env');
 
 console.log('Loading...');
 
@@ -55,7 +57,7 @@ client.once('ready', async () => {
 });
 
 (async () => {
-  await client.login(process.env.DISCORD_TOKEN);
+  await client.login(DISCORD_TOKEN);
 })();
 
 function failable<T extends (...args: any[]) => Promise<void>>(fn: T) {
