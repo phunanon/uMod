@@ -35,16 +35,21 @@ export const Histogram: Feature = {
       const kind = interaction.options.getString('kind') ?? 'daily';
       const user = interaction.options.getUser('user');
       const sf = user ? BigInt(user.id) : guildSf;
-      const histogram = await prisma.histogram.findMany({
-        where: { sf },
-        select: { weekDay: true, dayHour: true, count: true },
-      });
+      const histogram = await prisma.histogram.findMany({ where: { sf } });
+      const earliestSince = histogram.reduce((acc, { since }) => {
+        if (since < acc) return since;
+        return acc;
+      }, new Date());
+      const days = Math.ceil(
+        (Date.now() - earliestSince.getTime()) / (1000 * 60 * 60 * 24),
+      );
+      const text = `Over the past ${days} day` + (days === 1 ? '' : 's');
 
       const embed =
         kind === 'daily' ? dayHistogram(histogram) : hourHistogram(histogram);
       await interaction.editReply({
         content: `Histogram for ${user ? `<@${user.id}>` : guild.name}`,
-        embeds: [embed],
+        embeds: [{ ...embed, footer: { text } }],
       });
     },
   },
@@ -67,7 +72,7 @@ export const Histogram: Feature = {
 };
 
 type Count = { weekDay: number; dayHour: number; count: number };
-const w = 20;
+const w = 12;
 
 function dayHistogram(counts: Count[]) {
   const dayCounts = counts.reduce((acc, { weekDay, count }) => {

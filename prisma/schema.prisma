@@ -143,3 +143,13 @@ model Histogram {
 
   @@unique([sf, weekDay, dayHour])
 }
+
+model TempRole {
+  id      Int      @id @default(autoincrement())
+  userSf  BigInt
+  guildSf BigInt
+  roleSf  BigInt
+  expires DateTime
+
+  @@unique([userSf, guildSf, roleSf])
+}

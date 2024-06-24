@@ -364,7 +364,9 @@ export const HandleAlert = async (i: HandleInfo) => {
       .replaceAll(/\$url/g, i.url ?? '[no URL]');
     const info = alertInfo(event, uSf, roleSf, pattern);
     const allowedMentions =
-      a.altReason && uSf ? { users: [`${uSf}`] } : { parse: [] };
+      a.altReason?.includes('$ping') && uSf
+        ? { users: [`${uSf}`] }
+        : { parse: [] };
     const content =
       `||${a.id}|| ` +
       (altReason || info) +

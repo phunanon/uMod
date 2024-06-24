@@ -71,9 +71,12 @@ const tick = async () => {
   });
 
   messages.push(
-    ...batch.map(({ id, author, content, attachments }) => {
+    ...batch.map(({ id, author, content, attachments, reference }) => {
       const txt = [content, ...attachments.map(a => a.url)].join(' ');
-      return `${id}: ${author.id}: ${author.tag}: ${txt}`;
+      return (
+        `${id}: ${author.id}: ${author.tag}: ${txt}` +
+        (reference ? ` (in reply to ${reference.messageId})` : '')
+      );
     }),
   );
   job.before = batch.last()?.id ?? null;
@@ -90,7 +93,7 @@ const tick = async () => {
     }
   })();
 
-  if (!dest && (messages.length % 500)) return;
+  if (!dest && messages.length % 1000) return;
 
   const numMsg = messages.length.toLocaleString();
   const elapsedMs = new Date().getTime() - job.startedAt.getTime();

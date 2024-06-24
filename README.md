@@ -27,6 +27,7 @@ A moderation bot I made so I could kick Carlbot, but which now has now become qu
     - Also **DeleteAlert**, **DeleteAlerts**, and **RecommendedAlerts**
   - **GuildMods**: assign moderator roles for your guild
     - Only the guild owner can use this command
+  - **TempRole**: assign a role to a user for a specified amount of time
 - Fun
   - **Leaderboard**: keeps track of user messages and ranks them
   - **Confess**: repeats a message in a channel, anonymously
@@ -63,8 +64,7 @@ Instructions for Node.js, in the terminal:
 ```
 npm i -g pm2                       # Keeps the bot running even if it crashes
 npm ci                             # Installs exact dependencies
-npx prisma generate                # Generates Prisma client
-npx prisma migrate dev             # Migrates the database
+npx prisma migrate dev             # Migrates the database and generates client
 pm2 start out/index.js --name uMod # Starts up the bot
 ```
 
