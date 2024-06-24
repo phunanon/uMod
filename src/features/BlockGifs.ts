@@ -40,12 +40,11 @@ export const BlockGifs: Feature = {
     if (!existing?.blockGifs) return;
 
     const hasGif = message.attachments.some(a => a.contentType === 'image/gif');
-    const hasTenor = message.content
-      .toLowerCase()
-      .includes('tenor.com/view');
-    
+    const hasTenor = message.content.toLowerCase().includes('tenor.com/view');
+
     if (hasGif || hasTenor) {
       await message.delete();
+      return 'stop';
     }
 
     return;

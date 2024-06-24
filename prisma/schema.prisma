@@ -153,3 +153,13 @@ model TempRole {
 
   @@unique([userSf, guildSf, roleSf])
 }
+
+model Acquaintance {
+  id      Int      @id @default(autoincrement())
+  since   DateTime @default(now())
+  userASf BigInt
+  userBSf BigInt
+  count   Int
+
+  @@unique([userASf, userBSf])
+}

@@ -35,6 +35,7 @@ A moderation bot I made so I could kick Carlbot, but which now has now become qu
   - **GlobalChat**: mirrors messages between guilds using public or private rooms
     - Includes message editing, deleting, and typing indication
   - **Histogram**: generates a histogram of hourly and week daily message counts for a user or the guild
+  - **Acquaintances**: analyses the top three of who each user spends the most time talking to in chat
 - Useful
   - **Ping**: replies with "Pong!"
   - **StickyMessage**: periodically resends a message to a channel
@@ -54,7 +55,6 @@ Aspirations:
 - fix media double-send in guild mirroring
 - auto role
 - global chat mute message context function
-- fight mode (blocked out of all channels except one for an hour)
 - /timestamp
 
 ## To host it yourself
