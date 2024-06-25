@@ -43,13 +43,13 @@ A moderation bot I made so I could kick Carlbot, but which now has now become qu
   - **RoleList**: maintains a message with a list of members with a role
   - **MutualTimeout**: allows anybody to mute another user but only if they are muted in return
     - Disabled in code by default
-  - **Transcript**: sends a plaintext transcript of a channel to a channel
+  - **Transcript**: sends a CSV transcript of a channel to a channel
 
 Aspirations:
 
 - Auto-close ticket after a day of inactivity
 - Confess IDs are unique per confession
-- Global chat reacts, first message introduction
+- GlobalChat first message introduction
 - caching for various things
 - bump reminder
 - fix media double-send in guild mirroring

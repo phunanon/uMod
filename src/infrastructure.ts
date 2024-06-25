@@ -17,10 +17,11 @@ export const client = new Client({
     IntentsBitField.Flags.Guilds,
     GatewayIntentBits.GuildMembers,
     GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.MessageContent,
     GatewayIntentBits.GuildModeration,
     GatewayIntentBits.GuildVoiceStates,
     GatewayIntentBits.GuildMessageTyping,
+    GatewayIntentBits.GuildMessageReactions,
+    GatewayIntentBits.MessageContent,
   ],
   partials: [Partials.Channel, Partials.Message],
   closeTimeout: 6_000,
@@ -34,3 +35,5 @@ export const isGoodChannel = (
 ): channel is TextChannel | VoiceChannel =>
   channel?.type === ChannelType.GuildText ||
   channel?.type === ChannelType.GuildVoice;
+
+export const sanitiseTag = (tag: string) => tag.replace(new RegExp('([_*#])', 'g'), '\\$1')

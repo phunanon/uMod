@@ -1,6 +1,6 @@
 import { ApplicationCommandOptionType } from 'discord.js';
 import { Feature, TextChannels } from '.';
-import { client, isGoodChannel, prisma } from '../infrastructure';
+import { client, isGoodChannel, prisma, sanitiseTag } from '../infrastructure';
 
 const bufferLen = 10_000;
 const m2m: { channelId: string; messageId: string }[][] = [];
@@ -35,7 +35,7 @@ export const GlobalChat: Feature = {
       message.content.length > 1500
         ? `${message.content.slice(0, 1500)}...`
         : message.content;
-    const content = `**${nickname}**: ${truncated}`;
+    const content = `**${sanitiseTag(nickname)}**: ${truncated}`;
     const files = message.attachments.map(a => a.url);
     const payload = { content, files, allowedMentions: { parse: [] } };
 
@@ -81,6 +81,22 @@ export const GlobalChat: Feature = {
     const chats = await GetChatsForChannel(BigInt(typing.channel.id));
     for (const { channel } of chats ?? []) {
       await channel.sendTyping();
+    }
+  },
+  async HandleReactionAdd({ message, emoji }, user) {
+    if (user.id === client.user?.id) return;
+
+    const associations = m2m.find(m =>
+      m.some(({ messageId }) => messageId === message.id),
+    );
+    if (!associations) return;
+
+    for (const { channelId, messageId } of associations) {
+      if (messageId === message.id) continue;
+      const channel = await client.channels.fetch(channelId);
+      if (!isGoodChannel(channel)) continue;
+      const msg = await channel.messages.fetch(messageId);
+      await msg.react(emoji);
     }
   },
   Interaction: {

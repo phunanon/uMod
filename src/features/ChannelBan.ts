@@ -31,19 +31,18 @@ export const ChannelBan: Feature = {
       await interaction.deferReply({ ephemeral: true });
 
       const { options } = interaction;
-      const user = options.getUser('user');
-      const reason = options.getString('reason');
-
-      if (!user || !reason) {
-        await interaction.editReply('Invalid user or reason.');
-        return;
-      }
+      const user = options.getUser('user', true);
+      const reason = options.getString('reason', true);
 
       const member = await guild.members.fetch(user.id);
       if (!member) {
         await interaction.editReply('User not found.');
         return;
       }
+
+      await channel.permissionOverwrites.create(user.id, {
+        ViewChannel: false,
+      });
 
       const existing = await prisma.channelBan.findFirst({
         where: { guildSf, userSf, channelSf },
@@ -53,10 +52,6 @@ export const ChannelBan: Feature = {
         await interaction.editReply('User already banned from this channel.');
         return;
       }
-
-      await channel.permissionOverwrites.create(user.id, {
-        ViewChannel: false,
-      });
 
       await prisma.channelBan.create({ data: { guildSf, userSf, channelSf } });
 

@@ -1,4 +1,4 @@
-import { client, isGoodChannel, prisma } from '../infrastructure';
+import { client, isGoodChannel, prisma, sanitiseTag } from '../infrastructure';
 import { Feature, MsgCtx } from '.';
 
 export const MirrorGuild: Feature = {
@@ -48,12 +48,13 @@ async function HandleMessage({ message, guildSf }: MsgCtx) {
   const author = message.author;
   if (!author) return;
 
+  const tag = sanitiseTag(author.tag);
   const content = message.content || '[No content]';
   const truncated =
     content.length > 1000 ? content.slice(0, 1000) + '...' : content;
 
   await channel.send({
-    content: `**${author.tag}** ${message.url} ||${author.id}||\n${truncated}`,
+    content: `**${tag}** ${message.url} ||${author.id}||\n${truncated}`,
     files: message.attachments.map(a => a.url),
     allowedMentions: { parse: [] },
   });

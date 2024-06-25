@@ -2,6 +2,7 @@ import {
   ApplicationCommandManager,
   ButtonInteraction,
   ChatInputCommandInteraction,
+  ClientEvents,
   DMChannel,
   Guild,
   GuildMember,
@@ -126,6 +127,9 @@ export type Feature = {
   HandleAuditLog?: (entry: AuditEvent, guild: Guild) => Promise<void>;
   HandleChannelDelete?: (
     channel: DMChannel | NonThreadGuildBasedChannel,
+  ) => Promise<void>;
+  HandleReactionAdd?: (
+    ...[{ message, emoji }, user]: ClientEvents['messageReactionAdd']
   ) => Promise<void>;
 } & (
   | { HandleMessage: (context: MsgCtx) => Promise<void | 'stop'> }

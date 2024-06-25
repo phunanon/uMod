@@ -3,7 +3,8 @@ import { Feature } from '.';
 import { prisma } from '../infrastructure';
 
 const latestAuthorSf = new Map<bigint, bigint>();
-const sort = (a: bigint, b: bigint) => Number(a - b);
+const sort = (x: bigint, y: bigint) =>
+  [x, y].toSorted((a, b) => Number(a - b)) as [bigint, bigint];
 
 export const Acquaintances: Feature = {
   async Init(commands) {
@@ -23,13 +24,13 @@ export const Acquaintances: Feature = {
   Interaction: {
     name: 'acquaintances',
     moderatorOnly: false,
-    async command({ interaction, guild, userSf: sf1 }) {
+    async command({ interaction }) {
       await interaction.deferReply();
 
       const user = interaction.options.getUser('user', true);
-      const sf2 = BigInt(user.id);
+      const sf = BigInt(user.id);
 
-      const [userASf, userBSf] = [sf1, sf2].sort(sort) as [bigint, bigint];
+      const [userASf, userBSf] = [sf, sf];
 
       const acquaintances = await prisma.acquaintance.findMany({
         where: { OR: [{ userASf }, { userBSf }] },
@@ -38,7 +39,7 @@ export const Acquaintances: Feature = {
       });
 
       const users = acquaintances.map(({ userASf, userBSf, count }) => ({
-        sf: userASf === sf1 ? userBSf : userASf,
+        sf: userASf === sf ? userBSf : userASf,
         count,
       }));
 
@@ -58,20 +59,15 @@ export const Acquaintances: Feature = {
   },
   async HandleMessageCreate({ channelSf, userSf }) {
     const latest = latestAuthorSf.get(channelSf);
-    if (latest === userSf) return;
-    if (!latest) {
-      latestAuthorSf.set(channelSf, userSf);
-      return;
-    }
+    latestAuthorSf.set(channelSf, userSf);
+    if (!latest || latest === userSf) return;
 
-    const [userASf, userBSf] = [latest, userSf].sort(sort) as [bigint, bigint];
+    const [userASf, userBSf] = sort(latest, userSf);
 
     await prisma.acquaintance.upsert({
       where: { userASf_userBSf: { userASf, userBSf } },
       update: { count: { increment: 1 } },
       create: { userASf, userBSf, count: 1 },
     });
-
-    latestAuthorSf.set(channelSf, userSf);
   },
 };

@@ -16,6 +16,15 @@ type Job = {
 };
 const jobs: Job[] = [];
 
+const headers = 'Message ID,Author ID,Author,Content,Reference ID';
+const csvCells = (...args: (string | undefined)[]) =>
+  args
+    .map(a => {
+      const quoted = a?.includes(',') ? `"${a.replace(/"/g, '""')}"` : a ?? '';
+      return quoted.replace(/\n/g, '\\n');
+    })
+    .join(',');
+
 export const Transcript: Feature = {
   async Init(commands) {
     await commands.create({
@@ -73,10 +82,7 @@ const tick = async () => {
   messages.push(
     ...batch.map(({ id, author, content, attachments, reference }) => {
       const txt = [content, ...attachments.map(a => a.url)].join(' ');
-      return (
-        `${id}: ${author.id}: ${author.tag}: ${txt}` +
-        (reference ? ` (in reply to ${reference.messageId})` : '')
-      );
+      return csvCells(id, author.id, author.tag, txt, reference?.messageId);
     }),
   );
   job.before = batch.last()?.id ?? null;
@@ -86,8 +92,8 @@ const tick = async () => {
       messages.reverse();
       jobs.splice(jobs.indexOf(job), 1);
       const attachment = new AttachmentBuilder(
-        Buffer.from(messages.join('\n'), 'utf-8'),
-      ).setName(`${channel.name} transcript.txt`);
+        Buffer.from(headers + '\n' + messages.join('\n'), 'utf-8'),
+      ).setName(`${channel.name} transcript.csv`);
       const content = `Transcription of ${channel.url}`;
       return await job.destination.send({ content, files: [attachment] });
     }
