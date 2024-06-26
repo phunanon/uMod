@@ -27,18 +27,12 @@ export const ChannelBan: Feature = {
   Interaction: {
     name: 'channel-ban',
     moderatorOnly: true,
-    async command({ interaction, guildSf, userSf, channelSf, channel, guild }) {
+    async command({ interaction, guildSf, userSf, channelSf, channel }) {
       await interaction.deferReply({ ephemeral: true });
 
       const { options } = interaction;
       const user = options.getUser('user', true);
       const reason = options.getString('reason', true);
-
-      const member = await guild.members.fetch(user.id);
-      if (!member) {
-        await interaction.editReply('User not found.');
-        return;
-      }
 
       await channel.permissionOverwrites.create(user.id, {
         ViewChannel: false,
@@ -82,6 +76,7 @@ export const ChannelBan: Feature = {
     const channels = await member.guild.channels.fetch();
     for (const { channelSf } of channelBans) {
       const channel = channels.get(`${channelSf}`);
+      console.log("restoring channel ban", userSf, channelSf, channel?.name);
       if (!channel) continue;
       await channel.permissionOverwrites.create(member.id, {
         ViewChannel: false,

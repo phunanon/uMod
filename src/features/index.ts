@@ -44,6 +44,7 @@ import { Histogram } from './Histogram';
 import { TempRole } from './TempRole';
 import { Acquaintances } from './Acquaintances';
 import { BumpReminder, BumpRemind, BumpUnremind } from './BumpReminder';
+import { DisallowRole } from './DisallowRole';
 
 export const features = {
   ...{ PermaRole, InviteSpam, Ping, WhitelistChannel, MirrorGuild },
@@ -56,6 +57,7 @@ export const features = {
   ...{ PingSpam, PingProtect, GlobalChat, GlobalChatList },
   ...{ GuildMods, Histogram, TempRole, Acquaintances },
   ...{ BumpReminder, BumpRemind, BumpUnremind },
+  ...{ DisallowRole },
 };
 
 export type FeatureConfig = {

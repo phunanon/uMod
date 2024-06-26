@@ -28,6 +28,7 @@ A moderation bot I made so I could kick Carlbot, but which now has now become qu
   - **GuildMods**: assign moderator roles for your guild
     - Only the guild owner can use this command
   - **TempRole**: assign a role to a user for a specified amount of time
+  - **DisallowRole**: prevent a user from having a role
 - Fun
   - **Leaderboard**: keeps track of user messages and ranks them
   - **Confess**: repeats a message in a channel, anonymously

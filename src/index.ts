@@ -134,6 +134,7 @@ async function _handleInteraction(interaction: Interaction): Promise<void> {
   }
 
   const details = await FetchDetails(guild, userSf);
+  if (!details) return;
   if (feature.moderatorOnly && !details.isMod) {
     const { noMods } = details;
     const content = noMods
@@ -179,6 +180,7 @@ function handleMessage(kind: 'create' | 'update' | 'delete') {
     if (await IsChannelUnmoderated(channelSf)) return;
     if (!message.guildId || !message.guild) return;
     if (!client.user) return;
+
     const { guild, channel } = message;
     const guildSf = BigInt(message.guildId);
     const userSf = BigInt(message.author.id);
@@ -186,6 +188,8 @@ function handleMessage(kind: 'create' | 'update' | 'delete') {
     const isEdit = kind === 'update';
     const isDelete = kind === 'delete';
     const details = await FetchDetails(guild, userSf);
+    if (!details) return;
+
     const context = {
       ...{ guild, channel, message },
       ...{ guildSf, channelSf, userSf },
@@ -260,7 +264,14 @@ const FetchDetails = async (guild: Guild, userSf: bigint) => {
   const roles = await prisma.guildMods.findMany({
     where: { guildSf: BigInt(guild.id) },
   });
-  const member = await guild.members.fetch(`${userSf}`);
+  const member = await (async () => {
+    try {
+      return await guild.members.fetch(`${userSf}`);
+    } catch (e) {
+      return;
+    }
+  })();
+  if (!member) return;
   const isMod =
     isOwner || roles.some(role => member.roles.cache.has(`${role.roleSf}`));
   return { member, isMod, isOwner, noMods: !roles.length };

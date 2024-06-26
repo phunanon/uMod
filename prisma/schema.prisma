@@ -180,3 +180,11 @@ model BumpReminderUser {
   BumpReminder   BumpReminder @relation(fields: [bumpReminderId], references: [id])
   bumpReminderId Int
 }
+
+model DisallowRole {
+  id     Int    @id @default(autoincrement())
+  userSf BigInt
+  roleSf BigInt
+
+  @@unique([userSf, roleSf])
+}
