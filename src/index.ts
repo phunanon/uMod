@@ -20,7 +20,7 @@ console.log('Loading...');
 client.once('ready', async () => {
   for (const [_, guild] of client.guilds.cache) {
     //(await guild.members.fetchMe()).setNickname('µM');
-    process.stdout.write(`${guild.name}  `);
+    console.log(`${guild.id} ${guild.name}`);
   }
 
   client
@@ -80,7 +80,7 @@ const handleEvent =
       | 'HandleChannelDelete'
       | 'HandleVoiceStateUpdate'
       | 'HandleTypingStart'
-      | 'HandleReactionAdd'
+      | 'HandleReactionAdd',
   >(
     fn: T,
   ) =>
@@ -175,7 +175,6 @@ function handleMessage(kind: 'create' | 'update' | 'delete') {
     })();
     if (!message) return;
     if (!isGoodChannel(message.channel)) return;
-    if (message.author?.bot !== false) return;
     const channelSf = BigInt(message.channel.id);
     if (await IsChannelUnmoderated(channelSf)) return;
     if (!message.guildId || !message.guild) return;
@@ -183,6 +182,7 @@ function handleMessage(kind: 'create' | 'update' | 'delete') {
     const { guild, channel } = message;
     const guildSf = BigInt(message.guildId);
     const userSf = BigInt(message.author.id);
+    const isBot = message.author.bot;
     const isEdit = kind === 'update';
     const isDelete = kind === 'delete';
     const details = await FetchDetails(guild, userSf);
@@ -195,6 +195,10 @@ function handleMessage(kind: 'create' | 'update' | 'delete') {
 
     for (const [name, feature] of Object.entries(features)) {
       const handler = (() => {
+        if (isBot) {
+          if ('HandleBotMessage' in feature) return feature.HandleBotMessage;
+          return;
+        }
         if (isEdit && 'HandleMessageUpdate' in feature)
           return feature.HandleMessageUpdate;
         if (isDelete && 'HandleMessageDelete' in feature)

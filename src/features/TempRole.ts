@@ -4,6 +4,8 @@ import { client, prisma } from '../infrastructure';
 
 export const TempRole: Feature = {
   async Init(commands) {
+    setTimeout(check, 1000);
+
     await commands.create({
       name: 'temp-role',
       description: 'Give a user a role for a certain amount of time',
@@ -29,8 +31,6 @@ export const TempRole: Feature = {
         },
       ],
     });
-
-    setTimeout(check, 1000);
   },
   Interaction: {
     name: 'temp-role',

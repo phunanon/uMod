@@ -4,6 +4,7 @@ import { client, prisma } from '../infrastructure';
 
 export const StickyMessage: Feature = {
   async Init(commands) {
+    RenewStickyMessageSoon();
     await commands.create({
       name: 'sticky-message',
       description: 'Create a sticky message in the chat',
@@ -22,7 +23,6 @@ export const StickyMessage: Feature = {
         },
       ],
     });
-    RenewStickyMessageSoon();
   },
   async HandleChannelDelete(channel) {
     const channelSf = BigInt(channel.id);

@@ -35,7 +35,7 @@ export const MirrorGuild: Feature = {
   },
 };
 
-async function HandleMessage({ message, guildSf }: MsgCtx) {
+async function HandleMessage({ message, guildSf, isEdit }: MsgCtx) {
   const mirror = await prisma.guildMirror.findFirst({ where: { guildSf } });
 
   if (!mirror) return;
@@ -49,13 +49,13 @@ async function HandleMessage({ message, guildSf }: MsgCtx) {
   if (!author) return;
 
   const tag = sanitiseTag(author.tag);
-  const content = message.content || '[No content]';
+  const content = (isEdit ? '*' : '') + (message.content || '[No content]');
   const truncated =
     content.length > 1000 ? content.slice(0, 1000) + '...' : content;
 
   await channel.send({
     content: `**${tag}** ${message.url} ||${author.id}||\n${truncated}`,
-    files: message.attachments.map(a => a.url),
+    files: isEdit ? undefined : message.attachments.map(a => a.url),
     allowedMentions: { parse: [] },
   });
 }

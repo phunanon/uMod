@@ -99,6 +99,13 @@ const tick = async () => {
     }
   })();
 
+  if (!dest && interaction.createdAt < new Date(Date.now() - 14 * 60_000)) {
+    await interaction.editReply(
+      "I'm still transcribing, but because it has been more than 14 minutes I can't give you more updates. Sit tight!",
+    );
+    return;
+  }
+
   if (!dest && messages.length % 1000) return;
 
   const numMsg = messages.length.toLocaleString();

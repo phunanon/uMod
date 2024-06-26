@@ -105,7 +105,7 @@ export const GlobalChat: Feature = {
     async command({ interaction, channelSf }) {
       await interaction.deferReply({ ephemeral: true });
 
-      const room = interaction.options.getString('chat') ?? 'General';
+      const room = interaction.options.getString('room') ?? 'General';
 
       const existingChannel = await prisma.globalChat.findFirst({
         where: { channelSf },

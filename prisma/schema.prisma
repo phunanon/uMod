@@ -163,3 +163,20 @@ model Acquaintance {
 
   @@unique([userASf, userBSf])
 }
+
+model BumpReminder {
+  id        Int      @id @default(autoincrement())
+  guildSf   BigInt   @unique
+  channelSf BigInt
+  remindAt  DateTime
+
+  Users BumpReminderUser[]
+}
+
+model BumpReminderUser {
+  id     Int    @id @default(autoincrement())
+  userSf BigInt
+
+  BumpReminder   BumpReminder @relation(fields: [bumpReminderId], references: [id])
+  bumpReminderId Int
+}

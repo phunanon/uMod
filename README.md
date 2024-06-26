@@ -44,6 +44,7 @@ A moderation bot I made so I could kick Carlbot, but which now has now become qu
   - **MutualTimeout**: allows anybody to mute another user but only if they are muted in return
     - Disabled in code by default
   - **Transcript**: sends a CSV transcript of a channel to a channel
+  - **BumpReminder**: reminds users to bump on Disboard in a channel
 
 Aspirations:
 

@@ -43,6 +43,7 @@ import { GuildMods } from './GuildMods';
 import { Histogram } from './Histogram';
 import { TempRole } from './TempRole';
 import { Acquaintances } from './Acquaintances';
+import { BumpReminder, BumpRemind, BumpUnremind } from './BumpReminder';
 
 export const features = {
   ...{ PermaRole, InviteSpam, Ping, WhitelistChannel, MirrorGuild },
@@ -54,6 +55,7 @@ export const features = {
   ...{ SingleMessage, DeleteSingleMessage /* MutualTimeout */ },
   ...{ PingSpam, PingProtect, GlobalChat, GlobalChatList },
   ...{ GuildMods, Histogram, TempRole, Acquaintances },
+  ...{ BumpReminder, BumpRemind, BumpUnremind },
 };
 
 export type FeatureConfig = {
@@ -131,6 +133,7 @@ export type Feature = {
   HandleReactionAdd?: (
     ...[{ message, emoji }, user]: ClientEvents['messageReactionAdd']
   ) => Promise<void>;
+  HandleBotMessage?: (context: MsgCtx) => Promise<void | 'stop'>;
 } & (
   | { HandleMessage: (context: MsgCtx) => Promise<void | 'stop'> }
   | { HandleMessageCreate: (context: NarrowMsgCtx) => Promise<void | 'stop'> }
