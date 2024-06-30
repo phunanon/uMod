@@ -40,34 +40,39 @@ export const Histogram: Feature = {
         if (since < acc) return since;
         return acc;
       }, new Date());
-      const days = Math.ceil(
-        (Date.now() - earliestSince.getTime()) / (1000 * 60 * 60 * 24),
-      );
-      const text = `Over the past ${days} day` + (days === 1 ? '' : 's');
+      const since = `<t:${Math.round(earliestSince.getTime() / 1000)}:R>`;
 
-      const embed =
-        kind === 'daily' ? dayHistogram(histogram) : hourHistogram(histogram);
+      const makeEmbed = kind === 'daily' ? dayHistogram : hourHistogram;
+      const embed = makeEmbed(histogram);
+      embed.description += `\nSince ${since}`;
       await interaction.editReply({
         content: `Histogram for ${user ? `<@${user.id}>` : guild.name}`,
-        embeds: [{ ...embed, footer: { text } }],
+        embeds: [embed],
       });
     },
   },
   async HandleMessageCreate({ guildSf, userSf }) {
     const weekDay = (new Date().getUTCDay() + 6) % 7;
     const dayHour = new Date().getUTCHours();
-    await prisma.$transaction([
-      prisma.histogram.upsert({
-        where: { sf_weekDay_dayHour: { sf: guildSf, weekDay, dayHour } },
-        update: { count: { increment: 1 } },
-        create: { sf: guildSf, weekDay, dayHour, count: 1 },
-      }),
-      prisma.histogram.upsert({
-        where: { sf_weekDay_dayHour: { sf: userSf, weekDay, dayHour } },
-        update: { count: { increment: 1 } },
-        create: { sf: userSf, weekDay, dayHour, count: 1 },
-      }),
-    ]);
+
+    const makeUpsert = async (sf: bigint) => {
+      const where = { where: { sf, weekDay } };
+      const existing = await prisma.histogram.findFirst(where);
+      //Only start counting when its the zeroth hour of the day
+      if (dayHour && !existing) return [];
+      const sf_weekDay_dayHour = { sf, weekDay, dayHour };
+      return [
+        prisma.histogram.upsert({
+          where: { sf_weekDay_dayHour },
+          update: { count: { increment: 1 } },
+          create: { ...sf_weekDay_dayHour, count: 1 },
+        }),
+      ];
+    };
+
+    const guildUpsert = await makeUpsert(guildSf);
+    const userUpsert = await makeUpsert(userSf);
+    await prisma.$transaction([...guildUpsert, ...userUpsert]);
   },
 };
 

@@ -27,12 +27,14 @@ export const ChannelBan: Feature = {
   Interaction: {
     name: 'channel-ban',
     moderatorOnly: true,
-    async command({ interaction, guildSf, userSf, channelSf, channel }) {
+    async command({ interaction, ...ctx }) {
+      const { guildSf, userSf: authorSf, channelSf, channel } = ctx;
       await interaction.deferReply({ ephemeral: true });
 
       const { options } = interaction;
       const user = options.getUser('user', true);
       const reason = options.getString('reason', true);
+      const userSf = BigInt(user.id);
 
       await channel.permissionOverwrites.create(user.id, {
         ViewChannel: false,
@@ -57,7 +59,7 @@ export const ChannelBan: Feature = {
         content: `concerning <@${user.id}>: ${content}`,
       });
       await prisma.note.create({
-        data: { guildSf, authorSf: userSf, userSf: BigInt(user.id), content },
+        data: { guildSf, authorSf, userSf: BigInt(user.id), content },
       });
 
       await interaction.editReply(
@@ -76,7 +78,7 @@ export const ChannelBan: Feature = {
     const channels = await member.guild.channels.fetch();
     for (const { channelSf } of channelBans) {
       const channel = channels.get(`${channelSf}`);
-      console.log("restoring channel ban", userSf, channelSf, channel?.name);
+      console.log('restoring channel ban', userSf, channelSf, channel?.name);
       if (!channel) continue;
       await channel.permissionOverwrites.create(member.id, {
         ViewChannel: false,

@@ -32,14 +32,14 @@ export const DisallowRole: Feature = {
         where: { userSf_roleSf },
       });
       if (existing) {
-        await roles.remove(existing.roleSf.toString());
+        await roles.remove(`${existing.roleSf}`);
       }
     }
   },
   Interaction: {
     name: 'disallow-role',
     moderatorOnly: true,
-    async command({ interaction, guildSf, userSf: authorSf }) {
+    async command({ interaction, guild, guildSf, userSf: authorSf }) {
       await interaction.deferReply();
 
       const user = interaction.options.getUser('user', true);
@@ -59,7 +59,14 @@ export const DisallowRole: Feature = {
       if (existing) {
         await prisma.disallowRole.delete({ where: { userSf_roleSf } });
       } else {
-        await prisma.disallowRole.create({ data: userSf_roleSf });
+        try {
+          const member = await guild.members.fetch(user.id);
+          await member.roles.remove(`${roleSf}`);
+          await prisma.disallowRole.create({ data: userSf_roleSf });
+        } catch (e) {
+          await interaction.editReply('Failed to remove role from user.');
+          return;
+        }
       }
       await interaction.editReply({ content, allowedMentions });
       await prisma.note.create({ data });

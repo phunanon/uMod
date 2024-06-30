@@ -46,9 +46,13 @@ export const GlobalChat: Feature = {
       if (isEdit || isDelete) {
         for (const { messageId } of associations ?? []) {
           if (messageId === message.id) continue;
-          const msg = isEdit ? payload : `**${nickname}**: [deleted]`;
           try {
-            await channel.messages.edit(messageId, msg);
+            await channel.messages.edit(
+              messageId,
+              isEdit
+                ? payload
+                : { content: `**${nickname}**: [deleted]`, files: [] },
+            );
           } catch (e) {}
         }
         continue;

@@ -146,11 +146,14 @@ async function remind({ id, channelSf, Users }: Reminder) {
     return;
   }
 
-  const onlineUsers = (await channel.guild.members.fetch()).filter(
-    m => m.presence?.status === 'online',
-  );
+  const members = await channel.guild.members.fetch({
+    user: Users.map(u => `${u.userSf}`),
+  });
+  const onlineUsers = members.filter(m => m.presence?.status === 'online');
+  const dndUsers = members.filter(m => m.presence?.status === 'dnd');
+  const pingUsers = onlineUsers.size ? onlineUsers : dndUsers;
   const content =
-    Users.filter(u => onlineUsers.has(`${u.userSf}`))
+    Users.filter(u => pingUsers.has(`${u.userSf}`))
       .map(u => `<@${u.userSf}>`)
       .join(' ') || '.';
 
