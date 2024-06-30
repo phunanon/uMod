@@ -58,6 +58,7 @@ Aspirations:
 - auto role
 - global chat mute message context function
 - /timestamp
+- multiple tickets by putting a suffix on channel name
 
 ## To host it yourself
 

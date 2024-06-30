@@ -5,6 +5,7 @@ import {
   AuditLogEvent,
   Guild,
   GuildAuditLogsEntry,
+  GuildMember,
   Interaction,
   Message,
   PartialMessage,
@@ -100,6 +101,7 @@ async function _handleInteraction(interaction: Interaction): Promise<void> {
     (!interaction.isChatInputCommand() && !interaction.isButton()) ||
     !guild ||
     !member ||
+    !('_roles' in member) ||
     !client.user
   ) {
     if (interaction.isRepliable()) {
@@ -133,8 +135,7 @@ async function _handleInteraction(interaction: Interaction): Promise<void> {
     return;
   }
 
-  const details = await FetchDetails(guild, userSf);
-  if (!details) return;
+  const details = await FetchDetails(guild, member, userSf);
   if (feature.moderatorOnly && !details.isMod) {
     const { noMods } = details;
     const content = noMods
@@ -144,7 +145,11 @@ async function _handleInteraction(interaction: Interaction): Promise<void> {
     return;
   }
 
-  const context = { guildSf, userSf, channelSf, channel, guild, ...details };
+  const context = {
+    ...{ guildSf, userSf, channelSf },
+    ...{ guild, channel, member },
+    ...details,
+  };
   if (interaction.isChatInputCommand()) {
     if ('command' in feature) {
       await feature.command({ ...context, interaction });
@@ -181,14 +186,13 @@ function handleMessage(kind: 'create' | 'update' | 'delete') {
     if (!message.guildId || !message.guild) return;
     if (!client.user) return;
 
-    const { guild, channel } = message;
+    const { guild, channel, member } = message;
     const guildSf = BigInt(message.guildId);
     const userSf = BigInt(message.author.id);
     const isBot = message.author.bot;
     const isEdit = kind === 'update';
     const isDelete = kind === 'delete';
-    const details = await FetchDetails(guild, userSf);
-    if (!details) return;
+    const details = await FetchDetails(guild, member, userSf);
 
     const context = {
       ...{ guild, channel, message },
@@ -199,10 +203,6 @@ function handleMessage(kind: 'create' | 'update' | 'delete') {
 
     for (const [name, feature] of Object.entries(features)) {
       const handler = (() => {
-        if (isBot) {
-          if ('HandleBotMessage' in feature) return feature.HandleBotMessage;
-          return;
-        }
         if (isEdit && 'HandleMessageUpdate' in feature)
           return feature.HandleMessageUpdate;
         if (isDelete && 'HandleMessageDelete' in feature)
@@ -212,7 +212,10 @@ function handleMessage(kind: 'create' | 'update' | 'delete') {
         if ('HandleMessage' in feature) return feature.HandleMessage;
       })();
       try {
-        const signal = await handler?.(context);
+        const signal =
+          isBot && 'HandleBotMessage' in feature
+            ? await feature.HandleBotMessage?.(context)
+            : member && !isBot && (await handler?.({ ...context, member }));
         if (signal === 'stop') break;
       } catch (error) {
         console.error(name, error);
@@ -259,20 +262,17 @@ async function handleAudit(log: GuildAuditLogsEntry, guild: Guild) {
   }
 }
 
-const FetchDetails = async (guild: Guild, userSf: bigint) => {
+const FetchDetails = async <T extends GuildMember | null>(
+  guild: Guild,
+  member: T,
+  userSf: bigint,
+) => {
   const isOwner = BigInt(guild.ownerId) === userSf;
-  const roles = await prisma.guildMods.findMany({
+  const modRoles = await prisma.guildMods.findMany({
     where: { guildSf: BigInt(guild.id) },
   });
-  const member = await (async () => {
-    try {
-      return await guild.members.fetch(`${userSf}`);
-    } catch (e) {
-      return;
-    }
-  })();
-  if (!member) return;
-  const isMod =
-    isOwner || roles.some(role => member.roles.cache.has(`${role.roleSf}`));
-  return { member, isMod, isOwner, noMods: !roles.length };
+  const hasModRole =
+    member && modRoles.some(role => member.roles.cache.has(`${role.roleSf}`));
+  const isMod = (isOwner || hasModRole) ?? false;
+  return { isMod, isOwner, noMods: !modRoles.length };
 };

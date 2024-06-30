@@ -135,7 +135,9 @@ export type Feature = {
   HandleReactionAdd?: (
     ...[{ message, emoji }, user]: ClientEvents['messageReactionAdd']
   ) => Promise<void>;
-  HandleBotMessage?: (context: MsgCtx) => Promise<void | 'stop'>;
+  HandleBotMessage?: (
+    context: Omit<MsgCtx, 'member'>,
+  ) => Promise<void | 'stop'>;
 } & (
   | { HandleMessage: (context: MsgCtx) => Promise<void | 'stop'> }
   | { HandleMessageCreate: (context: NarrowMsgCtx) => Promise<void | 'stop'> }

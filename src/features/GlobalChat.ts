@@ -1,5 +1,5 @@
-import { ApplicationCommandOptionType } from 'discord.js';
-import { Feature, TextChannels } from '.';
+import { ApplicationCommandOptionType, GuildMember } from 'discord.js';
+import { Feature, MsgCtx, TextChannels } from '.';
 import { client, isGoodChannel, prisma, sanitiseTag } from '../infrastructure';
 
 const bufferLen = 10_000;
@@ -21,64 +21,10 @@ export const GlobalChat: Feature = {
       ],
     });
   },
-  async HandleMessage({ message, channelSf, isEdit, isDelete, member }) {
-    const chats = await GetChatsForChannel(channelSf);
-    if (!chats) return;
-
-    const associations = m2m.find(m =>
-      m.some(({ messageId }) => messageId === message.id),
-    );
-
-    const nickname =
-      member.displayName ?? member.nickname ?? message.author.tag;
-    const truncated =
-      message.content.length > 1500
-        ? `${message.content.slice(0, 1500)}...`
-        : message.content;
-    const content = `**${sanitiseTag(nickname)}**: ${truncated}`;
-    const files = message.attachments.map(a => a.url);
-    const payload = { content, files, allowedMentions: { parse: [] } };
-
-    const mids: (typeof m2m)[0] = [
-      { channelId: message.channel.id, messageId: message.id },
-    ];
-    for (const { channel } of chats) {
-      if (isEdit || isDelete) {
-        for (const { messageId } of associations ?? []) {
-          if (messageId === message.id) continue;
-          try {
-            await channel.messages.edit(
-              messageId,
-              isEdit
-                ? payload
-                : { content: `**${nickname}**: [deleted]`, files: [] },
-            );
-          } catch (e) {}
-        }
-        continue;
-      }
-
-      const reply = await (async () => {
-        const msgId = message.reference?.messageId;
-        if (!msgId) return;
-        const association = m2m
-          .find(m => m.some(({ messageId }) => messageId === msgId))
-          ?.find(({ channelId }) => channelId === channel.id);
-        const messageReference = association
-          ? await channel.messages.fetch(association.messageId)
-          : null;
-        return messageReference ? { messageReference } : undefined;
-      })();
-      const msg = await channel.send({ ...payload, reply });
-      mids.push({ channelId: channel.id, messageId: msg.id });
-    }
-
-    if (m2m.length === bufferLen) {
-      m2m[m2mIndex] = mids;
-      m2mIndex = (m2mIndex + 1) % bufferLen;
-    } else {
-      m2m.push(mids);
-    }
+  HandleMessage,
+  async HandleBotMessage(ctx) {
+    if (ctx.message.author.id === client.user?.id) return;
+    await HandleMessage(ctx);
   },
   async HandleTypingStart(typing) {
     if (typing.user.id === client.user?.id) return;
@@ -159,6 +105,68 @@ const GetChatsForChannel = async (channelSf: bigint) => {
 
   return chatsWithChannel;
 };
+
+async function HandleMessage(
+  ctx: Omit<MsgCtx, 'member'> & { member?: GuildMember },
+) {
+  const { message, channelSf, isEdit, isDelete, member } = ctx;
+  const chats = await GetChatsForChannel(channelSf);
+  if (!chats) return;
+
+  const associations = m2m.find(m =>
+    m.some(({ messageId }) => messageId === message.id),
+  );
+
+  const nickname =
+    member?.displayName ?? member?.nickname ?? message.author.username;
+  const truncated =
+    message.content.length > 1500
+      ? `${message.content.slice(0, 1500)}...`
+      : message.content;
+  const content = `**${sanitiseTag(nickname)}**: ${truncated}`;
+  const files = message.attachments.map(a => a.url);
+  const payload = { content, files, allowedMentions: { parse: [] } };
+
+  const mids: (typeof m2m)[0] = [
+    { channelId: message.channel.id, messageId: message.id },
+  ];
+  for (const { channel } of chats) {
+    if (isEdit || isDelete) {
+      for (const { messageId } of associations ?? []) {
+        if (messageId === message.id) continue;
+        try {
+          if (isDelete) {
+            await channel.messages.delete(messageId);
+          } else {
+            await channel.messages.edit(messageId, payload);
+          }
+        } catch (e) {}
+      }
+      continue;
+    }
+
+    const reply = await (async () => {
+      const msgId = message.reference?.messageId;
+      if (!msgId) return;
+      const association = m2m
+        .find(m => m.some(({ messageId }) => messageId === msgId))
+        ?.find(({ channelId }) => channelId === channel.id);
+      const messageReference = association
+        ? await channel.messages.fetch(association.messageId)
+        : null;
+      return messageReference ? { messageReference } : undefined;
+    })();
+    const msg = await channel.send({ ...payload, reply });
+    mids.push({ channelId: channel.id, messageId: msg.id });
+  }
+
+  if (m2m.length === bufferLen) {
+    m2m[m2mIndex] = mids;
+    m2mIndex = (m2mIndex + 1) % bufferLen;
+  } else {
+    m2m.push(mids);
+  }
+}
 
 export const GlobalChatList: Feature = {
   async Init(commands) {
