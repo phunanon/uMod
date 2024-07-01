@@ -20,6 +20,12 @@ export const DisallowRole: Feature = {
           description: 'The role to disallow',
           required: true,
         },
+        {
+          type: ApplicationCommandOptionType.String,
+          name: 'reason',
+          description: 'The reason for disallowing the role',
+          required: false,
+        },
       ],
     });
   },
@@ -44,20 +50,20 @@ export const DisallowRole: Feature = {
 
       const user = interaction.options.getUser('user', true);
       const role = interaction.options.getRole('role', true);
+      const reason = interaction.options.getString('reason');
       const userSf = BigInt(user.id);
       const roleSf = BigInt(role.id);
       const userSf_roleSf = { userSf, roleSf };
+      const where = { where: { userSf_roleSf } };
       const allowedMentions = { parse: [] };
 
-      const existing = await prisma.disallowRole.findUnique({
-        where: { userSf_roleSf },
-      });
+      const existing = await prisma.disallowRole.findUnique(where);
       const dis = existing ? '' : 'dis';
-      const content = `<@&${role.id}> now ${dis}allowed for <@${user.id}>.`;
+      const content = `<@&${role.id}> now ${dis}allowed for <@${user.id}>:${reason}`;
       const data = { guildSf, authorSf, userSf, content };
 
       if (existing) {
-        await prisma.disallowRole.delete({ where: { userSf_roleSf } });
+        await prisma.disallowRole.delete(where);
       } else {
         try {
           const member = await guild.members.fetch(user.id);

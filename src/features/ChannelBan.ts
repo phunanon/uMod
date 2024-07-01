@@ -52,12 +52,7 @@ export const ChannelBan: Feature = {
       await prisma.channelBan.create({ data: { guildSf, userSf, channelSf } });
 
       const content = `banned from <#${channel.id}>: ${reason}`;
-      await HandleAlert({
-        event: AlertEvent.Audit,
-        userSf,
-        guildSf,
-        content: `concerning <@${user.id}>: ${content}`,
-      });
+      await HandleAlert({ event: AlertEvent.Audit, userSf, guildSf, content });
       await prisma.note.create({
         data: { guildSf, authorSf, userSf: BigInt(user.id), content },
       });
