@@ -21,18 +21,19 @@ export const PingProtect: Feature = {
   Interaction: {
     name: 'ping-protect',
     moderatorOnly: true,
-    async command({ interaction }) {
+    async command({ interaction, guildSf }) {
       await interaction.deferReply();
 
-      const user = interaction.options.getUser('user', true);
-      const userSf = BigInt(user.id);
+      const { id, tag } = interaction.options.getUser('user', true);
+      const userSf = BigInt(id);
 
+      const userSf_guildSf = { userSf, guildSf };
       const { pingProtect } =
-        (await prisma.userFlags.findUnique({ where: { userSf } })) ?? {};
+        (await prisma.member.findUnique({ where: { userSf_guildSf } })) ?? {};
 
-      const flags = await prisma.userFlags.upsert({
-        where: { userSf },
-        create: { userSf, pingProtect: true },
+      const flags = await prisma.member.upsert({
+        where: { userSf_guildSf },
+        create: { ...userSf_guildSf, tag, pingProtect: true },
         update: { pingProtect: !pingProtect },
       });
 
@@ -49,21 +50,26 @@ export const PingProtect: Feature = {
       });
     },
   },
-  async HandleMessage({ message, userSf, isDelete, isMod }) {
+  async HandleMessage({ message, guildSf, userSf, isDelete, isMod }) {
     if (!message.mentions.users.size || isDelete || isMod) return;
     const users = message.mentions.users.filter(
       user => !user.bot && user.id !== message.author.id,
     );
 
     for (const user of users.values()) {
-      await handle(message, userSf, BigInt(user.id));
+      await handle(message, guildSf, userSf, BigInt(user.id));
     }
   },
 };
 
-async function handle(message: Message, userSf: bigint, aboutSf: bigint) {
-  const flags = await prisma.userFlags.findUnique({
-    where: { userSf: aboutSf },
+async function handle(
+  message: Message,
+  guildSf: bigint,
+  userSf: bigint,
+  aboutSf: bigint,
+) {
+  const flags = await prisma.member.findUnique({
+    where: { userSf_guildSf: { userSf: aboutSf, guildSf } },
   });
   if (!flags?.pingProtect) return;
 

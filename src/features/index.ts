@@ -35,7 +35,6 @@ import { BlockGifs } from './BlockGifs';
 import { CreateTicket, TicketAdd, TicketsHere, CloseTicket } from './Ticket';
 import { RoleList, RoleListAddRole, RoleListRemoveRole } from './RoleList';
 import { SingleMessage, DeleteSingleMessage } from './SingleMessage';
-// import { MutualTimeout } from './MutualTimeout';
 import { PingSpam } from './PingSpam';
 import { PingProtect } from './PingProtect';
 import { Transcript } from './Transcript';
@@ -45,6 +44,7 @@ import { TempRole } from './TempRole';
 import { Acquaintances } from './Acquaintances';
 import { BumpReminder, BumpRemind, BumpUnremind } from './BumpReminder';
 import { DisallowRole } from './DisallowRole';
+import { GifMute } from './GifMute';
 
 export const features = {
   ...{ PermaRole, InviteSpam, Ping, WhitelistChannel, MirrorGuild },
@@ -53,11 +53,11 @@ export const features = {
   ...{ Alert, DeleteAlert, DeleteAlerts, RecommendedAlerts, BlockGifs },
   ...{ CreateTicket, TicketAdd, TicketsHere, CloseTicket },
   ...{ RoleList, RoleListAddRole, RoleListRemoveRole },
-  ...{ SingleMessage, DeleteSingleMessage /* MutualTimeout */ },
+  ...{ SingleMessage, DeleteSingleMessage },
   ...{ PingSpam, PingProtect, GlobalChat, GlobalChatList },
   ...{ GuildMods, Histogram, TempRole, Acquaintances },
   ...{ BumpReminder, BumpRemind, BumpUnremind },
-  ...{ DisallowRole },
+  ...{ DisallowRole, GifMute },
 };
 
 export type FeatureConfig = {
@@ -91,17 +91,19 @@ export type MsgCtx = {
 };
 type NarrowMsgCtx = Omit<MsgCtx, 'isEdit' | 'isDelete'>;
 
-export type AuditEvent = {
-  kind: 'ban' | 'unban' | 'kick' | 'timeout';
-  target: User | null;
-  executor: User | null;
-  reason: string;
-} | {
-  kind: 'untimeout';
-  target: User | null;
-  executor: User | null;
-  reason: undefined;
-};
+export type AuditEvent =
+  | {
+      kind: 'ban' | 'unban' | 'kick' | 'timeout';
+      target: User | null;
+      executor: User | null;
+      reason: string;
+    }
+  | {
+      kind: 'untimeout';
+      target: User | null;
+      executor: User | null;
+      reason: undefined;
+    };
 
 export type Feature = {
   /** Call is guaranteed but not necessarily prior to other handlers. */

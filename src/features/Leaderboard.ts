@@ -63,11 +63,11 @@ export const Leaderboard: Feature = {
 };
 
 async function getMember(tag: string, userId: string, guildSf: bigint) {
-  const sf = BigInt(userId);
-  const sf_guildSf = { sf, guildSf };
+  const userSf = BigInt(userId);
+  const userSf_guildSf = { userSf, guildSf };
 
   const member =
-    (await prisma.member.findUnique({ where: { sf_guildSf } })) ??
-    (await prisma.member.create({ data: { tag, ...sf_guildSf } }));
+    (await prisma.member.findUnique({ where: { userSf_guildSf } })) ??
+    (await prisma.member.create({ data: { tag, ...userSf_guildSf } }));
   return member;
 }

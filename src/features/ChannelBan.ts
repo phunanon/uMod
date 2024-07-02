@@ -32,13 +32,13 @@ export const ChannelBan: Feature = {
       await interaction.deferReply({ ephemeral: true });
 
       const { options } = interaction;
-      const user = options.getUser('user', true);
+      const { id } = options.getUser('user', true);
       const reason = options.getString('reason', true);
-      const userSf = BigInt(user.id);
+      const userSf = BigInt(id);
 
-      await channel.permissionOverwrites.create(user.id, {
-        ViewChannel: false,
-      });
+      try {
+        await channel.permissionOverwrites.create(id, { ViewChannel: false });
+      } catch (e) {}
 
       const existing = await prisma.channelBan.findFirst({
         where: { guildSf, userSf, channelSf },
@@ -54,11 +54,11 @@ export const ChannelBan: Feature = {
       const content = `banned from <#${channel.id}>: ${reason}`;
       await HandleAlert({ event: AlertEvent.Audit, userSf, guildSf, content });
       await prisma.note.create({
-        data: { guildSf, authorSf, userSf: BigInt(user.id), content },
+        data: { guildSf, authorSf, userSf, content },
       });
 
       await interaction.editReply(
-        `User <@${user.id}> banned from <#${channel.id}>.`,
+        `User <@${id}> banned from <#${channel.id}>.`,
       );
     },
   },

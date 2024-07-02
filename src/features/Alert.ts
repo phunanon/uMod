@@ -149,7 +149,7 @@ export const Alert: Feature = {
     });
 
     const stats = await prisma.member.findFirst({
-      where: { guildSf, sf: userSf },
+      where: { guildSf, userSf },
       select: { numMessages: true },
     });
     if (stats?.numMessages === 1) {

@@ -31,13 +31,16 @@ model GuildMirror {
 }
 
 model Member {
-  id          Int    @id @default(autoincrement())
-  sf          BigInt
+  id          Int     @id @default(autoincrement())
   guildSf     BigInt
+  userSf      BigInt
   tag         String
-  numMessages Int    @default(0)
+  confessMute Boolean @default(false)
+  gifMute     Boolean @default(false)
+  pingProtect Boolean @default(false)
+  numMessages Int     @default(0)
 
-  @@unique([sf, guildSf])
+  @@unique([userSf, guildSf])
 }
 
 model StickyMessage {
@@ -108,13 +111,6 @@ model ChannelFlags {
   blockGifs     Boolean @default(false)
   censor        Boolean @default(true)
   singleMessage BigInt?
-}
-
-model UserFlags {
-  id          Int     @id @default(autoincrement())
-  userSf      BigInt  @unique
-  confessMute Boolean @default(false)
-  pingProtect Boolean @default(false)
 }
 
 model PingProtectWarns {

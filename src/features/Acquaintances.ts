@@ -27,8 +27,8 @@ export const Acquaintances: Feature = {
     async command({ interaction }) {
       await interaction.deferReply();
 
-      const user = interaction.options.getUser('user', true);
-      const sf = BigInt(user.id);
+      const { id, displayName } = interaction.options.getUser('user', true);
+      const sf = BigInt(id);
 
       const [userASf, userBSf] = [sf, sf];
 
@@ -46,7 +46,7 @@ export const Acquaintances: Feature = {
       await interaction.editReply({
         embeds: [
           {
-            title: `Acquaintances of ${user.displayName}`,
+            title: `Acquaintances of ${displayName}`,
             description: users
               .map(
                 ({ sf, count }, n) => `${n + 1}. <@${sf}> - ${count} messages`,

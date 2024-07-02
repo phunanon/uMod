@@ -11,6 +11,7 @@ A moderation bot I made so I could kick Carlbot, but which now has now become qu
   - **BlockGifs**: deletes messages with gifs from specified channels
   - **Censor**: deletes messages with blacklisted words or phrases and replaces them with a censored message
   - **PingProtect**: warn then timeout users who ping a user who has chosen to be protected
+  - **GifMute**: remove the ability to send gifs from messages of particular users
 - Manual Moderation
   - **Tickets**: a ticket system for users to ask for help
     - Allows adding users to the ticket
@@ -59,6 +60,10 @@ Aspirations & TODO:
 - global chat mute message context function
 - /timestamp
 - multiple tickets by putting a suffix on channel name
+- allow censored messages through GlobalChat
+- repetitive message timeout (both same message in a row and multiple messages in short period of time)
+- ability to send alerts in the channel they were triggered by
+- Alert cooldown
 
 ## To host it yourself
 

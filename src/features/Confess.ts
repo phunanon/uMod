@@ -1,6 +1,6 @@
 import { ApplicationCommandOptionType } from 'discord.js';
 import { Feature } from '.';
-import { log, prisma } from '../infrastructure';
+import { client, log, prisma } from '../infrastructure';
 import RC5 from 'rc5';
 
 export const Confess: Feature = {
@@ -21,7 +21,7 @@ export const Confess: Feature = {
   Interaction: {
     name: 'confess',
     moderatorOnly: false,
-    async command({ interaction, channel, userSf }) {
+    async command({ interaction, channel, guildSf, userSf }) {
       await interaction.deferReply({ ephemeral: true });
       const message = interaction.options.get('content', true).value;
 
@@ -31,8 +31,8 @@ export const Confess: Feature = {
       }
 
       const { confessMute } =
-        (await prisma.userFlags.findUnique({
-          where: { userSf },
+        (await prisma.member.findUnique({
+          where: { userSf_guildSf: { userSf, guildSf } },
           select: { confessMute: true },
         })) ?? {};
 
@@ -71,7 +71,7 @@ export const ConfessMute: Feature = {
   Interaction: {
     name: 'confess-mute',
     moderatorOnly: true,
-    async command({ interaction }) {
+    async command({ interaction, guildSf }) {
       await interaction.deferReply({ ephemeral: true });
 
       const id = interaction.options.get('id')?.value;
@@ -82,15 +82,19 @@ export const ConfessMute: Feature = {
 
       try {
         const userSf = encryption.decrypt(id);
-        await prisma.userFlags.upsert({
-          where: { userSf },
-          create: { userSf, confessMute: true },
+        const { tag } = await client.users.fetch(`${userSf}`);
+        const userSf_guildSf = { userSf, guildSf };
+        await prisma.member.upsert({
+          where: { userSf_guildSf },
+          create: { ...userSf_guildSf, tag, confessMute: true },
           update: { confessMute: true },
         });
 
         await interaction.editReply('User muted.');
       } catch (e) {
-        await interaction.editReply('Invalid ID or some other error occurred.');
+        await interaction.editReply(
+          'Invalid ID, user has left, or some other error occurred.',
+        );
       }
     },
   },
