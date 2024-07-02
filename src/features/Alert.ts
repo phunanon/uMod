@@ -164,11 +164,12 @@ export const Alert: Feature = {
     }
   },
   async HandleAuditLog({ kind, executor, target, reason }, guild) {
-    if (reason.includes('Pinging protected')) return;
+    if (reason?.includes('Pinging protected')) return;
     const guildSf = BigInt(guild.id);
     const by = executor ? `<@${executor.id}>` : '[unknown]';
     const of = target ? `<@${target.id}> (\`${target.tag}\`)` : '[unknown]';
-    const content = `${kind} of ${of} by ${by}: ${reason}`;
+    const reasonWithColon = reason ? `: ${reason}` : '';
+    const content = `${kind} of ${of} by ${by}${reasonWithColon}`;
     await HandleAlert({ guildSf, event: AlertEvent.Audit, content });
   },
   async HandleChannelDelete(channel) {

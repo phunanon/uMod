@@ -47,7 +47,7 @@ A moderation bot I made so I could kick Carlbot, but which now has now become qu
   - **Transcript**: sends a CSV transcript of a channel to a channel
   - **BumpReminder**: reminds users to bump on Disboard in a channel
 
-Aspirations:
+Aspirations & TODO:
 
 - Auto-close ticket after a day of inactivity
 - Confess IDs are unique per confession

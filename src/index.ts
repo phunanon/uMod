@@ -229,24 +229,26 @@ async function handleAudit(log: GuildAuditLogsEntry, guild: Guild) {
   const entry = (() => {
     const target = log.target as User | null;
     const executor = log.executor;
+    const entry = { target, executor };
     const reason = log.reason ?? 'No reason provided';
     if (log.action === AuditLogEvent.MemberBanAdd)
-      return { kind: 'ban', target, executor, reason } as const;
+      return { kind: 'ban', ...entry, reason } as const;
     if (log.action === AuditLogEvent.MemberBanRemove)
-      return { kind: 'unban', target, executor, reason } as const;
+      return { kind: 'unban', ...entry, reason } as const;
     if (log.action === AuditLogEvent.MemberKick)
-      return { kind: 'kick', target, executor, reason } as const;
+      return { kind: 'kick', ...entry, reason } as const;
     if (log.action === AuditLogEvent.MemberUpdate) {
       const timeout = log.changes.find(
         change => change.key === 'communication_disabled_until',
       );
-      if (timeout) {
-        const durationMs =
-          new Date(`${timeout.new}`).getTime() - new Date().getTime();
-        const durationMin = Math.ceil(durationMs / 60_000);
-        const r = `${durationMin}m: ${reason}`;
-        return { kind: 'timeout', target, executor, reason: r } as const;
-      }
+      if (!timeout) return;
+      if (!timeout.new)
+        return { kind: 'untimeout', ...entry, reason: undefined } as const;
+      const durationMs =
+        new Date(`${timeout.new}`).getTime() - new Date().getTime();
+      const durationMin = Math.ceil(durationMs / 60_000);
+      const r = `${durationMin}m: ${reason}`;
+      return { kind: 'timeout', target, executor, reason: r } as const;
     }
   })();
 

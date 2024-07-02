@@ -96,6 +96,11 @@ export type AuditEvent = {
   target: User | null;
   executor: User | null;
   reason: string;
+} | {
+  kind: 'untimeout';
+  target: User | null;
+  executor: User | null;
+  reason: undefined;
 };
 
 export type Feature = {
