@@ -78,14 +78,16 @@ model ActivitySort {
 }
 
 model Alert {
-  id        Int     @id @default(autoincrement())
-  guildSf   BigInt
-  channelSf BigInt
-  event     String
-  userSf    BigInt?
-  roleSf    BigInt?
-  pattern   String?
-  altReason String?
+  id            Int       @id @default(autoincrement())
+  guildSf       BigInt
+  channelSf     BigInt
+  event         String
+  userSf        BigInt?
+  roleSf        BigInt?
+  pattern       String?
+  altReason     String?
+  cooldownSec   Int?
+  cooldownUntil DateTime?
 }
 
 model Note {
@@ -117,6 +119,7 @@ model PingProtectWarns {
   id      Int    @id @default(autoincrement())
   userSf  BigInt
   aboutSf BigInt
+  count   Int    @default(1)
 
   @@unique([userSf, aboutSf])
 }

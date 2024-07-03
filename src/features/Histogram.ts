@@ -56,10 +56,6 @@ export const Histogram: Feature = {
     const dayHour = new Date().getUTCHours();
 
     const makeUpsert = async (sf: bigint) => {
-      const where = { where: { sf, weekDay } };
-      const existing = await prisma.histogram.findFirst(where);
-      //Only start counting when its the zeroth hour of the day
-      if (dayHour && !existing) return [];
       const sf_weekDay_dayHour = { sf, weekDay, dayHour };
       return [
         prisma.histogram.upsert({

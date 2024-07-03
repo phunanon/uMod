@@ -24,7 +24,8 @@ A moderation bot I made so I could kick Carlbot, but which now has now become qu
   - **Alerts**: sends a message to a channel reacting to a specific event
     - Events: join, leave, role assignment, role restoration, moderation note, moderator action (ban, unban, kick, timeout, channel ban), first message in server, join VC, leave VC, membership milestone
     - Criteria: user ID, role ID, message pattern
-    - Optionally with a custom alert message with tokens: `$userId $content`
+    - Optionally with a custom alert message with tokens: `$content, $url, $tag, $user, $ping`
+    - Optionally with a cooldown
     - Also **DeleteAlert**, **DeleteAlerts**, and **RecommendedAlerts**
   - **GuildMods**: assign moderator roles for your guild
     - Only the guild owner can use this command
@@ -55,7 +56,7 @@ Aspirations & TODO:
 - GlobalChat first message introduction
 - caching for various things
 - bump reminder
-- fix media double-send in guild mirroring
+- fix media double-send in guild mirroring and global chat https://github.com/discordjs/discord.js/issues/10301#issuecomment-2133187939
 - auto role
 - global chat mute message context function
 - /timestamp
@@ -63,7 +64,6 @@ Aspirations & TODO:
 - allow censored messages through GlobalChat
 - repetitive message timeout (both same message in a row and multiple messages in short period of time)
 - ability to send alerts in the channel they were triggered by
-- Alert cooldown
 
 ## To host it yourself
 

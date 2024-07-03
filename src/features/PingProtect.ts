@@ -74,19 +74,25 @@ async function handle(
   if (!flags?.pingProtect) return;
 
   const userSf_aboutSf = { userSf, aboutSf };
-  const warned = await prisma.pingProtectWarns.findUnique({
+  const warnings = await prisma.pingProtectWarns.findUnique({
     where: { userSf_aboutSf },
   });
 
-  if (warned) {
+  if (warnings) {
+    const min = warnings.count + 1;
+    const nth = ordinal(min);
     await message.reply({
-      content: `<@${userSf}> was timed-out for pinging <@${aboutSf}>.`,
+      content: `<@${userSf}> was timed-out for ${min} for pinging <@${aboutSf}> for the ${nth} time.`,
       allowedMentions: { parse: [] },
     });
     await message.member?.timeout(
-      60_000 * 2,
+      min * 60_000,
       `Pinging protected user (<@${aboutSf}>)`,
     );
+    await prisma.pingProtectWarns.update({
+      where: { userSf_aboutSf },
+      data: { count: { increment: 1 } },
+    });
   } else {
     await prisma.pingProtectWarns.create({ data: userSf_aboutSf });
     await message.reply({
@@ -94,4 +100,10 @@ async function handle(
       allowedMentions: { parse: [] },
     });
   }
+}
+
+function ordinal(n: number) {
+  const s = ['th', 'st', 'nd', 'rd'];
+  const v = n % 100;
+  return n + (s[(v - 20) % 10] ?? s[v] ?? 'th');
 }

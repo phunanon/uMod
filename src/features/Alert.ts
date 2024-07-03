@@ -63,6 +63,13 @@ export const Alert: Feature = {
             "Tokens: $content, $url, $tag, $user (won't ping), $ping; \\n for newline",
           type: ApplicationCommandOptionType.String,
         },
+        {
+          name: 'cooldown-seconds',
+          description: 'Alert cooldown in seconds',
+          type: ApplicationCommandOptionType.Integer,
+          minValue: 1,
+          maxValue: 3600,
+        },
       ],
     });
   },
@@ -73,26 +80,22 @@ export const Alert: Feature = {
       const { options } = interaction;
       await interaction.deferReply();
 
-      const event = options.getString('event');
+      const event = options.getString('event', true);
       const userSf = nBigInt(options.get('user')?.user?.id);
       const roleSf = nBigInt(options.get('role')?.role?.id);
       const pattern = options.getString('pattern');
       const altReason = options
         .getString('alt-reason')
         ?.replaceAll('\\n', '\n');
-
-      if (!event) {
-        await interaction.editReply('An event must be provided.');
-        return;
-      }
+      const cooldownSec = options.getInteger('cooldown-seconds');
 
       const alert = await prisma.alert.create({
         data: {
           ...{ guildSf, channelSf },
-          ...{ userSf, roleSf, event, pattern, altReason },
+          ...{ userSf, roleSf, event, pattern, altReason, cooldownSec },
         },
       });
-      const criteria = alertInfo(event, userSf, roleSf, pattern);
+      const criteria = alertInfo(event, userSf, roleSf, pattern, cooldownSec);
       await interaction.editReply({
         content: `Alert ${alert.id} created: ${criteria}, ${altReason ?? ''}`,
         allowedMentions: { parse: [] },
@@ -342,6 +345,7 @@ export const HandleAlert = async (i: HandleInfo) => {
       guildSf: i.guildSf,
       event: i.event,
       pattern: i.content && !requireContent ? { not: null } : undefined,
+      OR: [{ cooldownUntil: null }, { cooldownUntil: { lte: new Date() } }],
       AND: [
         { OR: [{ userSf: i.userSf }, { userSf: null }] },
         { OR: [{ roleSf: { in: i.roles } }, { roleSf: null }] },
@@ -350,7 +354,7 @@ export const HandleAlert = async (i: HandleInfo) => {
   });
 
   for (const a of alerts) {
-    const { channelSf, userSf, roleSf, event, pattern } = a;
+    const { id, channelSf, userSf, roleSf, event, pattern, cooldownSec } = a;
     const regex = pattern ? new RegExp(pattern, 'i') : null;
     if (regex && i.content && !regex.test(i.content)) continue;
     const channel = await client.channels.fetch(`${channelSf}`);
@@ -363,16 +367,21 @@ export const HandleAlert = async (i: HandleInfo) => {
       .replaceAll(/\$ping/g, uSf ? `<@${uSf}>` : '[unknown $ping]')
       .replaceAll(/\$tag/g, i.tag ?? '[unknown $tag]')
       .replaceAll(/\$url/g, i.url ?? '[no URL]');
-    const info = alertInfo(event, uSf, roleSf, pattern);
+    const info = alertInfo(event, uSf, roleSf, pattern, cooldownSec);
     const allowedMentions =
       a.altReason?.includes('$ping') && uSf
         ? { users: [`${uSf}`] }
         : { parse: [] };
     const content =
-      `||${a.id}|| ` +
+      `||${id}|| ` +
       (altReason || info) +
       (requireContent ? `: ${i.content}` : '');
     await channel.send({ content, allowedMentions });
+
+    if (cooldownSec) {
+      const cooldownUntil = new Date(new Date().getTime() + cooldownSec * 1000);
+      await prisma.alert.update({ where: { id }, data: { cooldownUntil } });
+    }
   }
 };
 
@@ -381,12 +390,14 @@ const alertInfo = (
   userSf: bigint | null,
   roleSf: bigint | null,
   pattern: string | null,
+  cooldownSec: number | null,
 ) => {
   const parts = [
     event,
     userSf ? `<@${userSf}>` : null,
     roleSf ? `<@&${roleSf}>` : null,
     pattern ? `\`${pattern}\` pattern` : null,
+    cooldownSec ? `${cooldownSec}s cooldown` : null,
   ].filter(Boolean);
   return parts.join(', ');
 };
