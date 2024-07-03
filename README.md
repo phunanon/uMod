@@ -40,6 +40,7 @@ A moderation bot I made so I could kick Carlbot, but which now has now become qu
   - **Histogram**: generates a histogram of hourly and week daily message counts for a user or the guild
   - **Acquaintances**: analyses the top three of who each user spends the most time talking to in chat
 - Useful
+  - **AutoRole**: assigns a role to a user when they join
   - **Ping**: replies with "Pong!"
   - **StickyMessage**: periodically resends a message to a channel
   - **ActivitySort**: sorts channels in a category by recent activity

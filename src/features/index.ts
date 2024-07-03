@@ -45,6 +45,7 @@ import { Acquaintances } from './Acquaintances';
 import { BumpReminder, BumpRemind, BumpUnremind } from './BumpReminder';
 import { DisallowRole } from './DisallowRole';
 import { GifMute } from './GifMute';
+import { AutoRole } from './AutoRole';
 
 export const features = {
   ...{ PermaRole, InviteSpam, Ping, WhitelistChannel, MirrorGuild },
@@ -57,7 +58,7 @@ export const features = {
   ...{ PingSpam, PingProtect, GlobalChat, GlobalChatList },
   ...{ GuildMods, Histogram, TempRole, Acquaintances },
   ...{ BumpReminder, BumpRemind, BumpUnremind },
-  ...{ DisallowRole, GifMute },
+  ...{ DisallowRole, GifMute, AutoRole },
 };
 
 export type FeatureConfig = {

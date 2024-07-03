@@ -187,3 +187,11 @@ model DisallowRole {
 
   @@unique([userSf, roleSf])
 }
+
+model AutoRole {
+  id      Int    @id @default(autoincrement())
+  guildSf BigInt
+  roleSf  BigInt
+
+  @@unique([guildSf, roleSf])
+}
