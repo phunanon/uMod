@@ -142,9 +142,7 @@ const UpdateRoleList = async (
 ) => {
   const members = await guild.members.fetch();
   const withRole = members.filter(m => m.roles.cache.has(`${roleSf}`));
-  const list = withRole
-    .map(m => `\`${m.user.tag}\``)
-    .join(' ');
+  const list = withRole.map(m => `\`${m.user.tag}\``).join(' ');
   const count = withRole.size;
   const payload: BaseMessageOptions = {
     content: `**${count} members with the role <@&${roleSf}>:**\n.\n${list}\n.`,
@@ -163,15 +161,17 @@ const UpdateRoleList = async (
         .setStyle(ButtonStyle.Danger),
     );
   if ('message' in mode) {
-    if (mode.message.components.length) {
-      payload.components?.push(makeAddRow());
-    }
-    return await mode.message.edit(payload);
+    const newComponents = {
+      components: mode.message.components.length
+        ? [...(payload.components ?? []), makeAddRow()]
+        : [],
+    };
+    return await mode.message.edit({ ...payload, ...newComponents });
   } else {
     const { channel, addable } = mode;
-    if (addable) {
-      payload.components?.push(makeAddRow());
-    }
-    return await channel.send(payload);
+    const newComponents = {
+      components: addable ? [...(payload.components ?? []), makeAddRow()] : [],
+    };
+    return await channel.send({ ...payload, ...newComponents });
   }
 };

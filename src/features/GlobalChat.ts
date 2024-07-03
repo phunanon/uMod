@@ -156,7 +156,8 @@ async function HandleMessage(
         : null;
       return messageReference ? { messageReference } : undefined;
     })();
-    const msg = await channel.send({ ...payload, reply });
+    const nonce = { nonce: message.id, enforceNonce: true };
+    const msg = await channel.send({ ...payload, ...nonce, reply });
     mids.push({ channelId: channel.id, messageId: msg.id });
   }
 

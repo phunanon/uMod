@@ -57,5 +57,7 @@ async function HandleMessage({ message, guildSf, isEdit }: MsgCtx) {
     content: `**${tag}** ${message.url} ||${author.id}||\n${truncated}`,
     files: isEdit ? undefined : message.attachments.map(a => a.url),
     allowedMentions: { parse: [] },
+    nonce: message.id,
+    enforceNonce: true,
   });
 }

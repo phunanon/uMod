@@ -55,8 +55,6 @@ Aspirations & TODO:
 - Confess IDs are unique per confession
 - GlobalChat first message introduction
 - caching for various things
-- bump reminder
-- fix media double-send in guild mirroring and global chat https://github.com/discordjs/discord.js/issues/10301#issuecomment-2133187939
 - auto role
 - global chat mute message context function
 - /timestamp
