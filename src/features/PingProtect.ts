@@ -82,7 +82,7 @@ async function handle(
     const min = warnings.count + 1;
     const nth = ordinal(min);
     await message.reply({
-      content: `<@${userSf}> was timed-out for ${min} for pinging <@${aboutSf}> for the ${nth} time.`,
+      content: `<@${userSf}> was timed-out for ${min} minutes for pinging <@${aboutSf}> for the ${nth} time.`,
       allowedMentions: { parse: [] },
     });
     await message.member?.timeout(

@@ -156,8 +156,9 @@ async function HandleMessage(
         : null;
       return messageReference ? { messageReference } : undefined;
     })();
-    const nonce = { nonce: message.id, enforceNonce: true };
-    const msg = await channel.send({ ...payload, ...nonce, reply });
+    const nonce = `${BigInt(message.id) + BigInt(channel.id)}`;
+    const enforcedNonce = { nonce, enforceNonce: true };
+    const msg = await channel.send({ ...payload, ...enforcedNonce, reply });
     mids.push({ channelId: channel.id, messageId: msg.id });
   }
 
@@ -193,3 +194,5 @@ export const GlobalChatList: Feature = {
     },
   },
 };
+
+export const GlobalChatMute: Feature = {};

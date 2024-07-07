@@ -30,7 +30,10 @@ export const Purge: Feature = {
     name: 'purge',
     moderatorOnly: true,
     async command({ interaction, channel, guildSf, userSf }) {
-      await interaction.reply('Deleting messages...');
+      await interaction.reply({
+        content: 'Deleting messages...',
+        ephemeral: true,
+      });
 
       const limit = interaction.options.get('count', true).value;
       if (typeof limit !== 'number') {

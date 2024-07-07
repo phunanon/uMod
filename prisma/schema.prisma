@@ -176,7 +176,7 @@ model BumpReminderUser {
   id     Int    @id @default(autoincrement())
   userSf BigInt
 
-  BumpReminder   BumpReminder @relation(fields: [bumpReminderId], references: [id])
+  BumpReminder   BumpReminder @relation(fields: [bumpReminderId], references: [id], onDelete: Cascade)
   bumpReminderId Int
 }
 
@@ -194,4 +194,22 @@ model AutoRole {
   roleSf  BigInt
 
   @@unique([guildSf, roleSf])
+}
+
+model GuildQotd {
+  id             Int            @id @default(autoincrement())
+  guildSf        BigInt         @unique
+  postChannelSf  BigInt
+  auditChannelSf BigInt
+  Question       QotdQuestion[]
+}
+
+model QotdQuestion {
+  id       Int       @id @default(autoincrement())
+  guildSf  BigInt
+  authorSf BigInt
+  question String
+  postAt   DateTime?
+  postedAt DateTime?
+  Config   GuildQotd @relation(fields: [guildSf], references: [guildSf])
 }

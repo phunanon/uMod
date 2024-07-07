@@ -39,6 +39,7 @@ A moderation bot I made so I could kick Carlbot, but which now has now become qu
     - Includes message editing, deleting, and typing indication
   - **Histogram**: generates a histogram of hourly and week daily message counts for a user or the guild
   - **Acquaintances**: analyses the top three of who each user spends the most time talking to in chat
+  - **QotD**: allows people to submit questions, moderators to approve them, and then sends one out daily
 - Useful
   - **AutoRole**: assigns a role to a user when they join
   - **Ping**: replies with "Pong!"
@@ -63,6 +64,7 @@ Aspirations & TODO:
 - allow censored messages through GlobalChat
 - repetitive message timeout (both same message in a row and multiple messages in short period of time)
 - ability to send alerts in the channel they were triggered by
+- different handler for registering slash commands which is only called via process.env
 
 ## To host it yourself
 

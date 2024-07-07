@@ -24,7 +24,7 @@ export const DisallowRole: Feature = {
           type: ApplicationCommandOptionType.String,
           name: 'reason',
           description: 'The reason for disallowing the role',
-          required: false,
+          required: true,
         },
       ],
     });
@@ -50,7 +50,7 @@ export const DisallowRole: Feature = {
 
       const user = interaction.options.getUser('user', true);
       const role = interaction.options.getRole('role', true);
-      const reason = interaction.options.getString('reason');
+      const reason = interaction.options.getString('reason', true);
       const userSf = BigInt(user.id);
       const roleSf = BigInt(role.id);
       const userSf_roleSf = { userSf, roleSf };
@@ -59,7 +59,7 @@ export const DisallowRole: Feature = {
 
       const existing = await prisma.disallowRole.findUnique(where);
       const dis = existing ? '' : 'dis';
-      const content = `<@&${role.id}> now ${dis}allowed for <@${user.id}>:${reason}`;
+      const content = `<@&${role.id}> now ${dis}allowed for <@${user.id}>: ${reason}`;
       const data = { guildSf, authorSf, userSf, content };
 
       if (existing) {

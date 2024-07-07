@@ -157,7 +157,12 @@ export const TicketAdd: Feature = {
         return;
       }
 
-      await channel.permissionOverwrites.edit(user.id, { ViewChannel: true });
+      try {
+        await channel.permissionOverwrites.edit(user.id, { ViewChannel: true });
+      } catch (e) {
+        await interaction.editReply("Couldn't add user to ticket.");
+        return;
+      }
 
       await interaction.editReply(`Added <@${user.id}> to the ticket.`);
 

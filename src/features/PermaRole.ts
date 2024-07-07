@@ -5,7 +5,9 @@ import { AlertEvent, HandleAlert } from './Alert';
 /** Restore roles if somebody leaves and rejoins */
 export const PermaRole: Feature = {
   async HandleMemberUpdate(_, newMember) {
-    const roles = newMember.roles.cache.map(x => BigInt(x.id));
+    const roles = newMember.roles.cache
+      .filter(x => !x.managed)
+      .map(x => BigInt(x.id));
     const userSf = BigInt(newMember.id);
     await prisma.$transaction([
       prisma.permaRole.deleteMany({ where: { userSf } }),
