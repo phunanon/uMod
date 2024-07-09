@@ -12,6 +12,14 @@ A moderation bot I made so I could kick Carlbot, but which now has now become qu
   - **Censor**: deletes messages with blacklisted words or phrases and replaces them with a censored message
   - **PingProtect**: warn then timeout users who ping a user who has chosen to be protected
   - **GifMute**: remove the ability to send gifs from messages of particular users
+  - **KickSus**: a suite of heuristics that warns a user then kicks them if they continue
+    - FastSpam - ten messages in 30 sec
+    - PingSpam - eight mentions in 30 sec
+    - BigSpam - three long or tall messages in 30 sec
+    - ChannelSpam - four of the same message in different channels in 5 min
+    - SameLinkSpam - three of the same link in 5 min
+    - SameMessageSpam - six of the same message in 5 min
+    - MediaSpam - five media messages in 5 min
 - Manual Moderation
   - **Tickets**: a ticket system for users to ask for help
     - Allows adding users to the ticket
@@ -54,8 +62,8 @@ A moderation bot I made so I could kick Carlbot, but which now has now become qu
 
 Aspirations & TODO:
 
-- Auto-close ticket after a day of inactivity
-- Confess IDs are unique per confession
+- Command to close ticket in a day
+- Confess IDs that are unique per confession
 - GlobalChat first message introduction
 - caching for various things
 - auto role
@@ -63,9 +71,10 @@ Aspirations & TODO:
 - /timestamp
 - multiple tickets by putting a suffix on channel name
 - allow censored messages through GlobalChat
-- repetitive message timeout (both same message in a row and multiple messages in short period of time)
 - ability to send alerts in the channel they were triggered by
 - different handler for registering slash commands which is only called via process.env
+- subscribe to Qotd
+- ticket custom reasons
 
 ## To host it yourself
 

@@ -48,10 +48,12 @@ import { GifMute } from './GifMute';
 import { AutoRole } from './AutoRole';
 import { QotdApprove, QotdDisable, QotdEnable, QotdSuggest } from './Qotd';
 import { FakeUser } from './FakeUser';
+import { KickSus } from './KickSus';
 
 export const features = {
-  ...{ PermaRole, InviteSpam, Ping, WhitelistChannel, MirrorGuild },
-  ...{ Leaderboard, StickyMessage, Purge, ActivitySort, Transcript },
+  ...{ MirrorGuild, KickSus },
+  ...{ PermaRole, InviteSpam, Ping, WhitelistChannel, ActivitySort },
+  ...{ Leaderboard, StickyMessage, Purge, Transcript },
   ...{ Confess, ConfessMute, Note, ReadNote, ChannelBan, Censor, DeleteCensor },
   ...{ Alert, DeleteAlert, DeleteAlerts, RecommendedAlerts, BlockGifs },
   ...{ CreateTicket, TicketAdd, TicketsHere, CloseTicket },

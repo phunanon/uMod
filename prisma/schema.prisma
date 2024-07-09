@@ -112,6 +112,7 @@ model ChannelFlags {
   unmoderated   Boolean @default(false)
   blockGifs     Boolean @default(false)
   censor        Boolean @default(true)
+  antiSpam      Boolean @default(true)
   singleMessage BigInt?
 }
 

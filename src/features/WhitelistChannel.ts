@@ -19,6 +19,7 @@ export const WhitelistChannel: Feature = {
               name: 'All (no mirroring, censoring, gif blocking, etc)',
               value: 'unmoderated',
             },
+            { name: 'Anti-spam', value: 'antispam' },
             { name: 'Censoring', value: 'censoring' },
           ],
         },
@@ -31,11 +32,7 @@ export const WhitelistChannel: Feature = {
     async command({ interaction, channelSf }) {
       await interaction.deferReply({ ephemeral: true });
 
-      const type = interaction.options.getString('type');
-      if (!type) {
-        await interaction.editReply('Invalid type.');
-        return;
-      }
+      const type = interaction.options.getString('type', true);
 
       const flags = await prisma.channelFlags.findFirst({
         where: { channelSf },
@@ -63,6 +60,15 @@ export const WhitelistChannel: Feature = {
         await upsert({ censor });
         await interaction.editReply(
           censor ? 'Censoring now enabled.' : 'Censoring now disabled.',
+        );
+        return;
+      }
+      
+      if (type === 'antispam') {
+        const antiSpam = !(flags?.antiSpam ?? true);
+        await upsert({ antiSpam });
+        await interaction.editReply(
+          antiSpam ? 'Anti-spam now enabled.' : 'Anti-spam now disabled.',
         );
         return;
       }

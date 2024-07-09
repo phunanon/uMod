@@ -253,6 +253,9 @@ async function handleAudit(log: GuildAuditLogsEntry, guild: Guild) {
   })();
 
   if (!entry) return;
+  const { reason } = entry;
+  if (reason?.includes('Pinging protected')) return;
+  if (reason?.includes('Warning for ') && reason?.includes('Spam')) return;
 
   for (const [name, feature] of Object.entries(features)) {
     const { HandleAuditLog } = feature;
