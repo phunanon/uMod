@@ -24,7 +24,7 @@ export const Acquaintances: Feature = {
   Interaction: {
     name: 'acquaintances',
     moderatorOnly: false,
-    async command({ interaction }) {
+    async command({ interaction, guildSf }) {
       await interaction.deferReply();
 
       const { id, displayName } = interaction.options.getUser('user', true);
@@ -33,7 +33,7 @@ export const Acquaintances: Feature = {
       const [userASf, userBSf] = [sf, sf];
 
       const acquaintances = await prisma.acquaintance.findMany({
-        where: { OR: [{ userASf }, { userBSf }] },
+        where: { guildSf, OR: [{ userASf }, { userBSf }] },
         orderBy: { count: 'desc' },
         take: 3,
       });
@@ -57,7 +57,7 @@ export const Acquaintances: Feature = {
       });
     },
   },
-  async HandleMessageCreate({ channelSf, userSf }) {
+  async HandleMessageCreate({ guildSf, channelSf, userSf }) {
     const latest = latestAuthorSf.get(channelSf);
     latestAuthorSf.set(channelSf, userSf);
     if (!latest || latest === userSf) return;
@@ -65,9 +65,9 @@ export const Acquaintances: Feature = {
     const [userASf, userBSf] = sort(latest, userSf);
 
     await prisma.acquaintance.upsert({
-      where: { userASf_userBSf: { userASf, userBSf } },
+      where: { guildSf_userASf_userBSf: { guildSf, userASf, userBSf } },
       update: { count: { increment: 1 } },
-      create: { userASf, userBSf, count: 1 },
+      create: { guildSf, userASf, userBSf, count: 1 },
     });
   },
 };

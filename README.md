@@ -49,6 +49,7 @@ A moderation bot I made so I could kick Carlbot, but which now has now become qu
   - **Acquaintances**: analyses the top three of who each user spends the most time talking to in chat
   - **QotD**: allows people to submit questions, moderators to approve them, and then sends one out daily
   - **FakeUser**: generates a message for a user that uses words and phrases they have previously said
+  - **IQ Leaderboard**: ranks users by their total number of distinct words per message divided by the number of message lines
 - Useful
   - **AutoRole**: assigns a role to a user when they join
   - **Ping**: replies with "Pong!"

@@ -21,7 +21,7 @@ import { InviteSpam } from './InviteSpam';
 import { Ping } from './Ping';
 import { WhitelistChannel } from './WhitelistChannel';
 import { MirrorGuild } from './MirrorGuild';
-import { Leaderboard } from './Leaderboard';
+import { Leaderboard, IqLeaderboard } from './Leaderboard';
 import { StickyMessage } from './StickyMessage';
 import { Confess, ConfessMute } from './Confess';
 import { Purge } from './Purge';
@@ -53,7 +53,7 @@ import { KickSus } from './KickSus';
 export const features = {
   ...{ MirrorGuild, KickSus },
   ...{ PermaRole, InviteSpam, Ping, WhitelistChannel, ActivitySort },
-  ...{ Leaderboard, StickyMessage, Purge, Transcript },
+  ...{ Leaderboard, IqLeaderboard, StickyMessage, Purge, Transcript },
   ...{ Confess, ConfessMute, Note, ReadNote, ChannelBan, Censor, DeleteCensor },
   ...{ Alert, DeleteAlert, DeleteAlerts, RecommendedAlerts, BlockGifs },
   ...{ CreateTicket, TicketAdd, TicketsHere, CloseTicket },

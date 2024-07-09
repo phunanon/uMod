@@ -39,6 +39,8 @@ model Member {
   gifMute     Boolean @default(false)
   pingProtect Boolean @default(false)
   numMessages Int     @default(0)
+  numIqLines  Int     @default(0)
+  numIqWords  Int     @default(0)
 
   @@unique([userSf, guildSf])
 }
@@ -157,11 +159,12 @@ model TempRole {
 model Acquaintance {
   id      Int      @id @default(autoincrement())
   since   DateTime @default(now())
+  guildSf BigInt
   userASf BigInt
   userBSf BigInt
   count   Int
 
-  @@unique([userASf, userBSf])
+  @@unique([guildSf, userASf, userBSf])
 }
 
 model BumpReminder {
