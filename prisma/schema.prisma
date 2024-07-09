@@ -213,3 +213,13 @@ model QotdQuestion {
   postedAt DateTime?
   Config   GuildQotd @relation(fields: [guildSf], references: [guildSf])
 }
+
+model PairFrequency {
+  id     Int    @id @default(autoincrement())
+  userSf BigInt
+  a      String
+  b      String
+  count  Int    @default(1)
+
+  @@unique([userSf, a, b])
+}

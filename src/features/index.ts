@@ -47,6 +47,7 @@ import { DisallowRole } from './DisallowRole';
 import { GifMute } from './GifMute';
 import { AutoRole } from './AutoRole';
 import { QotdApprove, QotdDisable, QotdEnable, QotdSuggest } from './Qotd';
+import { FakeUser } from './FakeUser';
 
 export const features = {
   ...{ PermaRole, InviteSpam, Ping, WhitelistChannel, MirrorGuild },
@@ -59,7 +60,7 @@ export const features = {
   ...{ PingSpam, PingProtect, GlobalChat, GlobalChatList },
   ...{ GuildMods, Histogram, TempRole, Acquaintances },
   ...{ BumpReminder, BumpRemind, BumpUnremind },
-  ...{ DisallowRole, GifMute, AutoRole },
+  ...{ DisallowRole, GifMute, AutoRole, FakeUser },
   ...{ QotdApprove, QotdDisable, QotdEnable, QotdSuggest },
 };
 
