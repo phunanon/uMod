@@ -7,6 +7,7 @@ import {
   Guild,
   GuildMember,
   Message,
+  ModalSubmitInteraction,
   NonThreadGuildBasedChannel,
   PartialGuildMember,
   TextChannel,
@@ -23,7 +24,7 @@ import { WhitelistChannel } from './WhitelistChannel';
 import { MirrorGuild } from './MirrorGuild';
 import { Leaderboard, IqLeaderboard } from './Leaderboard';
 import { StickyMessage } from './StickyMessage';
-import { Confess, ConfessMute } from './Confess';
+import { Confess, ConfessMute, ConfessSubmit, ConfessionsHere } from './Confess';
 import { Purge } from './Purge';
 import { GlobalChat, GlobalChatList } from './GlobalChat';
 import { ActivitySort } from './ActivitySort';
@@ -54,7 +55,8 @@ export const features = {
   ...{ MirrorGuild, KickSus },
   ...{ PermaRole, InviteSpam, Ping, WhitelistChannel, ActivitySort },
   ...{ Leaderboard, IqLeaderboard, StickyMessage, Purge, Transcript },
-  ...{ Confess, ConfessMute, Note, ReadNote, ChannelBan, Censor, DeleteCensor },
+  ...{ Note, ReadNote, ChannelBan, Censor, DeleteCensor },
+  ...{ Confess, ConfessMute, ConfessSubmit, ConfessionsHere },
   ...{ Alert, DeleteAlert, DeleteAlerts, RecommendedAlerts, BlockGifs },
   ...{ CreateTicket, TicketAdd, TicketsHere, CloseTicket },
   ...{ RoleList, RoleListAddRole, RoleListRemoveRole },
@@ -126,6 +128,11 @@ export type Feature = {
       }
     | {
         button: (context: InteractionCtx<ButtonInteraction>) => Promise<void>;
+      }
+    | {
+        modalSubmit: (
+          context: InteractionCtx<ModalSubmitInteraction>,
+        ) => Promise<void>;
       }
   );
   HandleMemberUpdate?: (

@@ -83,16 +83,20 @@ async function mimic(userSf: bigint) {
     return "[I don't know enough about that user to mimic them yet]";
   }
   const sentence: string[] = [];
+  let allowedStalls = 3;
   //Stitch together the most common fragments
-  while (current) {
+  while (current && sentence.length < 64 && allowedStalls) {
     //process.stdout.write(current.a + ' ' + current.b + '  ');
-    const { b } = current;
-    if (b === '[end]') break;
-    sentence.push(b);
+    let { a, b } = current;
+    if (b === '[end]') {
+      --allowedStalls;
+      b = a;
+    } else {
+      sentence.push(b);
+    }
     const nextIdx = frequencies.findIndex(({ a }) => a === b);
     current = nextIdx === -1 ? undefined : frequencies[nextIdx];
     frequencies.splice(nextIdx, 1);
-    if (sentence.length > 64) break;
   }
 
   return sentence.join(' ').replaceAll(/\bi\b/g, 'I');

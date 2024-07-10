@@ -364,7 +364,10 @@ export const HandleAlert = async (i: HandleInfo) => {
       ?.replaceAll(/\$content/g, i.content ?? '[no content]')
       .replaceAll(/\$user/g, uSf ? `<@${uSf}>` : '[unknown $user]')
       .replaceAll(/\$ping/g, uSf ? `<@${uSf}>` : '[unknown $ping]')
-      .replaceAll(/\$tag/g, i.tag ?? '[unknown $tag]')
+      .replaceAll(
+        /\$tag/g,
+        i.tag?.replaceAll(/([_*])/g, '\\$1') ?? '[unknown $tag]',
+      )
       .replaceAll(/\$url/g, i.url ?? '[no URL]');
     const info = alertInfo(event, uSf, roleSf, pattern, cooldownSec);
     const allowedMentions =

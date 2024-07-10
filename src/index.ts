@@ -98,7 +98,9 @@ async function _handleInteraction(interaction: Interaction): Promise<void> {
   const { channel, guild, member } = interaction;
   if (
     !isGoodChannel(channel) ||
-    (!interaction.isChatInputCommand() && !interaction.isButton()) ||
+    (!interaction.isChatInputCommand() &&
+      !interaction.isButton() &&
+      !interaction.isModalSubmit()) ||
     !guild ||
     !member ||
     !('_roles' in member) ||
@@ -154,9 +156,13 @@ async function _handleInteraction(interaction: Interaction): Promise<void> {
     if ('command' in feature) {
       await feature.command({ ...context, interaction });
     } else console.warn(feature.name, 'has not implemented', name);
-  } else {
+  } else if (interaction.isButton()) {
     if ('button' in feature) {
       await feature.button({ ...context, interaction });
+    } else console.warn(feature.name, 'has not implemented', name);
+  } else if (interaction.isModalSubmit()) {
+    if ('modalSubmit' in feature) {
+      await feature.modalSubmit({ ...context, interaction });
     } else console.warn(feature.name, 'has not implemented', name);
   }
 }
