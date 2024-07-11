@@ -15,6 +15,8 @@ import {
   User,
   VoiceChannel,
   VoiceState,
+  MessageContextMenuCommandInteraction,
+  StringSelectMenuInteraction,
 } from 'discord.js';
 
 import { PermaRole } from './PermaRole';
@@ -24,7 +26,12 @@ import { WhitelistChannel } from './WhitelistChannel';
 import { MirrorGuild } from './MirrorGuild';
 import { Leaderboard, IqLeaderboard } from './Leaderboard';
 import { StickyMessage } from './StickyMessage';
-import { Confess, ConfessMute, ConfessSubmit, ConfessionsHere } from './Confess';
+import {
+  Confess,
+  ConfessMute,
+  ConfessSubmit,
+  ConfessionsHere,
+} from './Confess';
 import { Purge } from './Purge';
 import { GlobalChat, GlobalChatList } from './GlobalChat';
 import { ActivitySort } from './ActivitySort';
@@ -50,6 +57,7 @@ import { AutoRole } from './AutoRole';
 import { QotdApprove, QotdDisable, QotdEnable, QotdSuggest } from './Qotd';
 import { FakeUser } from './FakeUser';
 import { KickSus } from './KickSus';
+import { EnforceRule, EnforceRulePicker, SetupRule } from './EnforceRule';
 
 export const features = {
   ...{ MirrorGuild, KickSus },
@@ -66,6 +74,7 @@ export const features = {
   ...{ BumpReminder, BumpRemind, BumpUnremind },
   ...{ DisallowRole, GifMute, AutoRole, FakeUser },
   ...{ QotdApprove, QotdDisable, QotdEnable, QotdSuggest },
+  ...{ EnforceRule, EnforceRulePicker, SetupRule },
 };
 
 export type FeatureConfig = {
@@ -132,6 +141,16 @@ export type Feature = {
     | {
         modalSubmit: (
           context: InteractionCtx<ModalSubmitInteraction>,
+        ) => Promise<void>;
+      }
+    | {
+        contextMenu: (
+          context: InteractionCtx<MessageContextMenuCommandInteraction>,
+        ) => Promise<void>;
+      }
+    | {
+        stringSelect: (
+          context: InteractionCtx<StringSelectMenuInteraction>,
         ) => Promise<void>;
       }
   );

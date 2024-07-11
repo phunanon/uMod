@@ -166,16 +166,20 @@ async function ReviewCache(guildSf: bigint, userSf: bigint) {
     const why = `${heuristic}, ${maxCount} in ${ttl}`;
     //If one count away from a kick, warn the user by replying to the message
     const warning = makeWarning(guildSf, userSf, heuristic, content);
-    if (count === maxCount - 1 && !warns.has(warning)) {
-      warns.add(warning);
-      await message.reply(
-        `**You are one message away from being kicked** (${why}). Please slow down.`,
-      );
-      await message.member?.timeout(6_000, `Warning for ${why}`);
-    }
-    //If the user has reached the limit, kick them
-    if (count >= maxCount) {
-      await message.member?.kick(why);
+    try {
+      if (count === maxCount - 1 && !warns.has(warning)) {
+        warns.add(warning);
+        await message.reply(
+          `**You are one message away from being kicked** (${why}). Please slow down.`,
+        );
+        await message.member?.timeout(6_000, `Warning for ${why}`);
+      }
+      //If the user has reached the limit, kick them
+      if (count >= maxCount) {
+        await message.member?.kick(why);
+      }
+    } catch (e) {
+      console.error(why, e);
     }
   }
 }

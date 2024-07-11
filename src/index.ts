@@ -100,7 +100,9 @@ async function _handleInteraction(interaction: Interaction): Promise<void> {
     !isGoodChannel(channel) ||
     (!interaction.isChatInputCommand() &&
       !interaction.isButton() &&
-      !interaction.isModalSubmit()) ||
+      !interaction.isModalSubmit() &&
+      !interaction.isStringSelectMenu() &&
+      !interaction.isMessageContextMenuCommand()) ||
     !guild ||
     !member ||
     !('_roles' in member) ||
@@ -163,6 +165,14 @@ async function _handleInteraction(interaction: Interaction): Promise<void> {
   } else if (interaction.isModalSubmit()) {
     if ('modalSubmit' in feature) {
       await feature.modalSubmit({ ...context, interaction });
+    } else console.warn(feature.name, 'has not implemented', name);
+  } else if (interaction.isStringSelectMenu()) {
+    if ('stringSelect' in feature) {
+      await feature.stringSelect({ ...context, interaction });
+    } else console.warn(feature.name, 'has not implemented', name);
+  } else if (interaction.isMessageContextMenuCommand()) {
+    if ('contextMenu' in feature) {
+      await feature.contextMenu({ ...context, interaction });
     } else console.warn(feature.name, 'has not implemented', name);
   }
 }

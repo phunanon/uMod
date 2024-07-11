@@ -228,3 +228,9 @@ model PairFrequency {
 
   @@unique([userSf, a, b])
 }
+
+model GuildRule {
+  id      Int    @id @default(autoincrement())
+  guildSf BigInt
+  rule    String
+}

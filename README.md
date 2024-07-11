@@ -25,6 +25,9 @@ A moderation bot I made so I could kick Carlbot, but which now has now become qu
     - Allows adding users to the ticket
   - **Note**: attaches notes to a user that all moderators can see
     - Notes are automatically attached for audit logs (ban, unban, kick, timeout, channel ban)
+  - **EnforceRule**: message context menu option to enforce your server rules as either a warning or 5/60min timeout
+    - Up to 25 rules can be configured
+    - Message author is informed that a moderator is reviewing their message, then they are informed of the outcome
   - **MirrorGuild**: mirrors messages from entire guild into one channel
   - **Purge**: deletes a number of messages in a channel
   - **ChannelBan**: prevents a user from sending messages in a channel
