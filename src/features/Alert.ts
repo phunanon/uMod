@@ -70,6 +70,11 @@ export const Alert: Feature = {
           minValue: 1,
           maxValue: 3600,
         },
+        {
+          name: 'in-situ',
+          description: 'Send alert only if message sent in this channel',
+          type: ApplicationCommandOptionType.Boolean,
+        },
       ],
     });
   },
@@ -88,14 +93,17 @@ export const Alert: Feature = {
         .getString('alt-reason')
         ?.replaceAll('\\n', '\n');
       const cooldownSec = options.getInteger('cooldown-seconds');
+      const insitu = options.getBoolean('in-situ') ?? false;
 
       const alert = await prisma.alert.create({
         data: {
           ...{ guildSf, channelSf },
-          ...{ userSf, roleSf, event, pattern, altReason, cooldownSec },
+          ...{ userSf, roleSf, event, pattern, altReason, cooldownSec, insitu },
         },
       });
-      const criteria = alertInfo(event, userSf, roleSf, pattern, cooldownSec);
+      const criteria = alertInfo(
+        ...[event, userSf, roleSf, pattern, cooldownSec, insitu],
+      );
       await interaction.editReply({
         content: `Alert ${alert.id} created: ${criteria}, ${altReason ?? ''}`,
         allowedMentions: { parse: [] },
@@ -137,14 +145,12 @@ export const Alert: Feature = {
       content,
     });
   },
-  async HandleMessageCreate({ message, guildSf, userSf, member }) {
+  async HandleMessageCreate({ message, guildSf, channelSf, userSf, member }) {
     if (!message.content) return;
     const roles = member.roles.cache.map(role => BigInt(role.id));
 
     await HandleAlert({
-      guildSf,
-      userSf,
-      tag: member.user.tag,
+      ...{ guildSf, channelSf, userSf, tag: member.user.tag },
       event: AlertEvent.Message,
       roles,
       content: message.content,
@@ -157,9 +163,7 @@ export const Alert: Feature = {
     });
     if (stats?.numMessages === 1) {
       await HandleAlert({
-        guildSf,
-        userSf,
-        tag: member.user.tag,
+        ...{ guildSf, userSf, channelSf, tag: member.user.tag },
         event: AlertEvent.FirstMessage,
         roles,
         url: message.url,
@@ -321,6 +325,7 @@ export const RecommendedAlerts: Feature = {
 type HandleInfo = {
   event: AlertEvent;
   guildSf: bigint;
+  channelSf?: bigint;
   userSf?: bigint;
   tag?: string;
   roles?: bigint[];
@@ -348,12 +353,19 @@ export const HandleAlert = async (i: HandleInfo) => {
       AND: [
         { OR: [{ userSf: i.userSf }, { userSf: null }] },
         { OR: [{ roleSf: { in: i.roles } }, { roleSf: null }] },
+        {
+          OR: [
+            ...(i.channelSf ? [{ insitu: true, channelSf: i.channelSf }] : []),
+            { insitu: false },
+          ],
+        },
       ],
     },
   });
 
   for (const a of alerts) {
-    const { id, channelSf, userSf, roleSf, event, pattern, cooldownSec } = a;
+    const { id, channelSf, userSf, roleSf, ...other } = a;
+    const { event, pattern, cooldownSec, insitu } = other;
     const regex = pattern ? new RegExp(pattern, 'i') : null;
     if (regex && i.content && !regex.test(i.content)) continue;
     const channel = await client.channels.fetch(`${channelSf}`);
@@ -369,7 +381,7 @@ export const HandleAlert = async (i: HandleInfo) => {
         i.tag?.replaceAll(/([_*])/g, '\\$1') ?? '[unknown $tag]',
       )
       .replaceAll(/\$url/g, i.url ?? '[no URL]');
-    const info = alertInfo(event, uSf, roleSf, pattern, cooldownSec);
+    const info = alertInfo(event, uSf, roleSf, pattern, cooldownSec, insitu);
     const allowedMentions =
       a.altReason?.includes('$ping') && uSf
         ? { users: [`${uSf}`] }
@@ -393,6 +405,7 @@ const alertInfo = (
   roleSf: bigint | null,
   pattern: string | null,
   cooldownSec: number | null,
+  insitu: boolean | null,
 ) => {
   const parts = [
     event,
@@ -400,6 +413,7 @@ const alertInfo = (
     roleSf ? `<@&${roleSf}>` : null,
     pattern ? `\`${pattern}\` pattern` : null,
     cooldownSec ? `${cooldownSec}s cooldown` : null,
+    insitu ? 'in-situ' : null,
   ].filter(Boolean);
   return parts.join(', ');
 };

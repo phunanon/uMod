@@ -83,6 +83,7 @@ model Alert {
   id            Int       @id @default(autoincrement())
   guildSf       BigInt
   channelSf     BigInt
+  insitu        Boolean   @default(false)
   event         String
   userSf        BigInt?
   roleSf        BigInt?
