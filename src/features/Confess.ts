@@ -10,7 +10,13 @@ import {
   TextInputStyle,
 } from 'discord.js';
 import { Feature } from '.';
-import { client, log, prisma } from '../infrastructure';
+import {
+  client,
+  log,
+  prisma,
+  TryFetchChannel,
+  TryFetchMessage,
+} from '../infrastructure';
 import RC5 from 'rc5';
 
 export const ConfessionsHere: Feature = {
@@ -19,6 +25,22 @@ export const ConfessionsHere: Feature = {
       name: 'confessions-here',
       description: 'Use this channel for anonymous confessions',
     });
+
+    const flags = await prisma.channelFlags.findMany({
+      where: { confessMessage: { not: null } },
+      select: { channelSf: true },
+    });
+    for (const { channelSf } of flags) {
+      const channel = await TryFetchChannel(channelSf);
+      if (!channel?.isTextBased()) {
+        await prisma.channelFlags.updateMany({
+          where: { channelSf },
+          data: { confessMessage: null },
+        });
+      } else {
+        await RenewStickyMessage(channel);
+      }
+    }
   },
   Interaction: {
     name: 'confessions-here',
@@ -94,14 +116,18 @@ export const ConfessSubmit: Feature = {
   Interaction: {
     name: 'confession',
     moderatorOnly: false,
-    async modalSubmit({ interaction, channel, channelSf, userSf }) {
+    async modalSubmit({ interaction, channel, userSf }) {
       await interaction.deferUpdate();
 
       const confession = interaction.fields.getTextInputValue('confession');
+      const formatted = confession
+        .split('\n')
+        .map(x => `> ${x}`)
+        .join('\n');
       const id = encryption.encrypt(userSf);
       const embed = new EmbedBuilder()
         .setAuthor({ name: 'Anonymous' })
-        .setDescription(confession)
+        .setDescription(formatted)
         .setFooter({ text: id });
 
       await channel.send({ embeds: [embed] });
@@ -120,7 +146,7 @@ export const ConfessMute: Feature = {
       options: [
         {
           name: 'id',
-          description: 'The confess message ID',
+          description: 'The confession message ID',
           type: ApplicationCommandOptionType.String,
           required: true,
         },
@@ -133,11 +159,7 @@ export const ConfessMute: Feature = {
     async command({ interaction, guildSf }) {
       await interaction.deferReply({ ephemeral: true });
 
-      const id = interaction.options.get('id')?.value;
-      if (typeof id !== 'string') {
-        await interaction.reply('Invalid ID.');
-        return;
-      }
+      const id = interaction.options.getString('id', true);
 
       try {
         const userSf = encryption.decrypt(id);
@@ -159,6 +181,42 @@ export const ConfessMute: Feature = {
   },
 };
 
+export const ConfessUnmute: Feature = {
+  async Init(commands) {
+    await commands.create({
+      name: 'confess-unmute',
+      description: 'Unmute a user from using the `/confess` command',
+      options: [
+        {
+          name: 'user',
+          type: ApplicationCommandOptionType.User,
+          description: 'The user to unmute',
+          required: true,
+        },
+      ],
+    });
+  },
+  Interaction: {
+    name: 'confess-unmute',
+    moderatorOnly: true,
+    async command({ interaction, guildSf }) {
+      await interaction.deferReply({ ephemeral: true });
+
+      const { id, tag } = interaction.options.getUser('user', true);
+
+      const userSf = BigInt(id);
+      const userSf_guildSf = { userSf, guildSf };
+      await prisma.member.upsert({
+        where: { userSf_guildSf },
+        create: { ...userSf_guildSf, tag, confessMute: false },
+        update: { confessMute: false },
+      });
+
+      await interaction.editReply('User unmuted, if they were muted.');
+    },
+  },
+};
+
 const encryption = {
   key() {
     const token = process.env.DISCORD_TOKEN ?? '';
@@ -166,7 +224,12 @@ const encryption = {
   },
   encrypt(userSf: bigint) {
     const rc5 = new RC5(this.key());
-    const plain = Buffer.from(userSf.toString(16).padStart(16, '0'), 'hex');
+    const minutesSince2015 = Math.floor(
+      (Date.now() - new Date('2015-01-01').getTime()) / 60_000,
+    );
+    const sfHex = userSf.toString(16).padStart(16, '0');
+    const minutesHex = minutesSince2015.toString(16).padStart(16, '0');
+    const plain = Buffer.from(sfHex + minutesHex, 'hex');
     const encrypted = rc5.encrypt(plain);
     return encrypted.toString('base64');
   },
@@ -175,7 +238,8 @@ const encryption = {
     const decrypted = rc5
       .decrypt(Buffer.from(encrypted, 'base64'))
       .toString('hex');
-    return BigInt(`0x${decrypted}`);
+    const sfHex = decrypted.slice(0, 16);
+    return BigInt(`0x${sfHex}`);
   },
 };
 
@@ -184,12 +248,13 @@ const RenewStickyMessage = async (channel: TextBasedChannel) => {
   const existingMessageSf = (
     await prisma.channelFlags.findFirst({ where: { channelSf } })
   )?.confessMessage;
+
+  //Check if it's already the latest message
+  const mostRecent = await channel.messages.fetch({ limit: 1 });
+  if (mostRecent.first()?.id === `${existingMessageSf}`) return;
+
   const existing = existingMessageSf
-    ? await (async () => {
-        try {
-          return await channel.messages.fetch(`${existingMessageSf}`);
-        } catch (e) {}
-      })()
+    ? await TryFetchMessage(channel, existingMessageSf)
     : null;
   await existing?.delete();
 
@@ -211,4 +276,8 @@ const RenewStickyMessage = async (channel: TextBasedChannel) => {
     update: { confessMessage },
     create: { channelSf, confessMessage },
   });
+
+  setTimeout(async () => {
+    await RenewStickyMessage(channel);
+  }, 5 * 60_000);
 };

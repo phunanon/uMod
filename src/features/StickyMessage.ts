@@ -1,6 +1,6 @@
 import { Feature } from '.';
-import { ApplicationCommandOptionType, TextBasedChannel } from 'discord.js';
-import { client, prisma } from '../infrastructure';
+import { ApplicationCommandOptionType } from 'discord.js';
+import { client, prisma, TryFetchMessage } from '../infrastructure';
 
 export const StickyMessage: Feature = {
   async Init(commands) {
@@ -116,11 +116,3 @@ const RenewStickyMessages = async () => {
 };
 
 const calcRenewAt = (sec: number) => new Date(Date.now() + sec * 1_000);
-
-const TryFetchMessage = async (channel: TextBasedChannel, sf: bigint) => {
-  try {
-    return await channel.messages.fetch(`${sf}`);
-  } catch {
-    return null;
-  }
-};

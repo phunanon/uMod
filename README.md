@@ -44,8 +44,8 @@ A moderation bot I made so I could kick Carlbot, but which now has now become qu
   - **DisallowRole**: prevent a user from having a role
 - Fun
   - **Leaderboard**: keeps track of user messages and ranks them
-  - **Confess**: repeats a message in a channel, anonymously
-    - Also **ConfessMute**
+  - **Confessions**: allows users to post anonymous messages in a channel
+    - Also **ConfessMute** (preserving anonymity) and **ConfessUnmute**
   - **GlobalChat**: mirrors messages between guilds using public or private rooms
     - Includes message editing, deleting, and typing indication
   - **Histogram**: generates a histogram of hourly and week daily message counts for a user or the guild
@@ -67,7 +67,6 @@ A moderation bot I made so I could kick Carlbot, but which now has now become qu
 Aspirations & TODO:
 
 - Command to close ticket in a day
-- Confess IDs that are unique per confession
 - GlobalChat first message introduction
 - caching for various things
 - auto role

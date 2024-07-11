@@ -29,6 +29,7 @@ import { StickyMessage } from './StickyMessage';
 import {
   Confess,
   ConfessMute,
+  ConfessUnmute,
   ConfessSubmit,
   ConfessionsHere,
 } from './Confess';
@@ -64,7 +65,7 @@ export const features = {
   ...{ PermaRole, InviteSpam, Ping, WhitelistChannel, ActivitySort },
   ...{ Leaderboard, IqLeaderboard, StickyMessage, Purge, Transcript },
   ...{ Note, ReadNote, ChannelBan, Censor, DeleteCensor },
-  ...{ Confess, ConfessMute, ConfessSubmit, ConfessionsHere },
+  ...{ Confess, ConfessMute, ConfessUnmute, ConfessSubmit, ConfessionsHere },
   ...{ Alert, DeleteAlert, DeleteAlerts, RecommendedAlerts, BlockGifs },
   ...{ CreateTicket, TicketAdd, TicketsHere, CloseTicket },
   ...{ RoleList, RoleListAddRole, RoleListRemoveRole },
