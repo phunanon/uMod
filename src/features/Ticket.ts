@@ -61,7 +61,7 @@ export const CreateTicket: Feature = {
   Interaction: {
     name: 'create_ticket_*',
     moderatorOnly: false,
-    async button({ interaction, channel, guild }) {
+    async button({ interaction, guild, channel, member }) {
       await interaction.deferReply({ ephemeral: true });
 
       const category = await channel.parent?.fetch();
@@ -79,19 +79,20 @@ export const CreateTicket: Feature = {
         return;
       }
 
-      //Check if a channel already exists for the user
-      const name = `ticket-${interaction.user.id}`;
+      //Check if a channel already exists for the user, unless they're part of the role
+      const prefix = `ticket-${interaction.user.id}`;
       const channels = await guild.channels.fetch();
-      const userChannel = channels.find(c => c?.name === name);
-      if (userChannel) {
+      const existingChannels = channels.filter(c => c?.name.startsWith(prefix));
+      const [firstChannel] = existingChannels.values();
+      if (firstChannel && !member.roles.cache.has(role)) {
         await interaction.editReply(
-          `You already have a ticket open: ${userChannel.url}`,
+          `You already have a ticket open: ${firstChannel.url}`,
         );
         return;
       }
 
       const newChannel = await guild.channels.create({
-        name,
+        name: prefix + `-${existingChannels.size}`,
         parent: category,
         permissionOverwrites: [
           {

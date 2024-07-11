@@ -71,7 +71,6 @@ Aspirations & TODO:
 - caching for various things
 - global chat mute message context function
 - /timestamp
-- multiple tickets by putting a suffix on channel name
 - allow censored messages through GlobalChat
 - ability to send alerts in the channel they were triggered by
 - different handler for registering slash commands which is only called via process.env
