@@ -165,7 +165,7 @@ export const EnforceRule: Feature = {
           event: AlertEvent.Note,
           userSf,
           guildSf,
-          content: `<@${userSf}> warned for rule: ${rule.rule}`,
+          content: `<@${authorSf}> warned for rule: ${rule.rule}`,
         });
       }
 

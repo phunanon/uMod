@@ -69,7 +69,6 @@ Aspirations & TODO:
 - Command to close ticket in a day
 - GlobalChat first message introduction
 - caching for various things
-- auto role
 - global chat mute message context function
 - /timestamp
 - multiple tickets by putting a suffix on channel name
