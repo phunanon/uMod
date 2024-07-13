@@ -56,9 +56,11 @@ import { DisallowRole } from './DisallowRole';
 import { GifMute } from './GifMute';
 import { AutoRole } from './AutoRole';
 import { QotdApprove, QotdDisable, QotdEnable, QotdSuggest } from './Qotd';
+import { QotdSubscribe, QotdUnsubscribe } from './Qotd';
 import { FakeUser } from './FakeUser';
 import { KickSus } from './KickSus';
 import { EnforceRule, EnforceRulePicker, SetupRule } from './EnforceRule';
+import { DeleteMessage } from './DeleteMessage';
 
 export const features = {
   ...{ MirrorGuild, KickSus },
@@ -75,7 +77,8 @@ export const features = {
   ...{ BumpReminder, BumpRemind, BumpUnremind },
   ...{ DisallowRole, GifMute, AutoRole, FakeUser },
   ...{ QotdApprove, QotdDisable, QotdEnable, QotdSuggest },
-  ...{ EnforceRule, EnforceRulePicker, SetupRule },
+  ...{ QotdSubscribe, QotdUnsubscribe },
+  ...{ EnforceRule, EnforceRulePicker, SetupRule, DeleteMessage },
 };
 
 export type FeatureConfig = {
@@ -106,6 +109,7 @@ export type MsgCtx = {
   isEdit: boolean;
   isDelete: boolean;
   isMod: boolean;
+  unmoddable: boolean;
 };
 type NarrowMsgCtx = Omit<MsgCtx, 'isEdit' | 'isDelete'>;
 

@@ -283,9 +283,9 @@ async function handleAudit(log: GuildAuditLogsEntry, guild: Guild) {
   }
 }
 
-const FetchDetails = async <T extends GuildMember | null>(
+const FetchDetails = async (
   guild: Guild,
-  member: T,
+  member: GuildMember | null,
   userSf: bigint,
 ) => {
   const isOwner = BigInt(guild.ownerId) === userSf;
@@ -295,5 +295,12 @@ const FetchDetails = async <T extends GuildMember | null>(
   const hasModRole =
     member && modRoles.some(role => member.roles.cache.has(`${role.roleSf}`));
   const isMod = (isOwner || hasModRole) ?? false;
-  return { isMod, isOwner, noMods: !modRoles.length };
+  const unmoddable =
+    (isMod ||
+      (guild.members.me &&
+        member &&
+        member.roles.highest.position >=
+          guild.members.me.roles.highest.position)) ??
+    false;
+  return { isMod, unmoddable, isOwner, noMods: !modRoles.length };
 };

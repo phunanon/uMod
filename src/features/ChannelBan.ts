@@ -41,7 +41,7 @@ export const ChannelBan: Feature = {
       } catch (e) {}
 
       const existing = await prisma.channelBan.findFirst({
-        where: { guildSf, userSf, channelSf },
+        where: { userSf, channelSf },
       });
 
       if (existing) {
@@ -49,7 +49,7 @@ export const ChannelBan: Feature = {
         return;
       }
 
-      await prisma.channelBan.create({ data: { guildSf, userSf, channelSf } });
+      await prisma.channelBan.create({ data: { userSf, channelSf } });
 
       const content = `banned from <#${channel.id}>: ${reason}`;
       await HandleAlert({ event: AlertEvent.Audit, userSf, guildSf, content });
@@ -64,11 +64,10 @@ export const ChannelBan: Feature = {
   },
   /** Restore channel bans if any are stored */
   async HandleMemberAdd(member) {
-    const guildSf = BigInt(member.guild.id);
     const userSf = BigInt(member.id);
     const channelBans = await prisma.channelBan.findMany({
       select: { channelSf: true },
-      where: { guildSf, userSf },
+      where: { userSf },
     });
     const channels = await member.guild.channels.fetch();
     for (const { channelSf } of channelBans) {

@@ -12,7 +12,7 @@ export const PermaRole: Feature = {
     await prisma.$transaction([
       prisma.permaRole.deleteMany({ where: { userSf } }),
       prisma.permaRole.createMany({
-        data: roles.map(roleSf => ({ userSf, roleSf })),
+        data: [...new Set(roles)].map(roleSf => ({ userSf, roleSf })),
       }),
     ]);
   },
@@ -29,6 +29,7 @@ export const PermaRole: Feature = {
     await member.roles.add(roleSnowflakes);
     const snowflakes = roleSnowflakes.map(sf => `<@&${sf}>`);
     const content = `Restored roles: ${snowflakes.join(', ')}`;
+    //TODO: check if alert is entirely necessary
     await HandleAlert({ guildSf, userSf, event: AlertEvent.Roles, content });
   },
 };

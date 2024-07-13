@@ -1,12 +1,11 @@
-import { log } from '../infrastructure';
 import { Feature } from '.';
 
 export const InviteSpam: Feature = {
-  async HandleMessage({ message, member, isMod, isDelete }) {
-    if (isMod || isDelete) return;
+  async HandleMessage({ message, member, unmoddable, isDelete }) {
+    if (unmoddable || isDelete) return;
 
     const wordDiscord = new RegExp(
-      /discord\.(gg|com)(?!\/channel|\/events)/gi,
+      /discord\.(gg|com)(?!\/channel|\/events|\/developers)/gi,
     ).test(message.content);
     const wordEveryone = message.content.includes('@everyone');
     if (!wordDiscord && !wordEveryone) return;

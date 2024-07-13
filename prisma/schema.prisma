@@ -11,15 +11,16 @@ model PermaRole {
   id     Int    @id @default(autoincrement())
   userSf BigInt
   roleSf BigInt
+
+  @@unique([userSf, roleSf])
 }
 
 model ChannelBan {
   id        Int    @id @default(autoincrement())
-  userSf    BigInt
-  guildSf   BigInt
   channelSf BigInt
+  userSf    BigInt
 
-  @@unique([userSf, guildSf, channelSf])
+  @@unique([channelSf, userSf])
 }
 
 model GuildMirror {
@@ -170,20 +171,18 @@ model Acquaintance {
 }
 
 model BumpReminder {
-  id        Int      @id @default(autoincrement())
-  guildSf   BigInt   @unique
+  id        Int                @id @default(autoincrement())
+  guildSf   BigInt             @unique
   channelSf BigInt
   remindAt  DateTime
-
-  Users BumpReminderUser[]
+  Users     BumpReminderUser[]
 }
 
 model BumpReminderUser {
-  id     Int    @id @default(autoincrement())
-  userSf BigInt
-
-  BumpReminder   BumpReminder @relation(fields: [bumpReminderId], references: [id], onDelete: Cascade)
+  id             Int          @id @default(autoincrement())
+  userSf         BigInt
   bumpReminderId Int
+  BumpReminder   BumpReminder @relation(fields: [bumpReminderId], references: [id], onDelete: Cascade)
 }
 
 model DisallowRole {
@@ -235,4 +234,11 @@ model GuildRule {
   id      Int    @id @default(autoincrement())
   guildSf BigInt
   rule    String
+}
+
+model ConfessMessage {
+  id        Int      @id @default(autoincrement())
+  at        DateTime @default(now())
+  userSf    BigInt
+  messageSf BigInt   @unique
 }

@@ -1,6 +1,7 @@
 import {
   ActionRowBuilder,
   ApplicationCommandOptionType,
+  ApplicationCommandType,
   ButtonBuilder,
   ButtonStyle,
   EmbedBuilder,
@@ -17,7 +18,7 @@ import {
   TryFetchChannel,
   TryFetchMessage,
 } from '../infrastructure';
-import RC5 from 'rc5';
+import { DeleteMessageRow } from './DeleteMessage';
 
 export const ConfessionsHere: Feature = {
   async Init(commands) {
@@ -124,13 +125,19 @@ export const ConfessSubmit: Feature = {
         .split('\n')
         .map(x => `> ${x}`)
         .join('\n');
-      const id = encryption.encrypt(userSf);
       const embed = new EmbedBuilder()
         .setAuthor({ name: 'Anonymous' })
-        .setDescription(formatted)
-        .setFooter({ text: id });
+        .setDescription(formatted);
 
-      await channel.send({ embeds: [embed] });
+      const message = await channel.send({ embeds: [embed] });
+      await prisma.confessMessage.create({
+        data: { userSf, messageSf: BigInt(message.id) },
+      });
+      //Delete confessMessage records older than a month
+      await prisma.confessMessage.deleteMany({
+        where: { at: { lt: new Date(Date.now() - 30 * 24 * 60 * 60_000) } },
+      });
+
       log(`Confession by ${userSf}: ${confession}`);
 
       await RenewStickyMessage(channel);
@@ -141,28 +148,29 @@ export const ConfessSubmit: Feature = {
 export const ConfessMute: Feature = {
   async Init(commands) {
     await commands.create({
-      name: 'confess-mute',
-      description: 'Mute a user from using the `/confess` command',
-      options: [
-        {
-          name: 'id',
-          description: 'The confession message ID',
-          type: ApplicationCommandOptionType.String,
-          required: true,
-        },
-      ],
+      type: ApplicationCommandType.Message,
+      name: 'Mute confessor',
     });
   },
   Interaction: {
-    name: 'confess-mute',
+    name: 'Mute confessor',
     moderatorOnly: true,
-    async command({ interaction, guildSf }) {
+    async contextMenu({ interaction, guildSf }) {
       await interaction.deferReply({ ephemeral: true });
 
-      const id = interaction.options.getString('id', true);
+      const messageSf = BigInt(interaction.targetMessage.id);
+      const { userSf } =
+        (await prisma.confessMessage.findUnique({
+          where: { messageSf },
+          select: { userSf: true },
+        })) ?? {};
+
+      if (!userSf) {
+        await interaction.editReply('Invalid confession, or too long ago.');
+        return;
+      }
 
       try {
-        const userSf = encryption.decrypt(id);
         const { tag } = await client.users.fetch(`${userSf}`);
         const userSf_guildSf = { userSf, guildSf };
         await prisma.member.upsert({
@@ -171,8 +179,13 @@ export const ConfessMute: Feature = {
           update: { confessMute: true },
         });
 
-        await interaction.editReply('User muted.');
-      } catch (e) {
+        const row = DeleteMessageRow(messageSf);
+
+        await interaction.editReply({
+          content: 'User muted.',
+          components: [row],
+        });
+      } catch {
         await interaction.editReply(
           'Invalid ID, user has left, or some other error occurred.',
         );
@@ -214,32 +227,6 @@ export const ConfessUnmute: Feature = {
 
       await interaction.editReply('User unmuted, if they were muted.');
     },
-  },
-};
-
-const encryption = {
-  key() {
-    const token = process.env.DISCORD_TOKEN ?? '';
-    return token.slice(0, 8);
-  },
-  encrypt(userSf: bigint) {
-    const rc5 = new RC5(this.key());
-    const minutesSince2015 = Math.floor(
-      (Date.now() - new Date('2015-01-01').getTime()) / 60_000,
-    );
-    const sfHex = userSf.toString(16).padStart(16, '0');
-    const minutesHex = minutesSince2015.toString(16).padStart(16, '0');
-    const plain = Buffer.from(sfHex + minutesHex, 'hex');
-    const encrypted = rc5.encrypt(plain);
-    return encrypted.toString('base64');
-  },
-  decrypt(encrypted: string): bigint {
-    const rc5 = new RC5(this.key());
-    const decrypted = rc5
-      .decrypt(Buffer.from(encrypted, 'base64'))
-      .toString('hex');
-    const sfHex = decrypted.slice(0, 16);
-    return BigInt(`0x${sfHex}`);
   },
 };
 

@@ -76,6 +76,7 @@ Aspirations & TODO:
 - different handler for registering slash commands which is only called via process.env
 - subscribe to Qotd
 - ticket custom reasons
+- ticket auto-nonmoderated
 
 ## To host it yourself
 

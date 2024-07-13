@@ -3,7 +3,9 @@ import {
   ApplicationCommandOptionType,
   ButtonBuilder,
   ButtonStyle,
+  ChannelType,
   EmbedBuilder,
+  Guild,
 } from 'discord.js';
 import { Feature } from '.';
 import { client, prisma } from '../infrastructure';
@@ -104,10 +106,19 @@ export const QotdApprove: Feature = {
           orderBy: { postAt: 'desc' },
           select: { postAt: true },
         })) ?? {};
+      const { postedAt: latestPostedAt } =
+        (await prisma.qotdQuestion.findFirst({
+          orderBy: { postedAt: 'desc' },
+          select: { postedAt: true },
+        })) ?? {};
 
-      const postAt = latestPostAt
-        ? new Date(latestPostAt.getTime() + 24 * 60 * 60_000)
-        : new Date();
+      const plus1Day = (x: Date) => x.getTime() + 24 * 60 * 60_000;
+      const dates = [
+        ...(latestPostAt ? [plus1Day(latestPostAt)] : []),
+        ...(latestPostedAt ? [plus1Day(latestPostedAt)] : []),
+        Date.now(),
+      ];
+      const postAt = new Date(Math.max(...dates));
       await prisma.qotdQuestion.update({ where: { id }, data: { postAt } });
 
       const t = Math.floor(postAt.getTime() / 1000);
@@ -179,6 +190,64 @@ export const QotdSuggest: Feature = {
   },
 };
 
+export const QotdSubscribe: Feature = {
+  Interaction: {
+    name: 'qotd-subscribe',
+    moderatorOnly: false,
+    async button({ interaction, guild, member }) {
+      await interaction.deferReply({ ephemeral: true });
+
+      const role = await GetQotdRole(guild);
+
+      if (member.roles.cache.has(role.id)) {
+        await interaction.editReply(
+          'You are already subscribed to QOTD notifications.',
+        );
+        return;
+      }
+
+      try {
+        await member.roles.add(role);
+      } catch {
+        await interaction.editReply('I was unable to give you the QOTD role.');
+        return;
+      }
+      await interaction.editReply(
+        'You will now receive notifications for new questions of the day.',
+      );
+    },
+  },
+};
+
+export const QotdUnsubscribe: Feature = {
+  Interaction: {
+    name: 'qotd-unsubscribe',
+    moderatorOnly: false,
+    async button({ interaction, guild, member }) {
+      await interaction.deferReply({ ephemeral: true });
+
+      const role = await GetQotdRole(guild);
+
+      if (!member.roles.cache.has(role.id)) {
+        await interaction.editReply(
+          'You are not subscribed to QOTD notifications.',
+        );
+        return;
+      }
+
+      try {
+        await member.roles.remove(role);
+      } catch {
+        await interaction.editReply('I was unable to remove the QOTD role.');
+        return;
+      }
+      await interaction.editReply(
+        'You will no longer receive notifications for new questions of the day.',
+      );
+    },
+  },
+};
+
 async function QotdTick() {
   const questions = await prisma.qotdQuestion.findMany({
     where: { postAt: { lte: new Date() }, postedAt: null },
@@ -194,10 +263,23 @@ async function PostQuestion(q: QotdQuestion & { Config: GuildQotd }) {
   const { id, guildSf, authorSf, question, Config } = q;
   const postChannel = await client.channels.fetch(`${Config.postChannelSf}`);
 
-  if (!postChannel?.isTextBased()) {
+  if (postChannel?.type !== ChannelType.GuildText) {
     await prisma.guildQotd.delete({ where: { guildSf } });
     return;
   }
+
+  const role = await GetQotdRole(postChannel.guild);
+
+  const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+    new ButtonBuilder()
+      .setCustomId('qotd-subscribe')
+      .setLabel('Be notified of new questions')
+      .setStyle(ButtonStyle.Primary),
+    new ButtonBuilder()
+      .setCustomId('qotd-unsubscribe')
+      .setLabel('Stop receiving notifications')
+      .setStyle(ButtonStyle.Danger),
+  );
 
   const embed = new EmbedBuilder()
     .setTitle('❓ Question of the Day ❓')
@@ -206,13 +288,19 @@ async function PostQuestion(q: QotdQuestion & { Config: GuildQotd }) {
 
   await postChannel.send({
     embeds: [embed],
-    content: `Suggest your own question with \`/suggest-qotd\`.
-This question was asked by <@${authorSf}>.`,
-    allowedMentions: { users: [`${authorSf}`] },
+    content: `<@&${role.id}> Suggest your own questions with \`/suggest-qotd\`. Asked by <@${authorSf}>.`,
+    components: [row],
+    allowedMentions: { users: [`${authorSf}`], roles: [role.id] },
   });
 
   await prisma.qotdQuestion.update({
     where: { id },
     data: { postedAt: new Date() },
   });
+}
+
+async function GetQotdRole(guild: Guild) {
+  const roles = await guild.roles.fetch();
+  const role = [...roles.values()].find(r => r.name === 'QotD pings');
+  return role ?? (await guild.roles.create({ name: 'QotD pings' }));
 }

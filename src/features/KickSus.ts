@@ -71,7 +71,10 @@ const makeWarning = (
 ) => `${guildSf}:${userSf}:${heuristic}:${content}`;
 
 export const KickSus: Feature = {
-  async HandleMessageCreate({ message, guildSf, userSf, channelSf }) {
+  async HandleMessageCreate(ctx) {
+    const { message, unmoddable, guildSf, userSf, channelSf } = ctx;
+    if (unmoddable) return;
+
     const flags = await prisma.channelFlags.findFirst({ where: { channelSf } });
     if (flags?.antiSpam === false) return;
     //Record potentially suspicious activity

@@ -50,8 +50,8 @@ export const PingProtect: Feature = {
       });
     },
   },
-  async HandleMessage({ message, guildSf, userSf, isDelete, isMod }) {
-    if (!message.mentions.users.size || isDelete || isMod) return;
+  async HandleMessage({ message, guildSf, userSf, isDelete, unmoddable }) {
+    if (!message.mentions.users.size || isDelete || unmoddable) return;
     const users = message.mentions.users.filter(
       user => !user.bot && user.id !== message.author.id,
     );

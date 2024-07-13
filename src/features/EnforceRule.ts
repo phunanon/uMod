@@ -5,8 +5,9 @@ import {
   StringSelectMenuBuilder,
 } from 'discord.js';
 import { Feature } from '.';
-import { prisma } from '../infrastructure';
+import { prisma, TryFetchMessage } from '../infrastructure';
 import { AlertEvent, HandleAlert } from './Alert';
+import { DeleteMessageRow } from './DeleteMessage';
 
 export const SetupRule: Feature = {
   async Init(commands) {
@@ -46,9 +47,9 @@ export const SetupRule: Feature = {
 
       await prisma.guildRule.deleteMany({ where: { guildSf } });
 
-      for (const rule of rules) {
-        await prisma.guildRule.create({ data: { guildSf, rule } });
-      }
+      await prisma.guildRule.createMany({
+        data: rules.map(rule => ({ guildSf, rule })),
+      });
 
       await interaction.editReply(`${rules.length} rule(s) configured.`);
     },
@@ -67,7 +68,7 @@ export const EnforceRulePicker: Feature = {
     moderatorOnly: true,
     async contextMenu({ interaction, guildSf }) {
       await interaction.deferReply({ ephemeral: true });
-      const { author, content } = interaction.targetMessage;
+      const { id: messageSf, author, content } = interaction.targetMessage;
 
       const rules = await prisma.guildRule.findMany({ where: { guildSf } });
 
@@ -85,7 +86,7 @@ export const EnforceRulePicker: Feature = {
           { id, label: `(60min timeout) ${rule}`, duration: 60 * 60_000 },
         ])
         .map(({ id, label, duration }) => ({
-          ...{ label, value: `${id}-${author.id}-${duration}` },
+          ...{ label, value: `${id}-${author.id}-${messageSf}-${duration}` },
         }));
 
       const row = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
@@ -116,15 +117,22 @@ export const EnforceRule: Feature = {
   Interaction: {
     name: 'rule',
     moderatorOnly: true,
-    async stringSelect({ interaction, guild, guildSf, userSf }) {
+    async stringSelect({ interaction, channel, guild, guildSf, userSf }) {
       await interaction.deferUpdate();
 
       const choice = interaction.values[0] ?? '';
-      const [ruleIdStr, authorSfStr, durationStr] = choice.split('-');
+      const [ruleIdStr, authorSfStr, messageSfStr, durationStr] =
+        choice.split('-');
       const ruleId = Number(ruleIdStr);
       const authorSf = BigInt(authorSfStr ?? '');
+      const messageSf = BigInt(messageSfStr ?? '');
       const duration = Number(durationStr);
-      if (!Number.isFinite(ruleId) || !authorSf || !Number.isFinite(duration)) {
+      if (
+        !Number.isFinite(ruleId) ||
+        !Number.isFinite(duration) ||
+        !authorSf ||
+        !messageSf
+      ) {
         await interaction.editReply('Invalid choice.');
         return;
       }
@@ -142,31 +150,26 @@ export const EnforceRule: Feature = {
         return;
       }
 
+      const message = await TryFetchMessage(channel, messageSf);
+      const content = `Rule ${
+        duration ? 'enforcement' : 'warning'
+      } by <@${userSf}>: ${rule.rule}\n> ${
+        (message?.content ?? '[deleted]') ||
+        message?.attachments.map(x => x.url).join('\n')
+      }`;
+
       if (duration) {
         try {
-          await member.timeout(
-            duration,
-            `Rule enforcement by <@${userSf}>: ${rule.rule}`,
-          );
+          await member.timeout(duration, content);
         } catch {
           await interaction.editReply('Could not timeout the author.');
           return;
         }
       } else {
         await prisma.note.create({
-          data: {
-            guildSf,
-            authorSf: userSf,
-            userSf: authorSf,
-            content: `Warned for rule: ${rule.rule}`,
-          },
+          data: { guildSf, authorSf: userSf, userSf: authorSf, content },
         });
-        await HandleAlert({
-          event: AlertEvent.Note,
-          userSf,
-          guildSf,
-          content: `<@${authorSf}> warned for rule: ${rule.rule}`,
-        });
+        await HandleAlert({ event: AlertEvent.Note, userSf, guildSf, content });
       }
 
       try {
@@ -182,12 +185,14 @@ export const EnforceRule: Feature = {
         return;
       }
 
+      const row = DeleteMessageRow(messageSf);
+
       const didWhat = duration
         ? "timed out and DM'd about why"
         : 'warned via DMs';
       await interaction.editReply({
         content: `Rule enforced: ${rule.rule}\nMember ${didWhat}.`,
-        components: [],
+        components: [row],
       });
     },
   },
