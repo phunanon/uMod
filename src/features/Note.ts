@@ -3,6 +3,23 @@ import { Feature } from '.';
 import { prisma } from '../infrastructure';
 import { AlertEvent, HandleAlert } from './Alert';
 
+export const MakeNote = async (
+  guildSf: bigint,
+  userSf: bigint,
+  authorSf: bigint,
+  content: string,
+) => {
+  await prisma.note.create({
+    data: { guildSf, authorSf, userSf, content },
+  });
+  await HandleAlert({
+    event: AlertEvent.Note,
+    userSf,
+    guildSf,
+    content: `concerning <@${userSf}>: ${content}`,
+  });
+};
+
 export const Note: Feature = {
   async Init(commands) {
     await commands.create({
@@ -27,26 +44,14 @@ export const Note: Feature = {
   Interaction: {
     name: 'note',
     moderatorOnly: true,
-    async command({ interaction, guildSf, userSf }) {
+    async command({ interaction, guildSf, userSf: authorSf }) {
       await interaction.deferReply({ ephemeral: true });
 
-      const user = interaction.options.getUser('user');
-      const content = interaction.options.getString('note');
-      if (!user || !content) {
-        await interaction.editReply('Please provide a user and note');
-        return;
-      }
+      const user = interaction.options.getUser('user', true);
+      const content = interaction.options.getString('note', true);
+      const userSf = BigInt(user.id);
 
-      await prisma.note.create({
-        data: { guildSf, authorSf: userSf, userSf: BigInt(user.id), content },
-      });
-
-      await HandleAlert({
-        event: AlertEvent.Note,
-        userSf,
-        guildSf,
-        content: `concerning <@${user.id}>: ${content}`,
-      });
+      await MakeNote(guildSf, userSf, authorSf, content);
 
       await interaction.editReply(
         `Note added for ${user.username}: ${content}`,

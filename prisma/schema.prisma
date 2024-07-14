@@ -32,16 +32,18 @@ model GuildMirror {
 }
 
 model Member {
-  id          Int     @id @default(autoincrement())
+  id          Int      @id @default(autoincrement())
   guildSf     BigInt
   userSf      BigInt
   tag         String
-  confessMute Boolean @default(false)
-  gifMute     Boolean @default(false)
-  pingProtect Boolean @default(false)
-  numMessages Int     @default(0)
-  numIqLines  Int     @default(0)
-  numIqWords  Int     @default(0)
+  confessMute Boolean  @default(false)
+  gifMute     Boolean  @default(false)
+  pingProtect Boolean  @default(false)
+  numMessages Int      @default(0)
+  numIqLines  Int      @default(0)
+  numIqWords  Int      @default(0)
+  earliest    DateTime @default(now())
+  latest      BigInt   @default(0)
 
   @@unique([userSf, guildSf])
 }

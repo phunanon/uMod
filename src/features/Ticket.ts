@@ -111,7 +111,11 @@ export const CreateTicket: Feature = {
       });
 
       await prisma.channelFlags.create({
-        data: { channelSf: BigInt(newChannel.id), censor: false },
+        data: {
+          channelSf: BigInt(newChannel.id),
+          censor: false,
+          antiSpam: false,
+        },
       });
 
       const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
@@ -181,7 +185,7 @@ export const CloseTicket: Feature = {
   Interaction: {
     name: 'close_ticket_*',
     moderatorOnly: false,
-    async button({ interaction, channel, member }) {
+    async button({ interaction, channel, member, channelSf }) {
       await interaction.deferReply({ ephemeral: true });
 
       const role = interaction.customId.split('_')[2];

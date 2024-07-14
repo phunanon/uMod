@@ -1,6 +1,7 @@
 import { ApplicationCommandOptionType } from 'discord.js';
 import { Feature } from '.';
 import { prisma } from '../infrastructure';
+import { MakeNote } from './Note';
 
 export const DisallowRole: Feature = {
   async Init(commands) {
@@ -60,7 +61,6 @@ export const DisallowRole: Feature = {
       const existing = await prisma.disallowRole.findUnique(where);
       const dis = existing ? '' : 'dis';
       const content = `<@&${role.id}> now ${dis}allowed for <@${user.id}>: ${reason}`;
-      const data = { guildSf, authorSf, userSf, content };
 
       if (existing) {
         await prisma.disallowRole.delete(where);
@@ -75,7 +75,7 @@ export const DisallowRole: Feature = {
         }
       }
       await interaction.editReply({ content, allowedMentions });
-      await prisma.note.create({ data });
+      await MakeNote(guildSf, userSf, authorSf, content);
     },
   },
 };

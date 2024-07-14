@@ -44,6 +44,8 @@ A moderation bot I made so I could kick Carlbot, but which now has now become qu
   - **DisallowRole**: prevent a user from having a role
 - Fun
   - **Leaderboard**: keeps track of user messages and ranks them
+    - **IqLeaderboard**: ranks users by their total number of distinct words per message divided by the number of message lines
+    - **LoyaltyLeaderboard**: ranks users by the number of days between their earliest and latest activity
   - **Confessions**: allows users to post anonymous messages in a channel
     - Also **ConfessMute** (preserving anonymity) and **ConfessUnmute**
   - **GlobalChat**: mirrors messages between guilds using public or private rooms
@@ -52,7 +54,6 @@ A moderation bot I made so I could kick Carlbot, but which now has now become qu
   - **Acquaintances**: analyses the top three of who each user spends the most time talking to in chat
   - **QotD**: allows people to submit questions, moderators to approve them, and then sends one out daily
   - **FakeUser**: generates a message for a user that uses words and phrases they have previously said
-  - **IQ Leaderboard**: ranks users by their total number of distinct words per message divided by the number of message lines
 - Useful
   - **AutoRole**: assigns a role to a user when they join
   - **Ping**: replies with "Pong!"
@@ -70,13 +71,13 @@ Aspirations & TODO:
 - GlobalChat first message introduction
 - caching for various things
 - global chat mute message context function
+  - ConfessMessage -> RealAuthor
 - /timestamp
 - allow censored messages through GlobalChat
-- ability to send alerts in the channel they were triggered by
 - different handler for registering slash commands which is only called via process.env
-- subscribe to Qotd
 - ticket custom reasons
-- ticket auto-nonmoderated
+- censor fake user
+- refactor leaderboard SQL so that there's only one query including both the top ten and the current user
 
 ## To host it yourself
 
@@ -85,7 +86,7 @@ Instructions for Node.js, in the terminal:
 ```
 npm i -g pm2                       # Keeps the bot running even if it crashes
 npm ci                             # Installs exact dependencies
-npx prisma migrate dev             # Migrates the database and generates client
+npx prisma migrate dev --name init # Migrates the database and generates client
 pm2 start out/index.js --name uMod # Starts up the bot
 ```
 

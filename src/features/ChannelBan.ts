@@ -1,7 +1,7 @@
 import { ApplicationCommandOptionType } from 'discord.js';
 import { Feature } from '.';
-import { AlertEvent, HandleAlert } from './Alert';
 import { prisma } from '../infrastructure';
+import { MakeNote } from './Note';
 
 export const ChannelBan: Feature = {
   async Init(commands) {
@@ -52,11 +52,8 @@ export const ChannelBan: Feature = {
       await prisma.channelBan.create({ data: { userSf, channelSf } });
 
       const content = `banned from <#${channel.id}>: ${reason}`;
-      await HandleAlert({ event: AlertEvent.Audit, userSf, guildSf, content });
-      await prisma.note.create({
-        data: { guildSf, authorSf, userSf, content },
-      });
-
+      await MakeNote(guildSf, userSf, authorSf, content);
+      
       await interaction.editReply(
         `User <@${id}> banned from <#${channel.id}>.`,
       );

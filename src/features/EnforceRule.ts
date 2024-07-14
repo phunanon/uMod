@@ -6,8 +6,8 @@ import {
 } from 'discord.js';
 import { Feature } from '.';
 import { prisma, TryFetchMessage } from '../infrastructure';
-import { AlertEvent, HandleAlert } from './Alert';
 import { DeleteMessageRow } from './DeleteMessage';
+import { MakeNote } from './Note';
 
 export const SetupRule: Feature = {
   async Init(commands) {
@@ -121,16 +121,16 @@ export const EnforceRule: Feature = {
       await interaction.deferUpdate();
 
       const choice = interaction.values[0] ?? '';
-      const [ruleIdStr, authorSfStr, messageSfStr, durationStr] =
+      const [ruleIdStr, offenderSfStr, messageSfStr, durationStr] =
         choice.split('-');
       const ruleId = Number(ruleIdStr);
-      const authorSf = BigInt(authorSfStr ?? '');
+      const offenderSf = BigInt(offenderSfStr ?? '');
       const messageSf = BigInt(messageSfStr ?? '');
       const duration = Number(durationStr);
       if (
         !Number.isFinite(ruleId) ||
         !Number.isFinite(duration) ||
-        !authorSf ||
+        !offenderSf ||
         !messageSf
       ) {
         await interaction.editReply('Invalid choice.');
@@ -144,32 +144,31 @@ export const EnforceRule: Feature = {
         return;
       }
 
-      const member = await guild.members.fetch(`${authorSf}`);
+      const member = await guild.members.fetch(`${offenderSf}`);
       if (!member) {
         await interaction.editReply('Member not found.');
         return;
       }
 
       const message = await TryFetchMessage(channel, messageSf);
-      const content = `Rule ${
+      const byline = ` by <@${userSf}>`;
+      const makeContent = (withByline: boolean) => `Rule ${
         duration ? 'enforcement' : 'warning'
-      } by <@${userSf}>: ${rule.rule}\n> ${
+      }${withByline ? byline : ''}: ${rule.rule}\n> ${
         (message?.content ?? '[deleted]') ||
         message?.attachments.map(x => x.url).join('\n')
       }`;
 
       if (duration) {
         try {
-          await member.timeout(duration, content);
+          await member.timeout(duration, makeContent(true));
         } catch {
           await interaction.editReply('Could not timeout the author.');
           return;
         }
       } else {
-        await prisma.note.create({
-          data: { guildSf, authorSf: userSf, userSf: authorSf, content },
-        });
-        await HandleAlert({ event: AlertEvent.Note, userSf, guildSf, content });
+        const content = makeContent(false);
+        await MakeNote(guildSf, offenderSf, userSf, content);
       }
 
       try {

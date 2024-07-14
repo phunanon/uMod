@@ -135,14 +135,12 @@ export const Alert: Feature = {
     if (!roles.length) return;
     const guildSf = BigInt(newMember.guild.id);
     const userSf = BigInt(newMember.id);
-    const content = roles.map(r => `<@&${r}>`).join(', ');
     await HandleAlert({
       guildSf,
       userSf,
       tag: newMember.user.tag,
       event: AlertEvent.Role,
       roles,
-      content,
     });
   },
   async HandleMessageCreate({ message, guildSf, channelSf, userSf, member }) {
@@ -338,7 +336,6 @@ export const HandleAlert = async (i: HandleInfo) => {
     [
       AlertEvent.Note,
       AlertEvent.Audit,
-      AlertEvent.Role,
       AlertEvent.Roles,
       AlertEvent.Milestone,
       AlertEvent.JoinVC,
@@ -386,10 +383,15 @@ export const HandleAlert = async (i: HandleInfo) => {
       a.altReason?.includes('$ping') && uSf
         ? { users: [`${uSf}`] }
         : { parse: [] };
+    const roleContent = roleSf
+      ? `<@&${roleSf}>`
+      : i.roles?.map(r => `<@&${r}>`).join(', ') ?? '';
     const content =
       `||${id}|| ` +
       (altReason || info) +
-      (requireContent ? `: ${i.content}` : '');
+      (requireContent ? `: ${i.content}` : '') +
+      (event === AlertEvent.Role ? `: ${roleContent}` : '');
+
     await channel.send({ content, allowedMentions });
 
     if (cooldownSec) {
