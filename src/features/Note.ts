@@ -14,7 +14,7 @@ export const MakeNote = async (
   });
   await HandleAlert({
     event: AlertEvent.Note,
-    userSf,
+    userSf: authorSf,
     guildSf,
     content: `concerning <@${userSf}>: ${content}`,
   });

@@ -70,14 +70,13 @@ Aspirations & TODO:
 - Command to close ticket in a day
 - GlobalChat first message introduction
 - caching for various things
-- global chat mute message context function
-  - ConfessMessage -> RealAuthor
 - /timestamp
 - allow censored messages through GlobalChat
 - different handler for registering slash commands which is only called via process.env
 - ticket custom reasons
 - censor fake user
 - refactor leaderboard SQL so that there's only one query including both the top ten and the current user
+- GlobalChat custom emojis
 
 ## To host it yourself
 

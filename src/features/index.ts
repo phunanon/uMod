@@ -39,7 +39,7 @@ import {
   ConfessionsHere,
 } from './Confess';
 import { Purge } from './Purge';
-import { GlobalChat, GlobalChatList } from './GlobalChat';
+import { GlobalChat, GlobalChatList, GlobalChatMute } from './GlobalChat';
 import { ActivitySort } from './ActivitySort';
 import { Alert, DeleteAlert, DeleteAlerts, RecommendedAlerts } from './Alert';
 import { Note, ReadNote } from './Note';
@@ -78,7 +78,7 @@ export const features = {
   ...{ CreateTicket, TicketAdd, TicketsHere, CloseTicket },
   ...{ RoleList, RoleListAddRole, RoleListRemoveRole },
   ...{ SingleMessage, DeleteSingleMessage },
-  ...{ PingSpam, PingProtect, GlobalChat, GlobalChatList },
+  ...{ PingSpam, PingProtect, GlobalChat, GlobalChatList, GlobalChatMute },
   ...{ GuildMods, Histogram, TempRole, Acquaintances },
   ...{ BumpReminder, BumpRemind, BumpUnremind },
   ...{ DisallowRole, GifMute, AutoRole, FakeUser },

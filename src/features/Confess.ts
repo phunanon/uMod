@@ -15,10 +15,12 @@ import {
   client,
   log,
   prisma,
+  RecordRealAuthor,
   TryFetchChannel,
   TryFetchMessage,
 } from '../infrastructure';
 import { DeleteMessageRow } from './DeleteMessage';
+import { MakeNote } from './Note';
 
 export const ConfessionsHere: Feature = {
   async Init(commands) {
@@ -130,13 +132,7 @@ export const ConfessSubmit: Feature = {
         .setDescription(formatted);
 
       const message = await channel.send({ embeds: [embed] });
-      await prisma.confessMessage.create({
-        data: { userSf, messageSf: BigInt(message.id) },
-      });
-      //Delete confessMessage records older than a month
-      await prisma.confessMessage.deleteMany({
-        where: { at: { lt: new Date(Date.now() - 30 * 24 * 60 * 60_000) } },
-      });
+      await RecordRealAuthor(userSf, BigInt(message.id));
 
       log(`Confession by ${userSf}: ${confession}`);
 
@@ -160,7 +156,7 @@ export const ConfessMute: Feature = {
 
       const messageSf = BigInt(interaction.targetMessage.id);
       const { userSf } =
-        (await prisma.confessMessage.findUnique({
+        (await prisma.realAuthor.findUnique({
           where: { messageSf },
           select: { userSf: true },
         })) ?? {};
@@ -178,6 +174,17 @@ export const ConfessMute: Feature = {
           create: { ...userSf_guildSf, tag, confessMute: true },
           update: { confessMute: true },
         });
+
+        const embedContent =
+          interaction.targetMessage.embeds[0]?.description ?? '[No content]';
+        const noteContent =
+          'confession mute:\n' + embedContent.split('\n').join('\n> ');
+        await MakeNote(
+          guildSf,
+          userSf,
+          BigInt(interaction.user.id),
+          noteContent,
+        );
 
         const row = DeleteMessageRow(messageSf);
 

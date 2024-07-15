@@ -74,6 +74,14 @@ model GlobalChat {
   channelSf BigInt @unique
 }
 
+model GlobalChatMute {
+  id        Int    @id @default(autoincrement())
+  channelSf BigInt
+  userSf    BigInt
+
+  @@unique([channelSf, userSf])
+}
+
 model ActivitySort {
   id         Int    @id @default(autoincrement())
   guildSf    BigInt
@@ -238,7 +246,7 @@ model GuildRule {
   rule    String
 }
 
-model ConfessMessage {
+model RealAuthor {
   id        Int      @id @default(autoincrement())
   at        DateTime @default(now())
   userSf    BigInt

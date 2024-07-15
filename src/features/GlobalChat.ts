@@ -1,6 +1,18 @@
-import { ApplicationCommandOptionType, GuildMember } from 'discord.js';
+import {
+  ApplicationCommandOptionType,
+  ApplicationCommandType,
+  GuildMember,
+} from 'discord.js';
 import { Feature, MsgCtx, TextChannels } from '.';
-import { client, isGoodChannel, prisma, sanitiseTag } from '../infrastructure';
+import {
+  client,
+  isGoodChannel,
+  prisma,
+  RecordRealAuthor,
+  sanitiseTag,
+} from '../infrastructure';
+import { DeleteMessageRow } from './DeleteMessage';
+import { MakeNote } from './Note';
 
 const bufferLen = 10_000;
 const m2m: { channelId: string; messageId: string }[][] = [];
@@ -74,6 +86,85 @@ export const GlobalChat: Feature = {
   },
 };
 
+export const GlobalChatList: Feature = {
+  async Init(commands) {
+    await commands.create({
+      name: 'global-chat-list',
+      description: 'List all global chats available',
+    });
+  },
+  Interaction: {
+    name: 'global-chat-list',
+    moderatorOnly: false,
+    async command({ interaction }) {
+      await interaction.deferReply();
+
+      const rooms = await prisma.globalChat.findMany({
+        where: { room: { not: { startsWith: '-' } } },
+        distinct: ['room'],
+      });
+
+      const content = rooms.map(({ room }) => `\`${room}\``).join(', ');
+
+      await interaction.editReply(content || 'No pre-existing global chats.');
+    },
+  },
+};
+
+export const GlobalChatMute: Feature = {
+  async Init(commands) {
+    await commands.create({
+      name: 'GlobalChat mute',
+      type: ApplicationCommandType.Message,
+    });
+  },
+  Interaction: {
+    name: 'GlobalChat mute',
+    moderatorOnly: true,
+    async contextMenu({ interaction, guildSf, channelSf, userSf }) {
+      await interaction.deferReply({ ephemeral: true });
+
+      const messageSf = BigInt(interaction.targetId);
+
+      const realAuthor = await prisma.realAuthor.findUnique({
+        where: { messageSf },
+      });
+
+      if (!realAuthor) {
+        await interaction.editReply(
+          "Couldn't mute; the original author of this message has been forgotten.",
+        );
+        return;
+      }
+
+      const existingMute = await prisma.globalChatMute.findFirst({
+        where: { userSf: realAuthor.userSf, channelSf },
+      });
+
+      const noteContent =
+        `GlobalChat ${existingMute ? 'un' : ''}mute:\n> ` +
+        interaction.targetMessage.content.split('\n').join('\n> ');
+      await MakeNote(guildSf, realAuthor.userSf, userSf, noteContent);
+
+      if (existingMute) {
+        await prisma.globalChatMute.delete({ where: { id: existingMute.id } });
+        await interaction.editReply('User unmuted.');
+        return;
+      }
+
+      await prisma.globalChatMute.create({
+        data: { userSf: realAuthor.userSf, channelSf },
+      });
+
+      const row = DeleteMessageRow(messageSf);
+      await interaction.editReply({
+        content: 'User muted.',
+        components: [row],
+      });
+    },
+  },
+};
+
 const GetChatsForChannel = async (channelSf: bigint) => {
   const thisChat = await prisma.globalChat.findMany({
     where: { channelSf },
@@ -109,13 +200,14 @@ const GetChatsForChannel = async (channelSf: bigint) => {
 async function HandleMessage(
   ctx: Omit<MsgCtx, 'member'> & { member?: GuildMember },
 ) {
-  const { message, channelSf, isEdit, isDelete, member } = ctx;
+  const { message, channelSf, userSf, isEdit, isDelete, member } = ctx;
   const chats = await GetChatsForChannel(channelSf);
   if (!chats) return;
 
   const associations = m2m.find(m =>
     m.some(({ messageId }) => messageId === message.id),
   );
+  const mutes = await prisma.globalChatMute.findMany({ where: { userSf } });
 
   const nickname =
     member?.displayName ?? member?.nickname ?? message.author.username;
@@ -130,6 +222,7 @@ async function HandleMessage(
   const mids: (typeof m2m)[0] = [
     { channelId: message.channel.id, messageId: message.id },
   ];
+  const msgIds: string[] = [];
   for (const { channel } of chats) {
     if (isEdit || isDelete) {
       for (const { messageId } of associations ?? []) {
@@ -145,6 +238,8 @@ async function HandleMessage(
       continue;
     }
 
+    if (mutes.some(m => m.channelSf === BigInt(channel.id))) continue;
+
     const reply = await (async () => {
       const msgId = message.reference?.messageId;
       if (!msgId) return;
@@ -159,8 +254,11 @@ async function HandleMessage(
     const nonce = `${BigInt(message.id) + BigInt(channel.id)}`;
     const enforcedNonce = { nonce, enforceNonce: true };
     const msg = await channel.send({ ...payload, ...enforcedNonce, reply });
+    msgIds.push(msg.id);
     mids.push({ channelId: channel.id, messageId: msg.id });
   }
+
+  await RecordRealAuthor(userSf, ...msgIds.map(BigInt));
 
   if (m2m.length === bufferLen) {
     m2m[m2mIndex] = mids;
@@ -169,30 +267,3 @@ async function HandleMessage(
     m2m.push(mids);
   }
 }
-
-export const GlobalChatList: Feature = {
-  async Init(commands) {
-    await commands.create({
-      name: 'global-chat-list',
-      description: 'List all global chats available',
-    });
-  },
-  Interaction: {
-    name: 'global-chat-list',
-    moderatorOnly: false,
-    async command({ interaction }) {
-      await interaction.deferReply();
-
-      const rooms = await prisma.globalChat.findMany({
-        where: { room: { not: { startsWith: '-' } } },
-        distinct: ['room'],
-      });
-
-      const content = rooms.map(({ room }) => `\`${room}\``).join(', ');
-
-      await interaction.editReply(content || 'No pre-existing global chats.');
-    },
-  },
-};
-
-export const GlobalChatMute: Feature = {};
