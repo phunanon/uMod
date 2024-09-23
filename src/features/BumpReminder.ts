@@ -129,6 +129,9 @@ async function tick() {
       });
     } catch (e) {
       console.error(reminder, e);
+      if (`${e}`.includes("Unknown Channel")) {
+        await prisma.bumpReminder.delete({ where: { id: reminder.id } });
+      }
     }
   }
 }
@@ -150,8 +153,13 @@ async function remind({ id, channelSf, Users }: Reminder) {
     user: Users.map(u => `${u.userSf}`),
   });
   const onlineUsers = members.filter(m => m.presence?.status === 'online');
+  const idleUsers = members.filter(m => m.presence?.status === 'idle');
   const dndUsers = members.filter(m => m.presence?.status === 'dnd');
-  const pingUsers = onlineUsers.size ? onlineUsers : dndUsers;
+  const pingUsers = onlineUsers.size
+    ? onlineUsers
+    : idleUsers.size
+    ? idleUsers
+    : dndUsers;
   const content =
     Users.filter(u => pingUsers.has(`${u.userSf}`))
       .map(u => `<@${u.userSf}>`)
