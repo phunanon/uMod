@@ -79,15 +79,20 @@ export const EnforceRulePicker: Feature = {
         return;
       }
 
-      const options = rules
-        .flatMap(({ id, rule }) => [
-          { id, label: `(warning) ${rule}`, duration: 0 },
-          { id, label: `(5min timeout) ${rule}`, duration: 5 * 60_000 },
-          { id, label: `(60min timeout) ${rule}`, duration: 60 * 60_000 },
-        ])
-        .map(({ id, label, duration }) => ({
-          ...{ label, value: `${id}-${author.id}-${messageSf}-${duration}` },
-        }));
+      const options = [
+        ...rules.map(({ id, rule }) => ({
+          id,
+          label: `(60min timeout) ${rule}`,
+          duration: 60 * 60_000,
+        })),
+        ...rules.map(({ id, rule }) => ({
+          id,
+          label: `(warning) ${rule}`,
+          duration: 0,
+        })),
+      ].map(({ id, label, duration }) => ({
+        ...{ label, value: `${id}-${author.id}-${messageSf}-${duration}` },
+      }));
 
       const row = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
         new StringSelectMenuBuilder()
@@ -97,8 +102,13 @@ export const EnforceRulePicker: Feature = {
       );
 
       try {
+        const urls = interaction.targetMessage.attachments
+          .map(x => x.url)
+          .join('\n');
         await author.send(
-          `A moderator is reviewing your message:\n> ${content}`,
+          `A moderator is reviewing your message:\n> ${
+            content || '[No content]'
+          }\n${urls}`,
         );
       } catch {
         await interaction.editReply('Could not DM the author.');
@@ -152,12 +162,13 @@ export const EnforceRule: Feature = {
 
       const message = await TryFetchMessage(channel, messageSf);
       const byline = ` by <@${userSf}>`;
-      const makeContent = (withByline: boolean) => `Rule ${
-        duration ? 'enforcement' : 'warning'
-      }${withByline ? byline : ''}: ${rule.rule}\n> ${
-        (message?.content ?? '[deleted]') ||
-        message?.attachments.map(x => x.url).join('\n')
-      }`;
+      const makeContent = (withByline: boolean) =>
+        `Rule ${duration ? 'enforcement' : 'warning'}${
+          withByline ? byline : ''
+        }: ${rule.rule}\n> ${
+          (message?.content ?? '[deleted]') ||
+          message?.attachments.map(x => x.url).join('\n')
+        }`;
 
       if (duration) {
         try {

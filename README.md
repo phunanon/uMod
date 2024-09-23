@@ -64,19 +64,21 @@ A moderation bot I made so I could kick Carlbot, but which now has now become qu
     - Disabled in code by default
   - **Transcript**: sends a CSV transcript of a channel to a channel
   - **BumpReminder**: reminds users to bump on Disboard in a channel
+  - **ChannelStats**: shows list of channels ordered by number of messages
 
-Aspirations & TODO:
+In order of priority, aspirations & TODO:
 
-- Command to close ticket in a day
-- GlobalChat first message introduction
-- caching for various things
-- /timestamp
-- allow censored messages through GlobalChat
-- different handler for registering slash commands which is only called via process.env
-- ticket custom reasons
-- censor fake user
 - refactor leaderboard SQL so that there's only one query including both the top ten and the current user
-- GlobalChat custom emojis
+- Command to close ticket in a day or /timestamp
+- different handler for registering slash commands which is only called via process.env
+- Granular permissions system (i.e. allow certain roles to use certain commands)
+- censor GlobalChat
+- censor fake user
+- ticket custom reasons
+- EnforceRule suggestions (e.g. if they've already been warned in the past week, timeout instead)
+- caching for various things
+- per feature, collect writes to the same tables to be performed at the end
+- delete global messages that uMod deleted itself?
 
 ## To host it yourself
 

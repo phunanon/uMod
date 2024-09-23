@@ -252,3 +252,13 @@ model RealAuthor {
   userSf    BigInt
   messageSf BigInt   @unique
 }
+
+model ChannelStat {
+  id         Int      @id @default(autoincrement())
+  at         DateTime @default(now())
+  guildSf    BigInt
+  channelSf  BigInt
+  numMessage Int      @default(0)
+
+  @@unique([guildSf, channelSf])
+}

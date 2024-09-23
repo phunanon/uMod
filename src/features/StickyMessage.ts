@@ -82,9 +82,20 @@ const RenewStickyMessages = async () => {
   for (const sticky of needsRenewal) {
     const { guildSf, channelSf, sf, content, renewalSeconds } = sticky;
     const where = { sf_guildSf_channelSf: { sf, guildSf, channelSf } };
-    const guild = await client.guilds.fetch(`${guildSf}`);
-    const channel = await guild.channels.fetch(`${channelSf}`);
-    if (!channel?.isTextBased()) continue;
+    const channel = await (async () => {
+      try {
+        const guild = await client.guilds.fetch(`${guildSf}`);
+        const channel = await guild.channels.fetch(`${channelSf}`);
+        if (!channel?.isTextBased()) return;
+        return channel;
+      } catch (e) {
+        console.log('StickyMessage', sticky, e);
+      }
+    })();
+    if (!channel) {
+      await prisma.stickyMessage.delete({ where });
+      continue;
+    }
 
     const message = await TryFetchMessage(channel, sf);
     const renewAt = calcRenewAt(renewalSeconds);

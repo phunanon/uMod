@@ -66,6 +66,7 @@ import { FakeUser } from './FakeUser';
 import { KickSus } from './KickSus';
 import { EnforceRule, EnforceRulePicker, SetupRule } from './EnforceRule';
 import { DeleteMessage } from './DeleteMessage';
+import { ChannelStats } from './ChannelStats';
 
 export const features = {
   ...{ MirrorGuild, KickSus },
@@ -83,7 +84,7 @@ export const features = {
   ...{ BumpReminder, BumpRemind, BumpUnremind },
   ...{ DisallowRole, GifMute, AutoRole, FakeUser },
   ...{ QotdApprove, QotdDisable, QotdEnable, QotdSuggest },
-  ...{ QotdSubscribe, QotdUnsubscribe },
+  ...{ QotdSubscribe, QotdUnsubscribe, ChannelStats },
   ...{ EnforceRule, EnforceRulePicker, SetupRule, DeleteMessage },
 };
 

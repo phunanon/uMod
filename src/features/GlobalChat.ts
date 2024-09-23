@@ -58,7 +58,9 @@ export const GlobalChat: Feature = {
       const channel = await client.channels.fetch(channelId);
       if (!isGoodChannel(channel)) continue;
       const msg = await channel.messages.fetch(messageId);
-      await msg.react(emoji);
+      try {
+        await msg.react(emoji);
+      } catch {}
     }
   },
   Interaction: {
@@ -211,10 +213,12 @@ async function HandleMessage(
 
   const nickname =
     member?.displayName ?? member?.nickname ?? message.author.username;
+  const nonemptyContent =
+    message.content || message.embeds[0]?.description || '[No content]';
   const truncated =
-    message.content.length > 1500
-      ? `${message.content.slice(0, 1500)}...`
-      : message.content;
+    nonemptyContent.length > 1500
+      ? `${nonemptyContent.slice(0, 1500)}...`
+      : nonemptyContent;
   const content = `**${sanitiseTag(nickname)}**: ${truncated}`;
   const files = message.attachments.map(a => a.url);
   const payload = { content, files, allowedMentions: { parse: [] } };

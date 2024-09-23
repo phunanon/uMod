@@ -126,12 +126,12 @@ LIMIT 10;`;
           where: { userSf_guildSf: { userSf, guildSf } },
         });
         const iq = member ? member.numIqWords / (member.numIqLines + 1.0) : 0;
-        const idx = await prisma.$queryRaw<[{ idx: bigint }]>`
-SELECT count(*) as rank
+        const idx = await prisma.$queryRaw<[{ idx: number }]>`
+SELECT count(*) as idx
 FROM member
 WHERE guildSf = ${guildSf}
 AND numIqWords / (numIqLines + 1.0) > ${iq};
-`.then(([{ idx }]) => idx + 1n);
+`.then(([{ idx }]) => BigInt(idx) + 1n);
         return { ...(member ?? { userSf, tag }), idx, iq };
       };
       const leaderboard = await MakeLeaderboard(
