@@ -8,12 +8,12 @@ import { Feature } from '.';
 import { prisma } from '../infrastructure';
 
 export const SingleMessage: Feature = {
-  async Init(commands) {
-    await commands.create({
+  ModCommands: [
+    {
       name: 'single-message',
       description: 'Allow each user to send only one message in this channel',
-    });
-  },
+    },
+  ],
   Interaction: {
     name: 'single-message',
     moderatorOnly: true,

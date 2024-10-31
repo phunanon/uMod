@@ -4,8 +4,8 @@ import { prisma } from '../infrastructure';
 import { ChannelFlags } from '@prisma/client';
 
 export const WhitelistChannel: Feature = {
-  async Init(commands) {
-    await commands.create({
+  ModCommands: [
+    {
       name: 'whitelist-channel',
       description: 'Disable moderation for current channel',
       options: [
@@ -24,8 +24,8 @@ export const WhitelistChannel: Feature = {
           ],
         },
       ],
-    });
-  },
+    },
+  ],
   Interaction: {
     name: 'whitelist-channel',
     moderatorOnly: true,
@@ -63,7 +63,7 @@ export const WhitelistChannel: Feature = {
         );
         return;
       }
-      
+
       if (type === 'antispam') {
         const antiSpam = !(flags?.antiSpam ?? true);
         await upsert({ antiSpam });

@@ -17,6 +17,8 @@ import {
   VoiceState,
   MessageContextMenuCommandInteraction,
   StringSelectMenuInteraction,
+  ApplicationCommandSubCommandData,
+  Awaitable,
 } from 'discord.js';
 
 import { PermaRole } from './PermaRole';
@@ -62,7 +64,6 @@ import { GifMute } from './GifMute';
 import { AutoRole } from './AutoRole';
 import { QotdApprove, QotdDisable, QotdEnable, QotdSuggest } from './Qotd';
 import { QotdSubscribe, QotdUnsubscribe } from './Qotd';
-import { FakeUser } from './FakeUser';
 import { KickSus } from './KickSus';
 import { EnforceRule, EnforceRulePicker, SetupRule } from './EnforceRule';
 import { DeleteMessage } from './DeleteMessage';
@@ -82,7 +83,7 @@ export const features = {
   ...{ PingSpam, PingProtect, GlobalChat, GlobalChatList, GlobalChatMute },
   ...{ GuildMods, Histogram, TempRole, Acquaintances },
   ...{ BumpReminder, BumpRemind, BumpUnremind },
-  ...{ DisallowRole, GifMute, AutoRole, FakeUser },
+  ...{ DisallowRole, GifMute, AutoRole },
   ...{ QotdApprove, QotdDisable, QotdEnable, QotdSuggest },
   ...{ QotdSubscribe, QotdUnsubscribe, ChannelStats },
   ...{ EnforceRule, EnforceRulePicker, SetupRule, DeleteMessage },
@@ -134,9 +135,12 @@ export type AuditEvent =
       reason: undefined;
     };
 
+export type SubCommands = Omit<ApplicationCommandSubCommandData, 'type'>[];
 export type Feature = {
   /** Call is guaranteed but not necessarily prior to other handlers. */
-  Init?: (commands: ApplicationCommandManager) => Promise<void>;
+  Init?: (commands: ApplicationCommandManager) => Awaitable<void>;
+  /** Call is guaranteed but not necessarily prior to other handlers. */
+  ModCommands?: (() => Awaitable<SubCommands>) | SubCommands;
   Interaction?: {
     /** Wildcard `*` can be put at the end */
     name: string;

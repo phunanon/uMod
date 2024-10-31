@@ -3,8 +3,8 @@ import { Feature } from '.';
 import { prisma } from '../infrastructure';
 
 export const GifMute: Feature = {
-  async Init(commands) {
-    await commands.create({
+  ModCommands: [
+    {
       name: 'gif-mute',
       description: 'Prevent a user from sending GIFs',
       options: [
@@ -15,8 +15,8 @@ export const GifMute: Feature = {
           required: true,
         },
       ],
-    });
-  },
+    },
+  ],
   Interaction: {
     name: 'gif-mute',
     moderatorOnly: true,

@@ -3,8 +3,8 @@ import { Feature } from '.';
 import { prisma } from '../infrastructure';
 
 export const Censor: Feature = {
-  async Init(commands) {
-    await commands.create({
+  ModCommands: [
+    {
       name: 'censor',
       description: 'Censor a word server-wide with a replacement',
       options: [
@@ -21,8 +21,8 @@ export const Censor: Feature = {
           required: true,
         },
       ],
-    });
-  },
+    },
+  ],
   Interaction: {
     name: 'censor',
     moderatorOnly: true,

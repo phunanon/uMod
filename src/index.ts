@@ -1,7 +1,8 @@
 import * as dotenv from 'dotenv';
 import { client, isGoodChannel, log, prisma } from './infrastructure';
-import { Feature, features } from './features';
+import { Feature, features, SubCommands } from './features';
 import {
+  ApplicationCommandOptionType,
   AuditLogEvent,
   Guild,
   GuildAuditLogsEntry,
@@ -11,6 +12,7 @@ import {
   PartialMessage,
   User,
 } from 'discord.js';
+import { REST, Routes } from 'discord.js';
 import { assert } from 'console';
 dotenv.config();
 const { DISCORD_TOKEN } = process.env;
@@ -38,21 +40,48 @@ client.once('ready', async () => {
     .on('guildAuditLogEntryCreate', handleAudit)
     .on('channelDelete', handleEvent('HandleChannelDelete'));
 
+  const rest = new REST().setToken(DISCORD_TOKEN!);
+  await rest
+    .put(Routes.applicationCommands(client.user!.id), { body: [] })
+    .then(() => console.log('Successfully deleted all application commands.'))
+    .catch(console.error);
+
   const inits = Object.entries(features).flatMap(([name, feature]) =>
-    feature.Init ? [[name, feature.Init] as const] : [],
+    feature.Init || feature.ModCommands
+      ? [[name, feature.Init, feature.ModCommands ?? []] as const]
+      : [],
   );
 
+  const modCommands: SubCommands = [];
+  const createModCommands = async () => {
+    if (modCommands.length) {
+      console.log('\ncreating /mod');
+      await client.application?.commands.create({
+        name: 'mod',
+        description: 'Moderation commands',
+        options: modCommands.map(c => ({
+          ...c,
+          type: ApplicationCommandOptionType.Subcommand,
+        })),
+      });
+      console.log('/mod created');
+    }
+  };
   const initTimer = setInterval(async () => {
     if (!client.application) return;
     const feature = inits.shift();
     if (!feature) {
       clearInterval(initTimer);
+      setTimeout(createModCommands, 1000);
       log('Features initialised.');
       return;
     }
-    const [name, init] = feature;
+    const [name, Init, ModCommands] = feature;
     process.stdout.write(`${name}... `);
-    await init(client.application.commands);
+    await Init?.(client.application.commands);
+    modCommands.push(
+      ...(Array.isArray(ModCommands) ? ModCommands : await ModCommands()),
+    );
   }, 1000);
 
   log('Ready.');
@@ -118,7 +147,9 @@ async function _handleInteraction(interaction: Interaction): Promise<void> {
   const channelSf = BigInt(channel.id);
   const userSf = BigInt(member.user.id);
   const name =
-    'commandName' in interaction
+    'options' in interaction && 'getSubcommand' in interaction.options
+      ? interaction.options.getSubcommand()
+      : 'commandName' in interaction
       ? interaction.commandName
       : interaction.customId;
 

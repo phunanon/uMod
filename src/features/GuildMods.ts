@@ -1,5 +1,5 @@
 import { ApplicationCommandOptionType } from 'discord.js';
-import { Feature } from '.';
+import { Feature, features } from '.';
 import { prisma } from '../infrastructure';
 
 export const GuildMods: Feature = {
@@ -7,7 +7,7 @@ export const GuildMods: Feature = {
     await commands.create({
       name: 'guild-mods',
       description:
-        'Toggle which roles have the power to use µMod (except for this command).',
+        'Toggle which roles have the power to use all of µMod (except for this command).',
       options: [
         {
           name: 'role',
@@ -61,5 +61,33 @@ export const GuildMods: Feature = {
         allowedMentions: { parse: [] },
       });
     },
+  },
+};
+
+export const GuildPermissions: Feature = {
+  async Init(commands) {
+    const choices = Object.entries(features)
+      .filter(([, f]) => 'Interaction' in f && f.Interaction?.moderatorOnly)
+      .filter(([, f]) => f !== GuildPermissions)
+      .map(([name]) => ({ name, value: name }));
+    await commands.create({
+      name: 'guild-permissions',
+      description: 'Set per-command permissions for roles.',
+      options: [
+        {
+          name: 'command',
+          description: 'The command to set permissions for.',
+          type: ApplicationCommandOptionType.String,
+          required: true,
+          choices,
+        },
+        {
+          name: 'role',
+          description: 'The role to toggle permissions for.',
+          type: ApplicationCommandOptionType.Role,
+          required: true,
+        },
+      ],
+    });
   },
 };

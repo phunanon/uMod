@@ -2,12 +2,9 @@ import { Feature } from '.';
 import { prisma } from '../infrastructure';
 
 export const BlockGifs: Feature = {
-  async Init(commands) {
-    await commands.create({
-      name: 'block-gifs',
-      description: 'Block gifs in the channel',
-    });
-  },
+  ModCommands: [
+    { name: 'block-gifs', description: 'Block gifs in the channel' },
+  ],
   Interaction: {
     name: 'block-gifs',
     moderatorOnly: true,

@@ -36,7 +36,8 @@ export const isGoodChannel = (
   channel: Channel | null,
 ): channel is TextChannel | VoiceChannel =>
   channel?.type === ChannelType.GuildText ||
-  channel?.type === ChannelType.GuildVoice;
+  channel?.type === ChannelType.GuildVoice ||
+  channel?.type === ChannelType.GuildAnnouncement;
 
 export const sanitiseTag = (tag: string) =>
   tag.replace(new RegExp('([_*#])', 'g'), '\\$1');

@@ -4,8 +4,8 @@ import { prisma } from '../infrastructure';
 import { MakeNote } from './Note';
 
 export const ChannelBan: Feature = {
-  async Init(commands) {
-    await commands.create({
+  ModCommands: [
+    {
       name: 'channel-ban',
       description: 'Ban or unban a user from a channel',
       options: [
@@ -22,8 +22,8 @@ export const ChannelBan: Feature = {
           required: true,
         },
       ],
-    });
-  },
+    },
+  ],
   Interaction: {
     name: 'channel-ban',
     moderatorOnly: true,
