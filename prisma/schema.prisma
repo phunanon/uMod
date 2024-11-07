@@ -102,6 +102,7 @@ model Alert {
   altReason     String?
   cooldownSec   Int?
   cooldownUntil DateTime?
+  autoDeleteSec Int?
 }
 
 model Note {

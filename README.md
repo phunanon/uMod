@@ -68,6 +68,7 @@ A moderation bot I made so I could kick Carlbot, but which now has now become qu
 
 In order of priority, aspirations & TODO:
 
+- disable invite spam protection in tickets
 - refactor leaderboard SQL so that there's only one query including both the top ten and the current user
 - Command to close ticket in a day or /timestamp
 - different handler for registering slash commands which is only called via process.env

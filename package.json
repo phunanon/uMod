@@ -3,12 +3,12 @@
     "start": "node out/index.js"
   },
   "dependencies": {
-    "@prisma/client": "^5.14.0",
+    "@prisma/client": "^5.21.1",
     "discord.js": "^14.15.3",
     "dotenv": "^16.0.3"
   },
   "devDependencies": {
-    "prisma": "^5.14.0",
+    "prisma": "^5.21.1",
     "typescript": "^5.5.3"
   }
 }

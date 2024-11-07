@@ -1,24 +1,10 @@
-import {
-  ActionRowBuilder,
-  ApplicationCommandOptionType,
-  ApplicationCommandType,
-  ButtonBuilder,
-  ButtonStyle,
-  EmbedBuilder,
-  ModalBuilder,
-  TextBasedChannel,
-  TextInputBuilder,
-  TextInputStyle,
-} from 'discord.js';
+import { ActionRowBuilder, ApplicationCommandOptionType } from 'discord.js';
+import { ApplicationCommandType, ButtonBuilder, ButtonStyle } from 'discord.js';
+import { EmbedBuilder, HexColorString, ModalBuilder } from 'discord.js';
+import { TextBasedChannel, TextInputBuilder, TextInputStyle } from 'discord.js';
 import { Feature } from '.';
-import {
-  client,
-  log,
-  prisma,
-  RecordRealAuthor,
-  TryFetchChannel,
-  TryFetchMessage,
-} from '../infrastructure';
+import { client, log, prisma, RecordRealAuthor } from '../infrastructure';
+import { TryFetchChannel, TryFetchMessage } from '../infrastructure';
 import { DeleteMessageRow } from './DeleteMessage';
 import { MakeNote } from './Note';
 
@@ -115,6 +101,16 @@ export const Confess: Feature = {
   },
 };
 
+const stringToColour = (str: string): HexColorString => {
+  const hash = [...str].reduce((a, c) => c.charCodeAt(0) + ((a << 5) - a), 0);
+  let colour = '';
+  for (let i = 0; i < 3; i++) {
+    const value = (hash >> (i * 8)) & 0xff;
+    colour += value.toString(16).padStart(2, '0');
+  }
+  return `#${colour}`;
+};
+
 export const ConfessSubmit: Feature = {
   Interaction: {
     name: 'confession',
@@ -123,13 +119,11 @@ export const ConfessSubmit: Feature = {
       await interaction.deferUpdate();
 
       const confession = interaction.fields.getTextInputValue('confession');
-      const formatted = confession
-        .split('\n')
-        .map(x => `> ${x}`)
-        .join('\n');
+      const someToken = process.env.DISCORD_TOKEN?.slice(0, 5);
       const embed = new EmbedBuilder()
-        .setAuthor({ name: 'Anonymous' })
-        .setDescription(formatted);
+        .setColor(stringToColour(userSf.toString() + someToken))
+        .setFooter({ text: '— Anonymous' })
+        .setDescription(confession);
 
       const message = await channel.send({ embeds: [embed] });
       await RecordRealAuthor(userSf, BigInt(message.id));

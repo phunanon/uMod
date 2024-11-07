@@ -62,7 +62,6 @@ import { GifMute } from './GifMute';
 import { AutoRole } from './AutoRole';
 import { QotdApprove, QotdDisable, QotdEnable, QotdSuggest } from './Qotd';
 import { QotdSubscribe, QotdUnsubscribe } from './Qotd';
-import { FakeUser } from './FakeUser';
 import { KickSus } from './KickSus';
 import { EnforceRule, EnforceRulePicker, SetupRule } from './EnforceRule';
 import { DeleteMessage } from './DeleteMessage';
@@ -82,7 +81,7 @@ export const features = {
   ...{ PingSpam, PingProtect, GlobalChat, GlobalChatList, GlobalChatMute },
   ...{ GuildMods, Histogram, TempRole, Acquaintances },
   ...{ BumpReminder, BumpRemind, BumpUnremind },
-  ...{ DisallowRole, GifMute, AutoRole, FakeUser },
+  ...{ DisallowRole, GifMute, AutoRole },
   ...{ QotdApprove, QotdDisable, QotdEnable, QotdSuggest },
   ...{ QotdSubscribe, QotdUnsubscribe, ChannelStats },
   ...{ EnforceRule, EnforceRulePicker, SetupRule, DeleteMessage },

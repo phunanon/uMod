@@ -75,6 +75,13 @@ export const Alert: Feature = {
           description: 'Send alert only if message sent in this channel',
           type: ApplicationCommandOptionType.Boolean,
         },
+        {
+          name: 'auto-delete',
+          description: 'Auto delete alert message after this many seconds',
+          type: ApplicationCommandOptionType.Integer,
+          minValue: 1,
+          maxValue: 300,
+        },
       ],
     });
   },
@@ -94,15 +101,17 @@ export const Alert: Feature = {
         ?.replaceAll('\\n', '\n');
       const cooldownSec = options.getInteger('cooldown-seconds');
       const insitu = options.getBoolean('in-situ') ?? false;
+      const autoDeleteSec = options.getInteger('auto-delete');
 
       const alert = await prisma.alert.create({
         data: {
           ...{ guildSf, channelSf },
           ...{ userSf, roleSf, event, pattern, altReason, cooldownSec, insitu },
+          ...{ autoDeleteSec },
         },
       });
       const criteria = alertInfo(
-        ...[event, userSf, roleSf, pattern, cooldownSec, insitu],
+        ...[event, userSf, roleSf, pattern, cooldownSec, insitu, autoDeleteSec],
       );
       await interaction.editReply({
         content: `Alert ${alert.id} created: ${criteria}, ${altReason ?? ''}`,
@@ -362,7 +371,7 @@ export const HandleAlert = async (i: HandleInfo) => {
 
   for (const a of alerts) {
     const { id, channelSf, userSf, roleSf, ...other } = a;
-    const { event, pattern, cooldownSec, insitu } = other;
+    const { event, pattern, cooldownSec, insitu, autoDeleteSec } = other;
     const regex = pattern ? new RegExp(pattern, 'i') : null;
     if (regex && i.content && !regex.test(i.content)) continue;
     const channel = await client.channels.fetch(`${channelSf}`);
@@ -378,7 +387,9 @@ export const HandleAlert = async (i: HandleInfo) => {
         i.tag?.replaceAll(/([_*])/g, '\\$1') ?? '[unknown $tag]',
       )
       .replaceAll(/\$url/g, i.url ?? '[no URL]');
-    const info = alertInfo(event, uSf, roleSf, pattern, cooldownSec, insitu);
+    const info = alertInfo(
+      ...[event, uSf, roleSf, pattern, cooldownSec, insitu, autoDeleteSec],
+    );
     const allowedMentions =
       a.altReason?.includes('$ping') && uSf
         ? { users: [`${uSf}`] }
@@ -392,11 +403,16 @@ export const HandleAlert = async (i: HandleInfo) => {
       (requireContent ? `: ${i.content}` : '') +
       (event === AlertEvent.Role ? `: ${roleContent}` : '');
 
-    await channel.send({ content, allowedMentions });
+    const message = await channel.send({ content, allowedMentions });
 
     if (cooldownSec) {
       const cooldownUntil = new Date(new Date().getTime() + cooldownSec * 1000);
       await prisma.alert.update({ where: { id }, data: { cooldownUntil } });
+    }
+    if (autoDeleteSec) {
+      setTimeout(async () => {
+        await message.delete();
+      }, autoDeleteSec * 1000);
     }
   }
 };
@@ -408,6 +424,7 @@ const alertInfo = (
   pattern: string | null,
   cooldownSec: number | null,
   insitu: boolean | null,
+  autoDeleteSec: number | null,
 ) => {
   const parts = [
     event,
@@ -416,6 +433,7 @@ const alertInfo = (
     pattern ? `\`${pattern}\` pattern` : null,
     cooldownSec ? `${cooldownSec}s cooldown` : null,
     insitu ? 'in-situ' : null,
+    autoDeleteSec ? `${autoDeleteSec}s auto-delete` : null,
   ].filter(Boolean);
   return parts.join(', ');
 };

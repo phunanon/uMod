@@ -1,3 +1,4 @@
+import { StickerFormatType } from 'discord.js';
 import { Feature } from '.';
 import { prisma } from '../infrastructure';
 
@@ -41,8 +42,14 @@ export const BlockGifs: Feature = {
 
     const hasGif = message.attachments.some(a => a.contentType === 'image/gif');
     const hasTenor = message.content.toLowerCase().includes('tenor.com/view');
+    const hasGifSticker = message.stickers.some(
+      s =>
+        s.format === StickerFormatType.APNG ||
+        s.format === StickerFormatType.GIF ||
+        s.format === StickerFormatType.Lottie,
+    );
 
-    if (hasGif || hasTenor) {
+    if (hasGif || hasTenor || hasGifSticker) {
       await message.delete();
       return 'stop';
     }
