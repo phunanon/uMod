@@ -130,6 +130,7 @@ model ChannelFlags {
   antiSpam       Boolean @default(true)
   singleMessage  BigInt?
   confessMessage BigInt?
+  confessRules   String?
 }
 
 model PingProtectWarns {
@@ -232,11 +233,12 @@ model QotdQuestion {
 }
 
 model PairFrequency {
-  id     Int    @id @default(autoincrement())
+  id     Int      @id @default(autoincrement())
+  at     DateTime @default(now())
   userSf BigInt
   a      String
   b      String
-  count  Int    @default(1)
+  count  Int      @default(1)
 
   @@unique([userSf, a, b])
 }

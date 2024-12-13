@@ -2,6 +2,7 @@ import {
   ActionRowBuilder,
   ApplicationCommandOptionType,
   ApplicationCommandType,
+  EmbedBuilder,
   StringSelectMenuBuilder,
 } from 'discord.js';
 import { Feature } from '.';
@@ -204,6 +205,27 @@ export const EnforceRule: Feature = {
         content: `Rule enforced: ${rule.rule}\nMember ${didWhat}.`,
         components: [row],
       });
+    },
+  },
+};
+
+export const ReadRules: Feature = {
+  async Init(commands) {
+    await commands.create({
+      name: 'read-rules',
+      description: 'Read the rules for this server',
+    });
+  },
+  Interaction: {
+    name: 'read-rules',
+    moderatorOnly: true,
+    async command({ interaction, guildSf }) {
+      await interaction.deferReply();
+      const rules = await prisma.guildRule.findMany({ where: { guildSf } });
+      const embed = new EmbedBuilder()
+        .setTitle('Some rules of the server')
+        .setDescription(rules.map(r => `- ${r.rule}`).join('\n'));
+      await interaction.editReply({ embeds: [embed] });
     },
   },
 };

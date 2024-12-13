@@ -107,12 +107,21 @@ export const ReadNote: Feature = {
         return;
       }
 
-      const content = notes
+      const truncate = 12;
+      const truncated = notes.slice(-truncate);
+
+      const content = truncated
         .map(
           note => `- <@${note.authorSf}> ${R(note.notedAt)}: ${note.content}`,
         )
         .join('\n');
-      await interaction.editReply(`Notes for ${user.username}:\n${content}`);
+      const warn =
+        truncated.length !== notes.length
+          ? `\n${notes.length - truncate} earlier notes not shown`
+          : '';
+      await interaction.editReply(
+        `Notes for ${user.username}:\n${content}${warn}`,
+      );
     },
   },
 };

@@ -42,6 +42,7 @@ A moderation bot I made so I could kick Carlbot, but which now has now become qu
     - Only the guild owner can use this command
   - **TempRole**: assign a role to a user for a specified amount of time
   - **DisallowRole**: prevent a user from having a role
+  - **TearGas**: temporarily enables slowmode in a channel
 - Fun
   - **Leaderboard**: keeps track of user messages and ranks them
     - **IqLeaderboard**: ranks users by their total number of distinct words per message divided by the number of message lines
@@ -69,6 +70,7 @@ A moderation bot I made so I could kick Carlbot, but which now has now become qu
 In order of priority, aspirations & TODO:
 
 - disable invite spam protection in tickets
+- AI moderator with triple-check
 - refactor leaderboard SQL so that there's only one query including both the top ten and the current user
 - Command to close ticket in a day or /timestamp
 - different handler for registering slash commands which is only called via process.env

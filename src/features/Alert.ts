@@ -315,7 +315,6 @@ export const RecommendedAlerts: Feature = {
             event: AlertEvent.LeaveVC,
             altReason: '$user ($tag) left $content',
           },
-          { guildSf, channelSf, event: AlertEvent.Message },
           { guildSf, channelSf, event: AlertEvent.Role },
           { guildSf, channelSf, event: AlertEvent.Roles },
           { guildSf, channelSf, event: AlertEvent.Note },
@@ -354,7 +353,6 @@ export const HandleAlert = async (i: HandleInfo) => {
     where: {
       guildSf: i.guildSf,
       event: i.event,
-      pattern: i.content && !requireContent ? { not: null } : undefined,
       OR: [{ cooldownUntil: null }, { cooldownUntil: { lte: new Date() } }],
       AND: [
         { OR: [{ userSf: i.userSf }, { userSf: null }] },

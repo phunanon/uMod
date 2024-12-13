@@ -2,6 +2,8 @@ import { prisma } from '../infrastructure';
 import { Feature } from '.';
 import { AlertEvent, HandleAlert } from './Alert';
 
+//TODO: add guildSf - a bit dumb that I never did
+
 /** Restore roles if somebody leaves and rejoins */
 export const PermaRole: Feature = {
   async HandleMemberUpdate(_, newMember) {
@@ -9,11 +11,12 @@ export const PermaRole: Feature = {
       .filter(x => !x.managed)
       .map(x => BigInt(x.id));
     const userSf = BigInt(newMember.id);
+    const data = [...new Set(roles)]
+      .filter(x => x !== BigInt(newMember.guild.id))
+      .map(roleSf => ({ userSf, roleSf }));
     await prisma.$transaction([
       prisma.permaRole.deleteMany({ where: { userSf } }),
-      prisma.permaRole.createMany({
-        data: [...new Set(roles)].map(roleSf => ({ userSf, roleSf })),
-      }),
+      prisma.permaRole.createMany({ data }),
     ]);
   },
   /** Restore roles if any are stored */
@@ -24,12 +27,11 @@ export const PermaRole: Feature = {
       select: { roleSf: true },
       where: { userSf },
     });
-    const roleSnowflakes = permaRoles.map(({ roleSf }) => `${roleSf}`);
-    if (!roleSnowflakes.length) return;
-    await member.roles.add(roleSnowflakes);
-    const snowflakes = roleSnowflakes.map(sf => `<@&${sf}>`);
-    const content = `Restored roles: ${snowflakes.join(', ')}`;
-    //TODO: check if alert is entirely necessary
-    await HandleAlert({ guildSf, userSf, event: AlertEvent.Roles, content });
+    const allRoles = await member.guild.roles.fetch();
+    const theseRoles = allRoles.filter(x =>
+      permaRoles.some(y => y.roleSf === BigInt(x.id)),
+    );
+    if (!theseRoles.size) return;
+    await member.roles.add(theseRoles);
   },
 };

@@ -13,6 +13,14 @@ export const ConfessionsHere: Feature = {
     await commands.create({
       name: 'confessions-here',
       description: 'Use this channel for anonymous confessions',
+      options: [
+        {
+          name: 'rules',
+          description: 'The rules for confessions here',
+          type: ApplicationCommandOptionType.String,
+          required: false,
+        },
+      ],
     });
 
     const flags = await prisma.channelFlags.findMany({
@@ -34,8 +42,10 @@ export const ConfessionsHere: Feature = {
   Interaction: {
     name: 'confessions-here',
     moderatorOnly: false,
-    async command({ interaction, channel, channelSf }) {
+    async command({ interaction, channel, channelSf, userSf }) {
       await interaction.deferReply({ ephemeral: true });
+
+      const confessRules = interaction.options.getString('rules');
 
       const { id, confessMessage } =
         (await prisma.channelFlags.findFirst({
@@ -43,6 +53,7 @@ export const ConfessionsHere: Feature = {
         })) ?? {};
 
       if (confessMessage) {
+        console.log(`${userSf} disabled confessions for ${channelSf}`);
         await prisma.channelFlags.update({
           where: { id },
           data: { confessMessage: null },
@@ -51,7 +62,15 @@ export const ConfessionsHere: Feature = {
           'Confessions for this channel have been disabled.',
         );
         return;
+      } else if (confessRules) {
+        await prisma.channelFlags.upsert({
+          where: { channelSf },
+          update: { confessRules },
+          create: { channelSf, confessRules },
+        });
       }
+
+      console.log(`${userSf} enabled confessions for ${channelSf}`);
 
       await RenewStickyMessage(channel);
 
@@ -233,9 +252,9 @@ export const ConfessUnmute: Feature = {
 
 const RenewStickyMessage = async (channel: TextBasedChannel) => {
   const channelSf = BigInt(channel.id);
-  const existingMessageSf = (
-    await prisma.channelFlags.findFirst({ where: { channelSf } })
-  )?.confessMessage;
+  const config = await prisma.channelFlags.findFirst({ where: { channelSf } });
+  if (!config) return;
+  const { confessMessage: existingMessageSf, confessRules } = config;
 
   //Check if it's already the latest message
   const mostRecent = await channel.messages.fetch({ limit: 1 });
@@ -254,7 +273,9 @@ const RenewStickyMessage = async (channel: TextBasedChannel) => {
   );
 
   const newMessage = await channel.send({
-    content: 'Click the button below to confess anonymously.',
+    content:
+      'Click the button below to confess anonymously.' +
+      (confessRules ? `\n${confessRules}` : ''),
     components: [row],
   });
 

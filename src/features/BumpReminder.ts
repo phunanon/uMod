@@ -129,8 +129,9 @@ async function tick() {
       });
     } catch (e) {
       console.error(reminder, e);
-      if (`${e}`.includes("Unknown Channel")) {
+      if (RegExp(/Unknown Channel|Missing Access/).test(`${e}`)) {
         await prisma.bumpReminder.delete({ where: { id: reminder.id } });
+        console.log("Deleted reminder");
       }
     }
   }

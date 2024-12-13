@@ -24,20 +24,11 @@ import { InviteSpam } from './InviteSpam';
 import { Ping } from './Ping';
 import { WhitelistChannel } from './WhitelistChannel';
 import { MirrorGuild } from './MirrorGuild';
-import {
-  LeaderboardRecorder,
-  Leaderboard,
-  IqLeaderboard,
-  LoyaltyLeaderboard,
-} from './Leaderboard';
+import { LeaderboardRecorder } from './Leaderboard';
+import { Leaderboard, IqLeaderboard, LoyaltyLeaderboard } from './Leaderboard';
 import { StickyMessage } from './StickyMessage';
-import {
-  Confess,
-  ConfessMute,
-  ConfessUnmute,
-  ConfessSubmit,
-  ConfessionsHere,
-} from './Confess';
+import { Confess, ConfessMute, ConfessUnmute, ConfessSubmit } from './Confess';
+import { ConfessionsHere } from './Confess';
 import { Purge } from './Purge';
 import { GlobalChat, GlobalChatList, GlobalChatMute } from './GlobalChat';
 import { ActivitySort } from './ActivitySort';
@@ -63,9 +54,13 @@ import { AutoRole } from './AutoRole';
 import { QotdApprove, QotdDisable, QotdEnable, QotdSuggest } from './Qotd';
 import { QotdSubscribe, QotdUnsubscribe } from './Qotd';
 import { KickSus } from './KickSus';
-import { EnforceRule, EnforceRulePicker, SetupRule } from './EnforceRule';
+import { EnforceRule, EnforceRulePicker } from './EnforceRule';
+import { ReadRules, SetupRule } from './EnforceRule';
 import { DeleteMessage } from './DeleteMessage';
 import { ChannelStats } from './ChannelStats';
+import { TearGas } from './TearGas';
+import { FakeUser } from './FakeUser';
+import { SuspectedAlt } from './SuspectedAlt';
 
 export const features = {
   ...{ MirrorGuild, KickSus },
@@ -81,10 +76,10 @@ export const features = {
   ...{ PingSpam, PingProtect, GlobalChat, GlobalChatList, GlobalChatMute },
   ...{ GuildMods, Histogram, TempRole, Acquaintances },
   ...{ BumpReminder, BumpRemind, BumpUnremind },
-  ...{ DisallowRole, GifMute, AutoRole },
+  ...{ DisallowRole, GifMute, AutoRole, TearGas, SuspectedAlt },
   ...{ QotdApprove, QotdDisable, QotdEnable, QotdSuggest },
-  ...{ QotdSubscribe, QotdUnsubscribe, ChannelStats },
-  ...{ EnforceRule, EnforceRulePicker, SetupRule, DeleteMessage },
+  ...{ QotdSubscribe, QotdUnsubscribe, ChannelStats, FakeUser },
+  ...{ EnforceRule, EnforceRulePicker, SetupRule, ReadRules, DeleteMessage },
 };
 
 export type FeatureConfig = {

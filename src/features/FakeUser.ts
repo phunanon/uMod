@@ -30,6 +30,14 @@ export const FakeUser: Feature = {
         content: `**${displayName}**: ${await mimic(sf)}`,
         allowedMentions: { parse: [] },
       });
+
+      //Forget pairs from longer than a month ago
+      await prisma.pairFrequency.deleteMany({
+        where: {
+          userSf: sf,
+          at: { lt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) },
+        },
+      });
     },
   },
   async HandleMessageCreate({ message, userSf }) {
