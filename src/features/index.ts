@@ -61,6 +61,8 @@ import { ChannelStats } from './ChannelStats';
 import { TearGas } from './TearGas';
 import { FakeUser } from './FakeUser';
 import { SuspectedAlt } from './SuspectedAlt';
+import { AiMod } from './AiMod';
+import { ChannelFlags } from '@prisma/client';
 
 export const features = {
   ...{ MirrorGuild, KickSus },
@@ -80,6 +82,7 @@ export const features = {
   ...{ QotdApprove, QotdDisable, QotdEnable, QotdSuggest },
   ...{ QotdSubscribe, QotdUnsubscribe, ChannelStats, FakeUser },
   ...{ EnforceRule, EnforceRulePicker, SetupRule, ReadRules, DeleteMessage },
+  AiMod,
 };
 
 export type FeatureConfig = {
@@ -95,6 +98,7 @@ export type InteractionCtx<T> = {
   userSf: bigint;
   channelSf: bigint;
   channel: TextChannels;
+  channelFlags: ChannelFlags;
   guild: Guild;
   member: GuildMember;
 };
@@ -102,6 +106,7 @@ export type InteractionCtx<T> = {
 export type MsgCtx = {
   guild: Guild;
   channel: TextChannels;
+  channelFlags: ChannelFlags;
   message: Message;
   member: GuildMember;
   guildSf: bigint;

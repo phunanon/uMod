@@ -44,12 +44,10 @@ export const Censor: Feature = {
     },
   },
   async HandleMessage(ctx) {
-    const { channel, message, isDelete, unmoddable } = ctx;
-    const { guildSf, userSf, channelSf } = ctx;
+    const { channel, message, isDelete, unmoddable, channelFlags } = ctx;
+    const { guildSf, userSf } = ctx;
     if (isDelete || unmoddable) return;
-
-    const flags = await prisma.channelFlags.findFirst({ where: { channelSf } });
-    if (flags?.censor === false) return;
+    if (channelFlags?.censor === false) return;
 
     const words = message.content
       .toLowerCase()

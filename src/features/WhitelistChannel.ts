@@ -29,25 +29,17 @@ export const WhitelistChannel: Feature = {
   Interaction: {
     name: 'whitelist-channel',
     moderatorOnly: true,
-    async command({ interaction, channelSf }) {
+    async command({ interaction, channelFlags, channelSf }) {
       await interaction.deferReply({ ephemeral: true });
 
       const type = interaction.options.getString('type', true);
 
-      const flags = await prisma.channelFlags.findFirst({
-        where: { channelSf },
-      });
-
-      const upsert = async (update: Partial<ChannelFlags>) => {
-        await prisma.channelFlags.upsert({
-          where: { channelSf },
-          update,
-          create: { channelSf, ...update },
-        });
+      const upsert = async (data: Partial<ChannelFlags>) => {
+        await prisma.channelFlags.update({ where: { channelSf }, data });
       };
 
       if (type === 'unmoderated') {
-        const unmoderated = !flags?.unmoderated;
+        const unmoderated = !channelFlags?.unmoderated;
         await upsert({ unmoderated });
         await interaction.editReply(
           unmoderated ? 'Channel now unmoderated.' : 'Channel now moderated.',
@@ -56,16 +48,16 @@ export const WhitelistChannel: Feature = {
       }
 
       if (type === 'censoring') {
-        const censor = !(flags?.censor ?? true);
+        const censor = !(channelFlags?.censor ?? true);
         await upsert({ censor });
         await interaction.editReply(
           censor ? 'Censoring now enabled.' : 'Censoring now disabled.',
         );
         return;
       }
-      
+
       if (type === 'antispam') {
-        const antiSpam = !(flags?.antiSpam ?? true);
+        const antiSpam = !(channelFlags?.antiSpam ?? true);
         await upsert({ antiSpam });
         await interaction.editReply(
           antiSpam ? 'Anti-spam now enabled.' : 'Anti-spam now disabled.',

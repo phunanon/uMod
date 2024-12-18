@@ -108,7 +108,7 @@ export const EnforceRulePicker: Feature = {
           .join('\n');
         await author.send(
           `A moderator is reviewing your message:\n> ${
-            content || '[No content]'
+            content || '[Unknown content]'
           }\n${urls}`,
         );
       } catch {

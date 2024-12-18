@@ -41,7 +41,7 @@ export const ConfessionsHere: Feature = {
   },
   Interaction: {
     name: 'confessions-here',
-    moderatorOnly: false,
+    moderatorOnly: true,
     async command({ interaction, channel, channelSf, userSf }) {
       await interaction.deferReply({ ephemeral: true });
 
@@ -63,10 +63,9 @@ export const ConfessionsHere: Feature = {
         );
         return;
       } else if (confessRules) {
-        await prisma.channelFlags.upsert({
+        await prisma.channelFlags.update({
           where: { channelSf },
-          update: { confessRules },
-          create: { channelSf, confessRules },
+          data: { confessRules },
         });
       }
 
@@ -252,7 +251,9 @@ export const ConfessUnmute: Feature = {
 
 const RenewStickyMessage = async (channel: TextBasedChannel) => {
   const channelSf = BigInt(channel.id);
-  const config = await prisma.channelFlags.findFirst({ where: { channelSf } });
+  const config = await prisma.channelFlags.findFirst({
+    where: { channelSf, confessMessage: { not: null } },
+  });
   if (!config) return;
   const { confessMessage: existingMessageSf, confessRules } = config;
 
@@ -280,10 +281,9 @@ const RenewStickyMessage = async (channel: TextBasedChannel) => {
   });
 
   const confessMessage = BigInt(newMessage.id);
-  await prisma.channelFlags.upsert({
+  await prisma.channelFlags.update({
     where: { channelSf },
-    update: { confessMessage },
-    create: { channelSf, confessMessage },
+    data: { confessMessage },
   });
 
   setTimeout(async () => {

@@ -131,6 +131,7 @@ model ChannelFlags {
   singleMessage  BigInt?
   confessMessage BigInt?
   confessRules   String?
+  aiModeration   Boolean @default(false)
 }
 
 model PingProtectWarns {

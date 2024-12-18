@@ -149,9 +149,11 @@ async function _handleInteraction(interaction: Interaction): Promise<void> {
     return;
   }
 
+  const channelFlags = await FetchChannelFlags(channelSf);
+
   const context = {
     ...{ guildSf, userSf, channelSf },
-    ...{ guild, channel, member },
+    ...{ guild, channel, channelFlags, member },
     ...details,
   };
   if (interaction.isChatInputCommand()) {
@@ -209,9 +211,10 @@ function handleMessage(kind: 'create' | 'update' | 'delete') {
     const isEdit = kind === 'update';
     const isDelete = kind === 'delete';
     const details = await FetchDetails(guild, member, userSf);
+    const channelFlags = await FetchChannelFlags(channelSf);
 
     const context = {
-      ...{ guild, channel, message },
+      ...{ guild, channel, channelFlags, message },
       ...{ guildSf, channelSf, userSf },
       ...{ isEdit, isDelete },
       ...details,
@@ -239,6 +242,13 @@ function handleMessage(kind: 'create' | 'update' | 'delete') {
     }
   }
   return failable(handle);
+}
+
+async function FetchChannelFlags(channelSf: bigint) {
+  return (
+    (await prisma.channelFlags.findUnique({ where: { channelSf } })) ??
+    (await prisma.channelFlags.create({ data: { channelSf } }))
+  );
 }
 
 async function handleAudit(log: GuildAuditLogsEntry, guild: Guild) {

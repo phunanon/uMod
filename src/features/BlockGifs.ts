@@ -12,19 +12,14 @@ export const BlockGifs: Feature = {
   Interaction: {
     name: 'block-gifs',
     moderatorOnly: true,
-    async command({ interaction, channelSf }) {
+    async command({ interaction, channelSf, channelFlags }) {
       await interaction.deferReply();
 
-      const flags = await prisma.channelFlags.findUnique({
-        where: { channelSf },
-      });
+      const blockGifs = !channelFlags?.blockGifs;
 
-      const blockGifs = !flags?.blockGifs;
-
-      await prisma.channelFlags.upsert({
+      await prisma.channelFlags.update({
         where: { channelSf },
-        create: { channelSf, blockGifs },
-        update: { blockGifs },
+        data: { blockGifs },
       });
 
       await interaction.editReply(
@@ -32,13 +27,8 @@ export const BlockGifs: Feature = {
       );
     },
   },
-  async HandleMessage({ channelSf, message, isDelete }) {
-    if (isDelete) return;
-    const existing = await prisma.channelFlags.findUnique({
-      where: { channelSf },
-    });
-
-    if (!existing?.blockGifs) return;
+  async HandleMessage({ channelFlags, message, isDelete }) {
+    if (isDelete || !channelFlags?.blockGifs) return;
 
     const hasGif = message.attachments.some(a => a.contentType === 'image/gif');
     const hasTenor = message.content.toLowerCase().includes('tenor.com/view');

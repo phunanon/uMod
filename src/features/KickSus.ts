@@ -72,11 +72,9 @@ const makeWarning = (
 
 export const KickSus: Feature = {
   async HandleMessageCreate(ctx) {
-    const { message, unmoddable, guildSf, userSf, channelSf } = ctx;
-    if (unmoddable) return;
-
-    const flags = await prisma.channelFlags.findFirst({ where: { channelSf } });
-    if (flags?.antiSpam === false) return;
+    const { message, unmoddable, guildSf, userSf, channelSf, channelFlags } =
+      ctx;
+    if (unmoddable || channelFlags?.antiSpam === false) return;
     //Record potentially suspicious activity
     const { content } = message;
     const hasMention = (message.mentions.members?.size ?? 0) > 0;
@@ -87,7 +85,11 @@ export const KickSus: Feature = {
     cache.push({ ...entry, kind: Heuristic.ChannelSpam, content, channelSf });
     cache.push({ ...entry, kind: Heuristic.SameMessageSpam, content });
     if (hasMention) cache.push({ ...entry, kind: Heuristic.PingSpam });
-    if (content.length > 200 || content.split('\n').length > 4)
+    if (
+      content.length > 200 ||
+      content.split('\n').length > 4 ||
+      content.match(/^#+ /m)
+    )
       cache.push({ ...entry, kind: Heuristic.BigSpam });
     if (hasLink)
       cache.push({
