@@ -133,7 +133,7 @@ export const Alert: Feature = {
     await HandleAlert({ guildSf, userSf, tag, event: AlertEvent.Join });
     const count = member.guild.memberCount;
     if ((count < 100 && !(count % 10)) || count % 100 === 0) {
-      const content = `${count} members :tada:`;
+      const content = `${count.toLocaleString()} members :tada:`;
       await HandleAlert({ guildSf, event: AlertEvent.Milestone, content });
     }
   },

@@ -1,6 +1,5 @@
-import { Message } from 'discord.js';
+import { GuildMember, Message } from 'discord.js';
 import { Feature } from '.';
-import { prisma } from '../infrastructure';
 
 enum Heuristic {
   /** (30sec) posting any message ten times */
@@ -17,12 +16,13 @@ enum Heuristic {
   SameMessageSpam = 'SameMessageSpam',
   /** (5min) posting a message with an attachment or link five times */
   MediaSpam = 'MediaSpam',
+  /** (5min) reacting to messages ten times */
+  ReactSpam = 'ReactSpam',
 }
 
 type CacheEntry = {
   at: Date;
-  guildSf: bigint;
-  userSf: bigint;
+  member: GuildMember;
   message: Message;
 } & (
   | {
@@ -39,7 +39,8 @@ type CacheEntry = {
         | Heuristic.PingSpam
         | Heuristic.BigSpam
         | Heuristic.MediaSpam
-        | Heuristic.FastSpam;
+        | Heuristic.FastSpam
+        | Heuristic.ReactSpam;
     }
 );
 const heuristicTtl = {
@@ -50,6 +51,7 @@ const heuristicTtl = {
   [Heuristic.SameLinkSpam]: '5min',
   [Heuristic.SameMessageSpam]: '5min',
   [Heuristic.MediaSpam]: '5min',
+  [Heuristic.ReactSpam]: '5min',
 } as const;
 const heuristicMax = {
   [Heuristic.FastSpam]: 10,
@@ -59,28 +61,27 @@ const heuristicMax = {
   [Heuristic.SameLinkSpam]: 3,
   [Heuristic.SameMessageSpam]: 6,
   [Heuristic.MediaSpam]: 5,
+  [Heuristic.ReactSpam]: 10,
 } as const;
 const ttlMs = { '30sec': 30_000, '5min': 5 * 60_000, '10min': 10 * 60_000 };
 const cache: CacheEntry[] = [];
 const warns = new Set<string>();
 const makeWarning = (
-  guildSf: bigint,
-  userSf: bigint,
+  member: GuildMember,
   heuristic: Heuristic,
   content?: string,
-) => `${guildSf}:${userSf}:${heuristic}:${content}`;
+) => `${member.guild.id}:${member.id}:${heuristic}:${content}`;
 
 export const KickSus: Feature = {
   async HandleMessageCreate(ctx) {
-    const { message, unmoddable, guildSf, userSf, channelSf, channelFlags } =
-      ctx;
+    const { message, member, unmoddable, channelSf, channelFlags } = ctx;
     if (unmoddable || channelFlags?.antiSpam === false) return;
     //Record potentially suspicious activity
     const { content } = message;
     const hasMention = (message.mentions.members?.size ?? 0) > 0;
     const hasLink = message.content.includes('https://');
     const hasMedia = message.attachments.size > 0;
-    const entry = { at: new Date(), guildSf, userSf, message };
+    const entry = { at: new Date(), member, message };
     cache.push({ ...entry, kind: Heuristic.FastSpam });
     cache.push({ ...entry, kind: Heuristic.ChannelSpam, content, channelSf });
     cache.push({ ...entry, kind: Heuristic.SameMessageSpam, content });
@@ -100,11 +101,23 @@ export const KickSus: Feature = {
     if (hasMedia || hasLink)
       cache.push({ ...entry, kind: Heuristic.MediaSpam });
     //Revew the cache for this user
-    await ReviewCache(guildSf, userSf);
+    await ReviewCache(member);
+  },
+  async HandleReactionAdd(reaction, user) {
+    if (!reaction.message.guild) return;
+    const message = reaction.message.partial
+      ? await reaction.message.fetch()
+      : reaction.message;
+    const at = new Date();
+    const member = await message.guild?.members.fetch(user.id);
+    if (!member) return;
+    cache.push({ at, member, message, kind: Heuristic.ReactSpam });
+    //Revew the cache for this user
+    await ReviewCache(member);
   },
 };
 
-async function ReviewCache(guildSf: bigint, userSf: bigint) {
+async function ReviewCache(member: GuildMember) {
   //Purge old entries
   {
     const newCache: CacheEntry[] = [];
@@ -114,15 +127,13 @@ async function ReviewCache(guildSf: bigint, userSf: bigint) {
         newCache.push(entry);
       } else {
         const content = 'content' in entry ? entry.content : undefined;
-        warns.delete(makeWarning(guildSf, userSf, entry.kind, content));
+        warns.delete(makeWarning(member, entry.kind, content));
       }
     }
     cache.splice(0, cache.length, ...newCache);
   }
   //Count suspicious activies per user
-  const entries = cache.filter(
-    entry => entry.guildSf === guildSf && entry.userSf === userSf,
-  );
+  const entries = cache.filter(entry => entry.member.id === member.id);
   type Count = { heuristic: Heuristic; content?: string; count: number };
   const counts: Count[] = [];
   for (const entry of entries) {
@@ -163,25 +174,33 @@ async function ReviewCache(guildSf: bigint, userSf: bigint) {
   //Check if the user should be warned or kicked based on counts
   for (const { heuristic, content, count } of counts) {
     const maxCount = heuristicMax[heuristic];
-    const message = entries.findLast(
-      entry => entry.kind === heuristic,
-    )?.message;
-    if (!message) continue;
+    const entry = entries.findLast(entry => entry.kind === heuristic);
+    if (!entry?.message.guild) continue;
     const ttl = heuristicTtl[heuristic];
     const why = `${heuristic}, ${maxCount} in ${ttl}`;
     //If one count away from a kick, warn the user by replying to the message
-    const warning = makeWarning(guildSf, userSf, heuristic, content);
+    const warning = makeWarning(member, heuristic, content);
     try {
       if (count === maxCount - 1 && !warns.has(warning)) {
         warns.add(warning);
-        await message.reply(
-          `**You are one message away from being kicked** (${why}). Please slow down.`,
-        );
-        await message.member?.timeout(6_000, `Warning for ${why}`);
+        const independentOfMessage = heuristic === Heuristic.ReactSpam;
+        const content =
+          '**' +
+          (independentOfMessage ? `<@${member.id}>, you` : 'You') +
+          ` are one message away from being kicked** (${why}). Please slow down.`;
+        await entry.message.reply({
+          content,
+          allowedMentions: { users: [member.id.toString()] },
+        });
+        await member.timeout(6_000, `Warning for ${why}`);
       }
       //If the user has reached the limit, kick them
       if (count >= maxCount) {
-        await message.member?.kick(why);
+        await member.timeout(
+          60_000 * 5,
+          `To mitigate immediate rejoin and reoffence for ${why}`,
+        );
+        await member.kick(why + `, ${entry.message.url}`);
       }
     } catch (e) {
       console.error(why, e);

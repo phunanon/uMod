@@ -93,7 +93,7 @@ async function Moderate(userSf: bigint, message: Message) {
     const member = await message.guild?.members.fetch(`${userSf}`);
     if (!member) return;
     const timeoutSec = timeoutMin * 60;
-    await member.timeout(timeoutSec * 1_000, `AI: ${cats}`);
+    await member.timeout(timeoutSec * 1_000, `${message.url} AI: ${cats}`);
     await message.reply(
       `**${timeoutMin} min timeout** due to three strikes in ${forgivenessMin} min (involving ${cats})`,
     );
