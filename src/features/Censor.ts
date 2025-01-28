@@ -2,6 +2,8 @@ import { ApplicationCommandOptionType } from 'discord.js';
 import { Feature } from '.';
 import { prisma } from '../infrastructure';
 
+//FIXME: ensure attachments are preserved
+
 export const Censor: Feature = {
   async Init(commands) {
     await commands.create({

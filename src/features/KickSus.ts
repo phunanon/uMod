@@ -188,10 +188,11 @@ async function ReviewCache(member: GuildMember) {
           '**' +
           (independentOfMessage ? `<@${member.id}>, you` : 'You') +
           ` are one message away from being kicked** (${why}). Please slow down.`;
-        await entry.message.reply({
+        const warningMessage =await entry.message.reply({
           content,
           allowedMentions: { users: [member.id.toString()] },
         });
+        setTimeout(() => warningMessage.delete(), 300_000);
         await member.timeout(6_000, `Warning for ${why}`);
       }
       //If the user has reached the limit, kick them
@@ -201,6 +202,23 @@ async function ReviewCache(member: GuildMember) {
           `To mitigate immediate rejoin and reoffence for ${why}`,
         );
         await member.kick(why + `, ${entry.message.url}`);
+        //If the member had not been in the server for over an hour, delete all their messages
+        const anHourAgo = Date.now() - 60 * 60_000;
+        if (member.joinedAt && member.joinedAt.getTime() < anHourAgo) {
+          const memberEntries = cache.filter(
+            entry => entry.member.id === member.id,
+          );
+          const messages: Message[] = [];
+          for (const entry of memberEntries)
+            if (!messages.some(m => m.id === entry.message.id))
+              messages.push(entry.message);
+          for (const message of messages) {
+            if (!message.guild) continue;
+            await entry.message.delete();
+            console.log('I deleted', message.id, message.content);
+            await new Promise(resolve => setTimeout(resolve, 1_000));
+          }
+        }
       }
     } catch (e) {
       console.error(why, e);

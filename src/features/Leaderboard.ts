@@ -34,10 +34,14 @@ const MakeLeaderboard = async <T extends {}>(
 
 export const LeaderboardRecorder: Feature = {
   async HandleMessage({ message, guildSf }) {
-    const { id, tag } = message.author;
+    const { content, author } = message;
+    if (content.includes('```')) return;
+
+    const { id, tag } = author;
     const member = await getMember(tag, id, guildSf);
-    const numWords = new Set(message.content.split(/\s+/)).size;
-    const numLines = new Set(message.content.split('\n')).size;
+    //-1 to allow for one word messages and be funny if somebody gets negative
+    const numWords = new Set(content.split(/\s+/)).size - 1;
+    const numLines = new Set(content.split('\n')).size - 1;
 
     await prisma.member.update({
       where: { id: member.id },
@@ -118,6 +122,7 @@ ROW_NUMBER() OVER (ORDER BY numIqWords / (numIqLines + 1.0) DESC) AS idx
 FROM member
 WHERE guildSf = ${guildSf}
 AND iq
+AND numIqLines > 16
 ORDER BY iq DESC
 LIMIT 10;`;
       };
@@ -130,6 +135,7 @@ LIMIT 10;`;
 SELECT count(*) as idx
 FROM member
 WHERE guildSf = ${guildSf}
+AND numIqLines > 16
 AND numIqWords / (numIqLines + 1.0) > ${iq};
 `.then(([{ idx }]) => BigInt(idx) + 1n);
         return { ...(member ?? { userSf, tag }), idx, iq };

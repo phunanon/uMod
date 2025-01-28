@@ -5,7 +5,12 @@ import OpenAI from 'openai';
 
 const forgivenessMin = 5;
 const timeoutMin = 5;
-const strikes: { userSf: bigint; sec: number; categories: Set<string> }[] = [];
+const strikes: {
+  userSf: bigint;
+  sec: number;
+  categories: Set<string>;
+  messageSf: bigint;
+}[] = [];
 
 export const AiMod: Feature = {
   async Init(commands) {
@@ -83,7 +88,12 @@ async function Moderate(userSf: bigint, message: Message) {
   if (!resultCategories.length) return;
   const cats = resultCategories.join(', ');
   const categories = new Set(resultCategories);
-  strikes.push({ userSf, sec, categories });
+  const messageSf = BigInt(message.id);
+  const alreadyPunishedForMessage = strikes.some(
+    x => x.messageSf === messageSf,
+  );
+  if (alreadyPunishedForMessage) return;
+  strikes.push({ userSf, sec, categories, messageSf });
   const userStrikes = strikes.filter(x => x.userSf === userSf);
 
   if (userStrikes.length === 1) await message.react('😐');
@@ -98,7 +108,7 @@ async function Moderate(userSf: bigint, message: Message) {
       `**${timeoutMin} min timeout** due to three strikes in ${forgivenessMin} min (involving ${cats})`,
     );
     //Start with one strike after timeout ends
-    userStrikes.push({ userSf, sec: sec + timeoutSec, categories });
+    userStrikes.push({ userSf, sec: sec + timeoutSec, categories, messageSf });
   }
 
   const scores = Object.entries(result.category_scores);

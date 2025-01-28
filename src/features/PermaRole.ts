@@ -1,8 +1,8 @@
 import { prisma } from '../infrastructure';
 import { Feature } from '.';
-import { AlertEvent, HandleAlert } from './Alert';
 
 //TODO: add guildSf - a bit dumb that I never did
+//TODO: add a way to blacklist roles from being restored
 
 /** Restore roles if somebody leaves and rejoins */
 export const PermaRole: Feature = {

@@ -20,6 +20,7 @@ A moderation bot I made so I could kick Carlbot, but which now has now become qu
     - SameLinkSpam - three of the same link in 5 min
     - SameMessageSpam - six of the same message in 5 min
     - MediaSpam - five media messages in 5 min
+  - **AI Moderator**: an OpenAI-powered moderation feature that times out for five minutes after three strikes
 - Manual Moderation
   - **Tickets**: a ticket system for users to ask for help
     - Allows adding users to the ticket
@@ -43,6 +44,7 @@ A moderation bot I made so I could kick Carlbot, but which now has now become qu
   - **TempRole**: assign a role to a user for a specified amount of time
   - **DisallowRole**: prevent a user from having a role
   - **TearGas**: temporarily enables slowmode in a channel
+  - **SuspectedAlt**: an easier way to log suspected alt accounts
 - Fun
   - **Leaderboard**: keeps track of user messages and ranks them
     - **IqLeaderboard**: ranks users by their total number of distinct words per message divided by the number of message lines
@@ -66,11 +68,10 @@ A moderation bot I made so I could kick Carlbot, but which now has now become qu
   - **Transcript**: sends a CSV transcript of a channel to a channel
   - **BumpReminder**: reminds users to bump on Disboard in a channel
   - **ChannelStats**: shows list of channels ordered by number of messages
+  - **ReadRules**: lists the rules set up for a server
 
 In order of priority, aspirations & TODO:
 
-- disable invite spam protection in tickets
-- AI moderator with triple-check
 - refactor leaderboard SQL so that there's only one query including both the top ten and the current user
 - Command to close ticket in a day or /timestamp
 - different handler for registering slash commands which is only called via process.env

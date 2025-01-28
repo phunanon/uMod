@@ -99,7 +99,9 @@ export const Alert: Feature = {
       const altReason = options
         .getString('alt-reason')
         ?.replaceAll('\\n', '\n');
-      const cooldownSec = options.getInteger('cooldown-seconds');
+      const cooldownSec =
+        options.getInteger('cooldown-seconds') ??
+        (event === 'milestone' ? 86_400 : null);
       const insitu = options.getBoolean('in-situ') ?? false;
       const autoDeleteSec = options.getInteger('auto-delete');
 
@@ -429,7 +431,7 @@ const alertInfo = (
     userSf ? `<@${userSf}>` : null,
     roleSf ? `<@&${roleSf}>` : null,
     pattern ? `\`${pattern}\` pattern` : null,
-    cooldownSec ? `${cooldownSec}s cooldown` : null,
+    cooldownSec && event !== 'milestone' ? `${cooldownSec}s cooldown` : null,
     insitu ? 'in-situ' : null,
     autoDeleteSec ? `${autoDeleteSec}s auto-delete` : null,
   ].filter(Boolean);

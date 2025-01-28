@@ -136,7 +136,9 @@ export const ConfessSubmit: Feature = {
     async modalSubmit({ interaction, channel, userSf }) {
       await interaction.deferUpdate();
 
-      const confession = interaction.fields.getTextInputValue('confession');
+      const confession = interaction.fields
+        .getTextInputValue('confession')
+        .replace(/#{1,} /g, '');
       const someToken = process.env.DISCORD_TOKEN?.slice(0, 5);
       const embed = new EmbedBuilder()
         .setColor(stringToColour(userSf.toString() + someToken))

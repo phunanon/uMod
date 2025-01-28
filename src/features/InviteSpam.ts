@@ -1,8 +1,8 @@
 import { Feature } from '.';
 
 export const InviteSpam: Feature = {
-  async HandleMessage({ message, member, unmoddable, isDelete }) {
-    if (unmoddable || isDelete) return;
+  async HandleMessage({ message, member, unmoddable, isDelete, channelFlags }) {
+    if (unmoddable || isDelete || !channelFlags.antiSpam) return;
 
     const wordDiscord = new RegExp(
       /discord\.(gg|com)(?!\/channel|\/events|\/developers)/gi,
@@ -40,7 +40,7 @@ You're welcome to rejoin the server again after you've fixed your account.`,
     })();
     await member.kick(
       'Discord invite link + @everyone spam' +
-        (dmed ? " (informed via DMs why)" : ''),
+        (dmed ? ' (informed via DMs why)' : ''),
     );
 
     return 'stop';
