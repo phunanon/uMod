@@ -192,7 +192,7 @@ export const ConfessMute: Feature = {
         const embedContent =
           interaction.targetMessage.embeds[0]?.description ?? '[No content]';
         const noteContent =
-          'confession mute:\n' + embedContent.split('\n').join('\n> ');
+          'confession mute:\n> ' + embedContent.split('\n').join('\n> ');
         await MakeNote(
           guildSf,
           userSf,

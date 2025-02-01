@@ -18,6 +18,8 @@ enum Heuristic {
   MediaSpam = 'MediaSpam',
   /** (5min) reacting to messages ten times */
   ReactSpam = 'ReactSpam',
+  /** (1h) posting a t.me link twice */
+  TelegramSpam = 'TelegramSpam',
 }
 
 type CacheEntry = {
@@ -29,18 +31,15 @@ type CacheEntry = {
       kind: Heuristic.SameLinkSpam | Heuristic.SameMessageSpam;
       content: string;
     }
-  | {
-      kind: Heuristic.ChannelSpam;
-      content: string;
-      channelSf: bigint;
-    }
+  | { kind: Heuristic.ChannelSpam; content: string; channelSf: bigint }
   | {
       kind:
         | Heuristic.PingSpam
         | Heuristic.BigSpam
         | Heuristic.MediaSpam
         | Heuristic.FastSpam
-        | Heuristic.ReactSpam;
+        | Heuristic.ReactSpam
+        | Heuristic.TelegramSpam;
     }
 );
 const heuristicTtl = {
@@ -52,6 +51,7 @@ const heuristicTtl = {
   [Heuristic.SameMessageSpam]: '5min',
   [Heuristic.MediaSpam]: '5min',
   [Heuristic.ReactSpam]: '5min',
+  [Heuristic.TelegramSpam]: '1h',
 } as const;
 const heuristicMax = {
   [Heuristic.FastSpam]: 10,
@@ -62,8 +62,14 @@ const heuristicMax = {
   [Heuristic.SameMessageSpam]: 6,
   [Heuristic.MediaSpam]: 5,
   [Heuristic.ReactSpam]: 10,
+  [Heuristic.TelegramSpam]: 2,
 } as const;
-const ttlMs = { '30sec': 30_000, '5min': 5 * 60_000, '10min': 10 * 60_000 };
+const ttlMs = {
+  '30sec': 30_000,
+  '5min': 5 * 60_000,
+  '10min': 10 * 60_000,
+  '1h': 60 * 60_000,
+};
 const cache: CacheEntry[] = [];
 const warns = new Set<string>();
 const makeWarning = (
@@ -80,6 +86,7 @@ export const KickSus: Feature = {
     const { content } = message;
     const hasMention = (message.mentions.members?.size ?? 0) > 0;
     const hasLink = message.content.includes('https://');
+    const hasTmeLink = message.content.includes('t.me/');
     const hasMedia = message.attachments.size > 0;
     const entry = { at: new Date(), member, message };
     cache.push({ ...entry, kind: Heuristic.FastSpam });
@@ -98,6 +105,8 @@ export const KickSus: Feature = {
         kind: Heuristic.SameLinkSpam,
         content: message.content.match(/https?:\/\/\S+/)![0] ?? '',
       });
+    if (hasTmeLink)
+      cache.push({ ...entry, kind: Heuristic.TelegramSpam });
     if (hasMedia || hasLink)
       cache.push({ ...entry, kind: Heuristic.MediaSpam });
     //Revew the cache for this user
@@ -188,7 +197,7 @@ async function ReviewCache(member: GuildMember) {
           '**' +
           (independentOfMessage ? `<@${member.id}>, you` : 'You') +
           ` are one message away from being kicked** (${why}). Please slow down.`;
-        const warningMessage =await entry.message.reply({
+        const warningMessage = await entry.message.reply({
           content,
           allowedMentions: { users: [member.id.toString()] },
         });
