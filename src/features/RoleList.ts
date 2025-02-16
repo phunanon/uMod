@@ -143,9 +143,11 @@ const UpdateRoleList = async (
   const members = await guild.members.fetch();
   const withRole = members.filter(m => m.roles.cache.has(`${roleSf}`));
   const list = withRole.map(m => `\`${m.user.tag}\``).join(' ');
+  const armouredList = `:**\n.\n${list}\n.`;
+  const listOrCoda = armouredList.length > 1024 ? '**' : armouredList;
   const count = withRole.size;
   const payload: BaseMessageOptions = {
-    content: `**${count} members with the role <@&${roleSf}>:**\n.\n${list}\n.`,
+    content: `**${count} members with the role <@&${roleSf}>${listOrCoda}`,
     allowedMentions: { parse: [] },
     components: [],
   };

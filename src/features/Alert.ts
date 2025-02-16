@@ -14,6 +14,7 @@ export enum AlertEvent {
   Audit = 'audit',
   Milestone = 'milestone',
   FirstMessage = 'first-message',
+  //TODO: LevelUp = 'level-up',
 }
 
 export const Alert: Feature = {
@@ -181,10 +182,13 @@ export const Alert: Feature = {
   },
   async HandleAuditLog({ kind, executor, target, reason }, guild) {
     const guildSf = BigInt(guild.id);
-    const by = executor ? `<@${executor.id}>` : '[unknown]';
+    const selfExecution = executor?.id === client.user?.id;
+    const auto = selfExecution ? 'auto-' : '';
+    const executorTag = executor ? `<@${executor.id}>` : '[unknown]';
+    const by = selfExecution ? '' : ` by ${executorTag}`;
     const of = target ? `<@${target.id}> (\`${target.tag}\`)` : '[unknown]';
     const reasonWithColon = reason ? `: ${reason}` : '';
-    const content = `${kind} of ${of} by ${by}${reasonWithColon}`;
+    const content = `${auto}${kind} of ${of}${by}${reasonWithColon}`;
     await HandleAlert({ guildSf, event: AlertEvent.Audit, content });
   },
   async HandleChannelDelete(channel) {
@@ -348,8 +352,6 @@ export const HandleAlert = async (i: HandleInfo) => {
       AlertEvent.Audit,
       AlertEvent.Roles,
       AlertEvent.Milestone,
-      AlertEvent.JoinVC,
-      AlertEvent.LeaveVC,
     ].includes(i.event);
   const alerts = await prisma.alert.findMany({
     where: {

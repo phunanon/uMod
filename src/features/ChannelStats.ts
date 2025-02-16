@@ -37,9 +37,9 @@ export const ChannelStats: Feature = {
         },
       });
 
-      const statsMessage = stats.map(stat => {
-        return `\`${fmt(stat.numMessage)}\` <#${stat.channelSf}>`;
-      });
+      const statsMessage = stats
+        .slice(0, 20)
+        .map((s, i) => `${i}. \`${fmt(s.numMessage)}\` <#${s.channelSf}>`);
       const earliestAt = Math.min(...stats.map(stat => stat.at.getTime()));
       const t = `<t:${Math.floor(earliestAt / 1000)}:R>`;
 

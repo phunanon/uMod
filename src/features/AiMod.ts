@@ -104,8 +104,9 @@ async function Moderate(userSf: bigint, message: Message) {
     if (!member) return;
     const timeoutSec = timeoutMin * 60;
     await member.timeout(timeoutSec * 1_000, `${message.url} AI: ${cats}`);
+    const s = resultCategories.length > 1 ? 's' : '';
     await message.reply(
-      `**${timeoutMin} min timeout** due to three strikes in ${forgivenessMin} min (involving ${cats})`,
+      `**${timeoutMin} min timeout** due to three strikes in ${forgivenessMin} min (reason${s}: ${cats})`,
     );
     //Start with one strike after timeout ends
     userStrikes.push({ userSf, sec: sec + timeoutSec, categories, messageSf });

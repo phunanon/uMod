@@ -105,8 +105,7 @@ export const KickSus: Feature = {
         kind: Heuristic.SameLinkSpam,
         content: message.content.match(/https?:\/\/\S+/)![0] ?? '',
       });
-    if (hasTmeLink)
-      cache.push({ ...entry, kind: Heuristic.TelegramSpam });
+    if (hasTmeLink) cache.push({ ...entry, kind: Heuristic.TelegramSpam });
     if (hasMedia || hasLink)
       cache.push({ ...entry, kind: Heuristic.MediaSpam });
     //Revew the cache for this user
@@ -206,14 +205,20 @@ async function ReviewCache(member: GuildMember) {
       }
       //If the user has reached the limit, kick them
       if (count >= maxCount) {
+        const anHourAgo = Date.now() - 60 * 60_000;
+        const deleteMessages =
+          member.joinedAt && member.joinedAt.getTime() > anHourAgo;
         await member.timeout(
           60_000 * 5,
           `To mitigate immediate rejoin and reoffence for ${why}`,
         );
-        await member.kick(why + `, ${entry.message.url}`);
+        await member.kick(
+          why +
+            `, ${entry.message.url}` +
+            (deleteMessages ? ' (all messages deleted)' : ''),
+        );
         //If the member had not been in the server for over an hour, delete all their messages
-        const anHourAgo = Date.now() - 60 * 60_000;
-        if (member.joinedAt && member.joinedAt.getTime() < anHourAgo) {
+        if (deleteMessages) {
           const memberEntries = cache.filter(
             entry => entry.member.id === member.id,
           );

@@ -20,6 +20,7 @@ A moderation bot I made so I could kick Carlbot, but which now has now become qu
     - SameLinkSpam - three of the same link in 5 min
     - SameMessageSpam - six of the same message in 5 min
     - MediaSpam - five media messages in 5 min
+    - TelegramSpam - two of the same t.me link in 1 hour
   - **AI Moderator**: an OpenAI-powered moderation feature that times out for five minutes after three strikes
 - Manual Moderation
   - **Tickets**: a ticket system for users to ask for help

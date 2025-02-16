@@ -177,8 +177,9 @@ export const QotdSuggest: Feature = {
           .setStyle(ButtonStyle.Success),
       );
 
+      const splitQuestion = question.split('\n').join('\n> ');
       await auditChannel.send({
-        content: `<@${authorSf}> suggested a question:\n> ${question}`,
+        content: `<@${authorSf}> suggested a question:\n> ${splitQuestion}`,
         allowedMentions: { parse: [] },
         components: [row],
       });

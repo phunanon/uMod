@@ -115,6 +115,7 @@ export const CreateTicket: Feature = {
           channelSf: BigInt(newChannel.id),
           censor: false,
           antiSpam: false,
+          blockGifs: true,
         },
       });
 

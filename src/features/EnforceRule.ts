@@ -218,7 +218,7 @@ export const ReadRules: Feature = {
   },
   Interaction: {
     name: 'read-rules',
-    moderatorOnly: true,
+    moderatorOnly: false,
     async command({ interaction, guildSf }) {
       await interaction.deferReply();
       const rules = await prisma.guildRule.findMany({ where: { guildSf } });

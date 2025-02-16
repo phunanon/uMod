@@ -47,31 +47,36 @@ export const ConfessionsHere: Feature = {
 
       const confessRules = interaction.options.getString('rules');
 
-      const { id, confessMessage } =
-        (await prisma.channelFlags.findFirst({
-          where: { channelSf, confessMessage: { not: null } },
-        })) ?? {};
+      const config = (await prisma.channelFlags.findFirst({
+        where: { channelSf, confessMessage: { not: null } },
+      })) ?? { id: null, confessMessage: null };
 
-      if (confessMessage) {
-        console.log(`${userSf} disabled confessions for ${channelSf}`);
+      if (config.confessMessage) {
+        console.log(`${userSf} disabling confessions for ${channelSf}`);
         await prisma.channelFlags.update({
-          where: { id },
+          where: { id: config.id },
           data: { confessMessage: null },
         });
+        const message = await TryFetchMessage(channel, config.confessMessage);
+        await message?.delete();
         await interaction.editReply(
           'Confessions for this channel have been disabled.',
         );
         return;
-      } else if (confessRules) {
-        await prisma.channelFlags.update({
-          where: { channelSf },
-          data: { confessRules },
-        });
       }
 
-      console.log(`${userSf} enabled confessions for ${channelSf}`);
+      console.log(`${userSf} enabling confessions for ${channelSf}`);
 
-      await RenewStickyMessage(channel);
+      const confessMessage = await RenewStickyMessage(channel, confessRules);
+      if (confessMessage) {
+        await prisma.channelFlags.update({
+          where: { channelSf },
+          data: { confessMessage, confessRules },
+        });
+      } else {
+        await interaction.editReply('There was an issue enabling confessions.');
+        return;
+      }
 
       await interaction.editReply(
         'Confessions for this channel have been enabled.',
@@ -251,11 +256,16 @@ export const ConfessUnmute: Feature = {
   },
 };
 
-const RenewStickyMessage = async (channel: TextBasedChannel) => {
+const RenewStickyMessage = async (
+  channel: TextBasedChannel,
+  newRules?: string | null,
+) => {
   const channelSf = BigInt(channel.id);
-  const config = await prisma.channelFlags.findFirst({
-    where: { channelSf, confessMessage: { not: null } },
-  });
+  const config = newRules
+    ? { confessRules: newRules, confessMessage: null }
+    : await prisma.channelFlags.findFirst({
+        where: { channelSf, confessMessage: { not: null } },
+      });
   if (!config) return;
   const { confessMessage: existingMessageSf, confessRules } = config;
 
@@ -291,4 +301,6 @@ const RenewStickyMessage = async (channel: TextBasedChannel) => {
   setTimeout(async () => {
     await RenewStickyMessage(channel);
   }, 5 * 60_000);
+
+  return BigInt(newMessage.id);
 };

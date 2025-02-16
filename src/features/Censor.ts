@@ -20,6 +20,7 @@ export const Censor: Feature = {
           name: 'censored',
           description: 'The censored form (* will be escaped)',
           type: ApplicationCommandOptionType.String,
+          //TODO: make unrequired, auto-*
           required: true,
         },
       ],

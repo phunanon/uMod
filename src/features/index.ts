@@ -65,13 +65,13 @@ import { AiMod } from './AiMod';
 import { ChannelFlags } from '@prisma/client';
 
 export const features = {
-  ...{ MirrorGuild, KickSus },
+  ...{ MirrorGuild, BlockGifs, KickSus },
   ...{ PermaRole, InviteSpam, Ping, WhitelistChannel, ActivitySort },
   ...{ LeaderboardRecorder, Leaderboard, IqLeaderboard, LoyaltyLeaderboard },
   ...{ StickyMessage, Purge, Transcript },
   ...{ Note, ReadNote, ChannelBan, Censor, DeleteCensor },
   ...{ Confess, ConfessMute, ConfessUnmute, ConfessSubmit, ConfessionsHere },
-  ...{ Alert, DeleteAlert, DeleteAlerts, RecommendedAlerts, BlockGifs },
+  ...{ Alert, DeleteAlert, DeleteAlerts, RecommendedAlerts },
   ...{ CreateTicket, TicketAdd, TicketsHere, CloseTicket },
   ...{ RoleList, RoleListAddRole, RoleListRemoveRole },
   ...{ SingleMessage, DeleteSingleMessage },
