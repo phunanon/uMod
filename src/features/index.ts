@@ -62,10 +62,11 @@ import { TearGas } from './TearGas';
 import { FakeUser } from './FakeUser';
 import { SuspectedAlt } from './SuspectedAlt';
 import { AiMod } from './AiMod';
+import { AutoClean } from './AutoClean';
 import { ChannelFlags } from '@prisma/client';
 
 export const features = {
-  ...{ MirrorGuild, BlockGifs, KickSus },
+  ...{ MirrorGuild, BlockGifs, KickSus, AutoClean },
   ...{ PermaRole, InviteSpam, Ping, WhitelistChannel, ActivitySort },
   ...{ LeaderboardRecorder, Leaderboard, IqLeaderboard, LoyaltyLeaderboard },
   ...{ StickyMessage, Purge, Transcript },

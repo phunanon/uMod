@@ -35,7 +35,7 @@ const MakeLeaderboard = async <T extends {}>(
 export const LeaderboardRecorder: Feature = {
   async HandleMessage({ message, guildSf }) {
     const { content, author } = message;
-    if (content.includes('```')) return;
+    if (content.includes('```') || content.includes('>')) return;
 
     const { id, tag } = author;
     const member = await getMember(tag, id, guildSf);

@@ -307,6 +307,7 @@ const FetchDetails = async (
   const isMod = (isOwner || hasModRole) ?? false;
   const unmoddable =
     (isMod ||
+      (member && client.user && member.user.id === client.user.id) ||
       (guild.members.me &&
         member &&
         member.roles.highest.position >=

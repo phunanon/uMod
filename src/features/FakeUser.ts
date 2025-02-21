@@ -40,8 +40,9 @@ export const FakeUser: Feature = {
       });
     },
   },
-  async HandleMessageCreate({ message, userSf }) {
+  async HandleMessageCreate({ message, userSf, channelFlags }) {
     if (message.content.length < 10) return;
+    if (channelFlags.unmoderated) return;
     //Break message into every combination of two words in a row
     const words = `[start] ${message.content} [end]`.toLowerCase().split(/\s+/);
     const pairs = words

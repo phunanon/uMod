@@ -185,15 +185,27 @@ const GetChatsForChannel = async (channelSf: bigint) => {
       try {
         return await client.channels.fetch(`${channelSf}`);
       } catch (e) {
+        if (
+          e &&
+          typeof e === 'object' &&
+          'rawError' in e &&
+          e.rawError &&
+          typeof e.rawError === 'object' &&
+          'message' in e.rawError
+        ) {
+          if (e.rawError.message === 'Unknown Channel') {
+            await prisma.globalChat.delete({ where: { channelSf } });
+          }
+        }
         return null;
       }
     })();
-    if (!isGoodChannel(channel)) {
-      //TODO: The channel no longer exists, is of the incorrect type, or was just a transient error?
-      //await prisma.globalChat.delete({ where: { channelSf } });
-      continue;
+    if (!channel) continue;
+    if (isGoodChannel(channel)) {
+      chatsWithChannel.push({ ...chat, channelSf, channel });
+    } else {
+      await prisma.globalChat.delete({ where: { channelSf } });
     }
-    chatsWithChannel.push({ ...chat, channelSf, channel });
   }
 
   return chatsWithChannel;

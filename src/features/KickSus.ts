@@ -188,14 +188,20 @@ async function ReviewCache(member: GuildMember) {
     const why = `${heuristic}, ${maxCount} in ${ttl}`;
     //If one count away from a kick, warn the user by replying to the message
     const warning = makeWarning(member, heuristic, content);
+    const anHour = Date.now() - 60 * 60_000;
+    const aWeek = Date.now() - 60 * 60_000 * 24 * 7;
+    const joinedInHour = member.joinedAt && member.joinedAt.getTime() > anHour;
+    const joinedInWeek = member.joinedAt && member.joinedAt.getTime() > aWeek;
+    const [deleteMessages, kickMember] = [joinedInHour, joinedInWeek];
     try {
       if (count === maxCount - 1 && !warns.has(warning)) {
         warns.add(warning);
         const independentOfMessage = heuristic === Heuristic.ReactSpam;
+        const verb = kickMember ? 'kicked' : 'muted';
         const content =
           '**' +
           (independentOfMessage ? `<@${member.id}>, you` : 'You') +
-          ` are one message away from being kicked** (${why}). Please slow down.`;
+          ` are one message away from being ${verb}** (${why}). Please slow down.`;
         const warningMessage = await entry.message.reply({
           content,
           allowedMentions: { users: [member.id.toString()] },
@@ -205,18 +211,19 @@ async function ReviewCache(member: GuildMember) {
       }
       //If the user has reached the limit, kick them
       if (count >= maxCount) {
-        const anHourAgo = Date.now() - 60 * 60_000;
-        const deleteMessages =
-          member.joinedAt && member.joinedAt.getTime() > anHourAgo;
         await member.timeout(
           60_000 * 5,
-          `To mitigate immediate rejoin and reoffence for ${why}`,
+          kickMember
+            ? `To mitigate immediate rejoin and reoffence for ${why}`
+            : `To mitigate reoffence for ${why}, ${entry.message.url}`,
         );
-        await member.kick(
-          why +
-            `, ${entry.message.url}` +
-            (deleteMessages ? ' (all messages deleted)' : ''),
-        );
+        if (kickMember) {
+          await member.kick(
+            why +
+              `, ${entry.message.url}` +
+              (deleteMessages ? ' (all messages deleted)' : ''),
+          );
+        }
         //If the member had not been in the server for over an hour, delete all their messages
         if (deleteMessages) {
           const memberEntries = cache.filter(

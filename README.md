@@ -3,6 +3,7 @@
 A moderation bot I made so I could kick Carlbot, but which now has now become quite featureful.
 
 - Auto-Moderation
+  - **AI Moderator**: an optional OpenAI-powered moderation feature that times out for five minutes after three strikes
   - **InviteSpam**: auto-timeout users who post invites, and kick those who post invites and ping @everyone
   - **PingSpam**: auto-timeout users who ping more than one role or user in one message
   - **PermaRole**: ensures roles are restored even if somebody leaves and joins
@@ -13,6 +14,9 @@ A moderation bot I made so I could kick Carlbot, but which now has now become qu
   - **PingProtect**: warn then timeout users who ping a user who has chosen to be protected
   - **GifMute**: remove the ability to send gifs from messages of particular users
   - **KickSus**: a suite of heuristics that warns a user then kicks them if they continue
+    - deletes all messages if they joined the server in the past hour
+    - kicks the member if they joined in the past week
+    - five minute timeout in any case
     - FastSpam - ten messages in 30 sec
     - PingSpam - eight mentions in 30 sec
     - BigSpam - three long or tall messages in 30 sec
@@ -21,7 +25,7 @@ A moderation bot I made so I could kick Carlbot, but which now has now become qu
     - SameMessageSpam - six of the same message in 5 min
     - MediaSpam - five media messages in 5 min
     - TelegramSpam - two of the same t.me link in 1 hour
-  - **AI Moderator**: an OpenAI-powered moderation feature that times out for five minutes after three strikes
+  - **AutoClean**: deletes messages with no content (e.g. wall of whitespace)
 - Manual Moderation
   - **Tickets**: a ticket system for users to ask for help
     - Allows adding users to the ticket
