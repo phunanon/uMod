@@ -2,8 +2,6 @@ import { ApplicationCommandOptionType } from 'discord.js';
 import { Feature } from '.';
 import { prisma } from '../infrastructure';
 
-//FIXME: ensure attachments are preserved
-
 export const Censor: Feature = {
   async Init(commands) {
     await commands.create({
@@ -20,8 +18,13 @@ export const Censor: Feature = {
           name: 'censored',
           description: 'The censored form (* will be escaped)',
           type: ApplicationCommandOptionType.String,
-          //TODO: make unrequired, auto-*
-          required: true,
+          required: false,
+        },
+        {
+          name: 'ban',
+          description: 'Whether to ban the user for using the word',
+          type: ApplicationCommandOptionType.Boolean,
+          required: false,
         },
       ],
     });
@@ -32,16 +35,14 @@ export const Censor: Feature = {
     async command({ guildSf, interaction }) {
       await interaction.deferReply();
 
-      const word = interaction.options.getString('word')?.toLowerCase();
-      const unescaped = interaction.options.getString('censored');
-
-      if (!word || !unescaped) {
-        await interaction.editReply('word or its censored form missing.');
-        return;
-      }
+      const word = interaction.options.getString('word', true).toLowerCase();
+      const unescaped =
+        interaction.options.getString('censored', false) ??
+        word.replaceAll(/./g, '\*');
+      const ban = interaction.options.getBoolean('ban', false) ?? undefined;
 
       const censored = unescaped.replaceAll('*', '\\*');
-      await prisma.censor.create({ data: { guildSf, word, censored } });
+      await prisma.censor.create({ data: { guildSf, word, censored, ban } });
 
       await interaction.editReply(`New censored word: ${censored}`);
     },
@@ -62,6 +63,19 @@ export const Censor: Feature = {
 
     if (!censors.length) return;
 
+    const banned = censors.filter(({ ban }) => ban);
+    if (banned.length) {
+      try {
+        await message.member?.ban({
+          reason: 'Used censored word/s: ' + banned.join(', '),
+        });
+        await channel.send('**Banned for using a forbidden word**');
+        await message.delete();
+        return 'stop';
+      } finally {
+      }
+    }
+
     const rx = (word: string) =>
       new RegExp(`\\b${[...word].join('.?')}\\b`, 'gi');
     const content = censors.reduce(
@@ -71,6 +85,7 @@ export const Censor: Feature = {
     await channel.send({
       content: `<@${userSf}>: ${content}`,
       allowedMentions: { parse: [] },
+      files: message.attachments.map(a => a.url),
     });
     await message.delete();
 

@@ -112,7 +112,7 @@ export const KickSus: Feature = {
     await ReviewCache(member);
   },
   async HandleReactionAdd(reaction, user) {
-    if (!reaction.message.guild) return;
+    if (!reaction.message.guild || user.bot) return;
     const message = reaction.message.partial
       ? await reaction.message.fetch()
       : reaction.message;

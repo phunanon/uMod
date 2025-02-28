@@ -66,7 +66,7 @@ export const GlobalChat: Feature = {
   Interaction: {
     name: 'global-chat',
     moderatorOnly: true,
-    async command({ interaction, channelSf }) {
+    async command({ interaction, channelSf, channelFlags }) {
       await interaction.deferReply({ ephemeral: true });
 
       const room = interaction.options.getString('room') ?? 'General';
@@ -81,9 +81,17 @@ export const GlobalChat: Feature = {
         return;
       }
 
-      await prisma.globalChat.create({ data: { channelSf, room } });
+      await prisma.$transaction([
+        prisma.globalChat.create({ data: { channelSf, room } }),
+        prisma.channelFlags.update({
+          where: { channelSf },
+          data: { unmoderated: true, antiSpam: true, aiModeration: true },
+        }),
+      ]);
 
-      await interaction.editReply(`Global chat enabled using \`${room}\`.`);
+      await interaction.editReply(
+        `Global chat enabled using \`${room}\`. This has also enabled moderation, anti-spam, and AiMod.`,
+      );
     },
   },
 };

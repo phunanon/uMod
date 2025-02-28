@@ -25,7 +25,16 @@ export const AiMod: Feature = {
     async command({ interaction, channelSf, channelFlags }) {
       await interaction.deferReply();
       try {
+        const globalChatOn = !!(await prisma.globalChat.findUnique({
+          where: { channelSf },
+        }));
         const aiModeration = !channelFlags?.aiModeration;
+        if (globalChatOn && !aiModeration) {
+          await interaction.editReply(
+            'GlobalChat is on in this channel; cannot disable AI moderation.',
+          );
+          return;
+        }
         await prisma.channelFlags.update({
           where: { channelSf },
           data: { aiModeration },
@@ -60,7 +69,7 @@ async function Moderate(userSf: bigint, message: Message) {
       text: message.content.normalize('NFKD'),
     });
   const [attachment] = message.attachments.values();
-  if (attachment)
+  if (attachment && !/\.mp4/.test(attachment.name))
     input.push({
       type: 'image_url' as const,
       image_url: { url: attachment.url },

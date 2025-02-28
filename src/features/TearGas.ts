@@ -12,16 +12,17 @@ export const TearGas: Feature = {
     name: 'tear-gas',
     moderatorOnly: true,
     async command({ interaction, guildSf, channel, member }) {
-      await interaction.deferReply();
+      const ms = 120_000;
+      await interaction.reply({
+        content: `Ends <t:${Math.floor((Date.now() + ms) / 1000)}:R>`,
+        ephemeral: true,
+      });
       const content = `**Tear gas deployed!** ☁️`;
       try {
         const restoredLimit = channel.rateLimitPerUser ?? 0;
         await channel.setRateLimitPerUser(120, content);
-        setTimeout(() => channel.setRateLimitPerUser(restoredLimit), 120_000);
-        const message = await interaction.editReply({
-          content,
-          allowedMentions: { parse: [] },
-        });
+        setTimeout(() => channel.setRateLimitPerUser(restoredLimit), ms);
+        const message = await channel.send(content);
         await HandleAlert({
           guildSf,
           event: AlertEvent.Audit,

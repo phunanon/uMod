@@ -35,21 +35,26 @@ const MakeLeaderboard = async <T extends {}>(
 export const LeaderboardRecorder: Feature = {
   async HandleMessage({ message, guildSf }) {
     const { content, author } = message;
-    if (content.includes('```') || content.includes('>')) return;
+    if (content.includes('`') || content.includes('>')) return;
+    const numLines = new Set(content.split('\n')).size;
+    if (numLines > 10) return;
+    const numWords = new Set(content.split(/\s+/)).size;
+    //People who talk too much are penalised linearly
+    const adjustedNumWords =
+      numWords > 64 ? Math.max(128 - numWords, 0) : numWords;
+    if (adjustedNumWords < 2) return;
 
     const { id, tag } = author;
     const member = await getMember(tag, id, guildSf);
-    //-1 to allow for one word messages and be funny if somebody gets negative
-    const numWords = new Set(content.split(/\s+/)).size - 1;
-    const numLines = new Set(content.split('\n')).size - 1;
 
     await prisma.member.update({
       where: { id: member.id },
       data: {
         numMessages: { increment: 1 },
         numIqLines: { increment: numLines },
-        numIqWords: { increment: numWords },
+        numIqWords: { increment: adjustedNumWords },
         latest: Date.now(),
+        tag,
       },
     });
   },
@@ -76,6 +81,7 @@ ROW_NUMBER() OVER (ORDER BY numMessages DESC) AS idx
 FROM member
 WHERE guildSf = ${guildSf}
 AND numMessages
+AND present
 ORDER BY numMessages DESC
 LIMIT 10;`;
       const getForSf = async (userSf: bigint) => {
@@ -123,6 +129,7 @@ FROM member
 WHERE guildSf = ${guildSf}
 AND iq
 AND numIqLines > 16
+AND present
 ORDER BY iq DESC
 LIMIT 10;`;
       };
@@ -136,16 +143,18 @@ SELECT count(*) as idx
 FROM member
 WHERE guildSf = ${guildSf}
 AND numIqLines > 16
-AND numIqWords / (numIqLines + 1.0) > ${iq};
+AND numIqWords / (numIqLines + 1.0) > ${iq}
+AND present;
 `.then(([{ idx }]) => BigInt(idx) + 1n);
         return { ...(member ?? { userSf, tag }), idx, iq };
       };
+      const { floor } = Math;
       const leaderboard = await MakeLeaderboard(
         userSf,
         getTop10,
         getForSf,
         ({ idx, tag, iq }) =>
-          userRow({ idx, tag, n: `${Math.floor(iq * 100)} IQ` }),
+          userRow({ idx, tag, n: `${floor(iq * 100).toLocaleString()} IQ` }),
       );
       await interaction.editReply('.\n' + leaderboard);
     },
@@ -173,6 +182,7 @@ ROW_NUMBER() OVER (ORDER BY  latest - strftime('%s', earliest) * 1000 DESC) AS i
 FROM member
 WHERE guildSf = ${guildSf}
 AND latest
+AND present
 ORDER BY durationMs DESC
 LIMIT 10;`;
       };
@@ -189,6 +199,7 @@ SELECT count(*) as idx
 FROM member
 WHERE guildSf = ${guildSf}
 AND latest
+AND present
 AND latest - strftime('%s', earliest) * 1000 > ${durationMs};
 `.then(([{ idx }]) => idx + 1n);
         return { ...(member ?? { userSf, tag }), idx, durationMs };

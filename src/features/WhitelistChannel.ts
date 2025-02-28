@@ -34,12 +34,24 @@ export const WhitelistChannel: Feature = {
 
       const type = interaction.options.getString('type', true);
 
+      const globalChatOn = !!(await prisma.globalChat.findUnique({
+        where: { channelSf },
+      }));
+
       const upsert = async (data: Partial<ChannelFlags>) => {
         await prisma.channelFlags.update({ where: { channelSf }, data });
+      };
+      const cannotDisable = async (what: string) => {
+        if (!globalChatOn) return false;
+        await interaction.editReply(
+          `GlobalChat is enabled in this channel; cannot disable ${what}.`,
+        );
+        return true;
       };
 
       if (type === 'unmoderated') {
         const unmoderated = !channelFlags?.unmoderated;
+        if (unmoderated && (await cannotDisable('moderation'))) return;
         await upsert({ unmoderated });
         await interaction.editReply(
           unmoderated ? 'Channel now unmoderated.' : 'Channel now moderated.',
@@ -58,6 +70,7 @@ export const WhitelistChannel: Feature = {
 
       if (type === 'antispam') {
         const antiSpam = !(channelFlags?.antiSpam ?? true);
+        if (!antiSpam && (await cannotDisable('anti-spam'))) return;
         await upsert({ antiSpam });
         await interaction.editReply(
           antiSpam ? 'Anti-spam now enabled.' : 'Anti-spam now disabled.',

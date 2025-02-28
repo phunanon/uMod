@@ -8,7 +8,6 @@ A moderation bot I made so I could kick Carlbot, but which now has now become qu
   - **PingSpam**: auto-timeout users who ping more than one role or user in one message
   - **PermaRole**: ensures roles are restored even if somebody leaves and joins
   - **WhitelistChannel**: disables different kinds of auto-moderation for a channel
-  - **SingleMessage**: enforces one message per user in a channel
   - **BlockGifs**: deletes messages with gifs from specified channels
   - **Censor**: deletes messages with blacklisted words or phrases and replaces them with a censored message
   - **PingProtect**: warn then timeout users who ping a user who has chosen to be protected
@@ -81,13 +80,14 @@ In order of priority, aspirations & TODO:
 - Command to close ticket in a day or /timestamp
 - different handler for registering slash commands which is only called via process.env
 - Granular permissions system (i.e. allow certain roles to use certain commands)
-- censor GlobalChat
+- censor GlobalChat (might already be done)
 - censor fake user
 - ticket custom reasons
 - EnforceRule suggestions (e.g. if they've already been warned in the past week, timeout instead)
 - caching for various things
 - per feature, collect writes to the same tables to be performed at the end
 - delete global messages that uMod deleted itself?
+- JoinLeaves table and logs
 
 ## To host it yourself
 
@@ -100,4 +100,4 @@ npx prisma migrate dev --name init # Migrates the database and generates client
 pm2 start out/index.js --name uMod # Starts up the bot
 ```
 
-Though, you could probably instead use Bun.
+Though, you could probably instead use [Bun](https://bun.sh/).

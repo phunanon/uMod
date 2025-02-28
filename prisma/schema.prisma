@@ -44,6 +44,7 @@ model Member {
   numIqWords  Int      @default(0)
   earliest    DateTime @default(now())
   latest      BigInt   @default(0)
+  present     Boolean  @default(true)
 
   @@unique([userSf, guildSf])
 }
@@ -119,6 +120,7 @@ model Censor {
   guildSf  BigInt
   word     String
   censored String
+  ban      Boolean @default(false)
 }
 
 model ChannelFlags {
@@ -128,7 +130,6 @@ model ChannelFlags {
   blockGifs      Boolean @default(false)
   censor         Boolean @default(true)
   antiSpam       Boolean @default(true)
-  singleMessage  BigInt?
   confessMessage BigInt?
   confessRules   String?
   aiModeration   Boolean @default(false)

@@ -1,22 +1,22 @@
 import * as dotenv from 'dotenv';
 import { client, isGoodChannel, log, prisma } from './infrastructure';
 import { Feature, features } from './features';
-import {
-  AuditLogEvent,
-  Guild,
-  GuildAuditLogsEntry,
-  GuildMember,
-  Interaction,
-  Message,
-  PartialMessage,
-  User,
-} from 'discord.js';
+import { GuildAuditLogsEntry, GuildMember } from 'discord.js';
+import { ActivityType, AuditLogEvent, Guild } from 'discord.js';
+import { Interaction, Message, PartialMessage, User } from 'discord.js';
 import { assert } from 'console';
 dotenv.config();
 const { DISCORD_TOKEN } = process.env;
 assert(DISCORD_TOKEN, 'DISCORD_TOKEN must be set in .env');
 
 console.log('Loading...');
+
+const stats: { messages: Date[] } = { messages: [] };
+const pushStat = (name: keyof typeof stats) => {
+  stats[name].push(new Date());
+  const anHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+  if (stats[name][0] && stats[name][0] < anHourAgo) stats[name].shift();
+};
 
 client.once('ready', async () => {
   for (const [_, guild] of client.guilds.cache) {
@@ -58,8 +58,31 @@ client.once('ready', async () => {
   log('Ready.');
 });
 
+function SetStatActivity(stat: number) {
+  const totalMembers = client.guilds.cache.reduce(
+    (acc, guild) => acc + guild.memberCount,
+    0,
+  );
+  const statList = [
+    ...Object.entries(stats).map(
+      ([k, v]) => `Read ${v.length.toLocaleString()} ${k}/hour`,
+    ),
+    `I'm in ${client.guilds.cache.size} servers`,
+    `Moderating ${totalMembers.toLocaleString()} members`,
+  ];
+  client.user?.setActivity({
+    name: statList[stat]!,
+    type: ActivityType.Custom,
+  });
+  setTimeout(
+    () => SetStatActivity(++stat >= statList.length ? 0 : stat),
+    60_000,
+  );
+}
+
 (async () => {
   await client.login(DISCORD_TOKEN);
+  setTimeout(() => SetStatActivity(0), 60_000);
 })();
 
 function failable<T extends (...args: any[]) => Promise<void>>(fn: T) {
@@ -220,6 +243,8 @@ function handleMessage(kind: 'create' | 'update' | 'delete') {
       ...details,
     };
 
+    if (!isBot) pushStat('messages');
+
     for (const [name, feature] of Object.entries(features)) {
       const handler = (() => {
         if (isEdit && 'HandleMessageUpdate' in feature)
@@ -307,7 +332,7 @@ const FetchDetails = async (
   const isMod = (isOwner || hasModRole) ?? false;
   const unmoddable =
     (isMod ||
-      (member && client.user && member.user.id === client.user.id) ||
+      (client.user && userSf === BigInt(client.user.id)) ||
       (guild.members.me &&
         member &&
         member.roles.highest.position >=

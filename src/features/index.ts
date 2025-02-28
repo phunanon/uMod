@@ -39,7 +39,6 @@ import { Censor, DeleteCensor } from './Censor';
 import { BlockGifs } from './BlockGifs';
 import { CreateTicket, TicketAdd, TicketsHere, CloseTicket } from './Ticket';
 import { RoleList, RoleListAddRole, RoleListRemoveRole } from './RoleList';
-import { SingleMessage, DeleteSingleMessage } from './SingleMessage';
 import { PingSpam } from './PingSpam';
 import { PingProtect } from './PingProtect';
 import { Transcript } from './Transcript';
@@ -63,6 +62,7 @@ import { FakeUser } from './FakeUser';
 import { SuspectedAlt } from './SuspectedAlt';
 import { AiMod } from './AiMod';
 import { AutoClean } from './AutoClean';
+import { PresenceCheck } from './PresenceCheck';
 import { ChannelFlags } from '@prisma/client';
 
 export const features = {
@@ -75,7 +75,6 @@ export const features = {
   ...{ Alert, DeleteAlert, DeleteAlerts, RecommendedAlerts },
   ...{ CreateTicket, TicketAdd, TicketsHere, CloseTicket },
   ...{ RoleList, RoleListAddRole, RoleListRemoveRole },
-  ...{ SingleMessage, DeleteSingleMessage },
   ...{ PingSpam, PingProtect, GlobalChat, GlobalChatList, GlobalChatMute },
   ...{ GuildMods, Histogram, TempRole, Acquaintances },
   ...{ BumpReminder, BumpRemind, BumpUnremind },
@@ -83,7 +82,7 @@ export const features = {
   ...{ QotdApprove, QotdDisable, QotdEnable, QotdSuggest },
   ...{ QotdSubscribe, QotdUnsubscribe, ChannelStats, FakeUser },
   ...{ EnforceRule, EnforceRulePicker, SetupRule, ReadRules, DeleteMessage },
-  AiMod,
+  ...{ AiMod, PresenceCheck },
 };
 
 export type FeatureConfig = {

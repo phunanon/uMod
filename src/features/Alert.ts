@@ -169,9 +169,14 @@ export const Alert: Feature = {
 
     const stats = await prisma.member.findFirst({
       where: { guildSf, userSf },
-      select: { numMessages: true },
+      select: { id: true, numMessages: true },
     });
     if (stats?.numMessages === 1) {
+      //To mitigate double-welcomes
+      await prisma.member.update({
+        where: { id: stats.id },
+        data: { numMessages: { increment: 1 } },
+      });
       await HandleAlert({
         ...{ guildSf, userSf, channelSf, tag: member.user.tag },
         event: AlertEvent.FirstMessage,
@@ -182,7 +187,8 @@ export const Alert: Feature = {
   },
   async HandleAuditLog({ kind, executor, target, reason }, guild) {
     const guildSf = BigInt(guild.id);
-    const selfExecution = executor?.id === client.user?.id;
+    const selfExecution =
+      executor?.id === client.user?.id && !reason?.includes('Rule enforcement');
     const auto = selfExecution ? 'auto-' : '';
     const executorTag = executor ? `<@${executor.id}>` : '[unknown]';
     const by = selfExecution ? '' : ` by ${executorTag}`;
