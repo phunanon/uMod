@@ -41,7 +41,7 @@ export const ConfessionsHere: Feature = {
   },
   Interaction: {
     name: 'confessions-here',
-    moderatorOnly: true,
+    needPermit: 'ChannelConfig',
     async command({ interaction, channel, channelSf, userSf }) {
       await interaction.deferReply({ ephemeral: true });
 
@@ -88,7 +88,6 @@ export const ConfessionsHere: Feature = {
 export const Confess: Feature = {
   Interaction: {
     name: 'confess',
-    moderatorOnly: false,
     async button({ interaction, guildSf, userSf }) {
       const { confessMute } =
         (await prisma.member.findUnique({
@@ -137,7 +136,6 @@ const stringToColour = (str: string): HexColorString => {
 export const ConfessSubmit: Feature = {
   Interaction: {
     name: 'confession',
-    moderatorOnly: false,
     async modalSubmit({ interaction, channel, userSf }) {
       await interaction.deferUpdate();
 
@@ -169,7 +167,7 @@ export const ConfessMute: Feature = {
   },
   Interaction: {
     name: 'Mute confessor',
-    moderatorOnly: true,
+    needPermit: 'EnforceRule',
     async contextMenu({ interaction, guildSf }) {
       await interaction.deferReply({ ephemeral: true });
 
@@ -237,7 +235,7 @@ export const ConfessUnmute: Feature = {
   },
   Interaction: {
     name: 'confess-unmute',
-    moderatorOnly: true,
+    needPermit: 'Member',
     async command({ interaction, guildSf }) {
       await interaction.deferReply({ ephemeral: true });
 

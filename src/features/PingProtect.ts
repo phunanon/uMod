@@ -20,7 +20,7 @@ export const PingProtect: Feature = {
   },
   Interaction: {
     name: 'ping-protect',
-    moderatorOnly: true,
+    needPermit: 'Member',
     async command({ interaction, guildSf }) {
       await interaction.deferReply();
 

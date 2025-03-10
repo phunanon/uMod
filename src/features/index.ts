@@ -18,6 +18,7 @@ import {
   MessageContextMenuCommandInteraction,
   StringSelectMenuInteraction,
 } from 'discord.js';
+import permits from './permits';
 
 import { PermaRole } from './PermaRole';
 import { InviteSpam } from './InviteSpam';
@@ -42,7 +43,7 @@ import { RoleList, RoleListAddRole, RoleListRemoveRole } from './RoleList';
 import { PingSpam } from './PingSpam';
 import { PingProtect } from './PingProtect';
 import { Transcript } from './Transcript';
-import { GuildMods } from './GuildMods';
+import { GuildPermit, GuildPermitList } from './GuildPermit';
 import { Histogram } from './Histogram';
 import { TempRole } from './TempRole';
 import { Acquaintances } from './Acquaintances';
@@ -76,7 +77,7 @@ export const features = {
   ...{ CreateTicket, TicketAdd, TicketsHere, CloseTicket },
   ...{ RoleList, RoleListAddRole, RoleListRemoveRole },
   ...{ PingSpam, PingProtect, GlobalChat, GlobalChatList, GlobalChatMute },
-  ...{ GuildMods, Histogram, TempRole, Acquaintances },
+  ...{ GuildPermit, GuildPermitList, Histogram, TempRole, Acquaintances },
   ...{ BumpReminder, BumpRemind, BumpUnremind },
   ...{ DisallowRole, GifMute, AutoRole, TearGas, SuspectedAlt },
   ...{ QotdApprove, QotdDisable, QotdEnable, QotdSuggest },
@@ -84,6 +85,17 @@ export const features = {
   ...{ EnforceRule, EnforceRulePicker, SetupRule, ReadRules, DeleteMessage },
   ...{ AiMod, PresenceCheck },
 };
+export const featurePermissions = new Set(
+  Object.values(features).flatMap(f => {
+    if (!f.Interaction) return [];
+    const { name, needPermit } = f.Interaction;
+    if (name === 'guild-permit') return [];
+    if (typeof needPermit === 'string') return [needPermit];
+    if (Array.isArray(needPermit)) return needPermit;
+    if (needPermit) return [name];
+    return [];
+  }),
+);
 
 export type FeatureConfig = {
   commandName?: string;
@@ -114,7 +126,7 @@ export type MsgCtx = {
   userSf: bigint;
   isEdit: boolean;
   isDelete: boolean;
-  isMod: boolean;
+  permissions: string[];
   unmoddable: boolean;
 };
 type NarrowMsgCtx = Omit<MsgCtx, 'isEdit' | 'isDelete'>;
@@ -133,38 +145,39 @@ export type AuditEvent =
       reason: undefined;
     };
 
+type Interaction = {
+  /** Wildcard `*` can be put at the end */
+  name: string;
+  needPermit?: true | keyof typeof permits | (keyof typeof permits)[];
+} & (
+  | {
+      command: (
+        context: InteractionCtx<ChatInputCommandInteraction>,
+      ) => Promise<void>;
+    }
+  | {
+      button: (context: InteractionCtx<ButtonInteraction>) => Promise<void>;
+    }
+  | {
+      modalSubmit: (
+        context: InteractionCtx<ModalSubmitInteraction>,
+      ) => Promise<void>;
+    }
+  | {
+      contextMenu: (
+        context: InteractionCtx<MessageContextMenuCommandInteraction>,
+      ) => Promise<void>;
+    }
+  | {
+      stringSelect: (
+        context: InteractionCtx<StringSelectMenuInteraction>,
+      ) => Promise<void>;
+    }
+);
 export type Feature = {
   /** Call is guaranteed but not necessarily prior to other handlers. */
   Init?: (commands: ApplicationCommandManager) => Promise<void>;
-  Interaction?: {
-    /** Wildcard `*` can be put at the end */
-    name: string;
-    moderatorOnly: boolean;
-  } & (
-    | {
-        command: (
-          context: InteractionCtx<ChatInputCommandInteraction>,
-        ) => Promise<void>;
-      }
-    | {
-        button: (context: InteractionCtx<ButtonInteraction>) => Promise<void>;
-      }
-    | {
-        modalSubmit: (
-          context: InteractionCtx<ModalSubmitInteraction>,
-        ) => Promise<void>;
-      }
-    | {
-        contextMenu: (
-          context: InteractionCtx<MessageContextMenuCommandInteraction>,
-        ) => Promise<void>;
-      }
-    | {
-        stringSelect: (
-          context: InteractionCtx<StringSelectMenuInteraction>,
-        ) => Promise<void>;
-      }
-  );
+  Interaction?: Interaction;
   HandleMemberUpdate?: (
     oldMember: GuildMember | PartialGuildMember,
     newMember: GuildMember,

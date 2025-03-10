@@ -19,7 +19,6 @@ export const FakeUser: Feature = {
   },
   Interaction: {
     name: 'fake-user',
-    moderatorOnly: false,
     async command({ interaction }) {
       await interaction.deferReply();
 

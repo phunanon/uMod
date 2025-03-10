@@ -26,7 +26,7 @@ export const ChannelBan: Feature = {
   },
   Interaction: {
     name: 'channel-ban',
-    moderatorOnly: true,
+    needPermit: 'Member',
     async command({ interaction, ...ctx }) {
       const { guildSf, userSf: authorSf, channelSf, channel } = ctx;
       await interaction.deferReply();

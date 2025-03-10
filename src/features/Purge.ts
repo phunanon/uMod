@@ -28,7 +28,7 @@ export const Purge: Feature = {
   },
   Interaction: {
     name: 'purge',
-    moderatorOnly: true,
+    needPermit: 'ChannelMessages',
     async command({ interaction, channel, guildSf, userSf }) {
       await interaction.reply({
         content: 'Deleting messages...',

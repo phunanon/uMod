@@ -5,7 +5,7 @@ import { TryFetchMessage } from '../infrastructure';
 export const DeleteMessage: Feature = {
   Interaction: {
     name: 'delete-message-*',
-    moderatorOnly: true,
+    needPermit: ['Member', 'EnforceRule'],
     async button({ interaction, channel }) {
       await interaction.deferUpdate();
       const messageSf = BigInt(interaction.customId.split('-').pop() ?? '');

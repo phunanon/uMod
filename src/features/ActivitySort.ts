@@ -10,7 +10,7 @@ export const ActivitySort: Feature = {
   },
   Interaction: {
     name: 'activity-sort',
-    moderatorOnly: true,
+    needPermit: 'ChannelConfig',
     async command({ interaction, guildSf, channel }) {
       await interaction.deferReply();
 

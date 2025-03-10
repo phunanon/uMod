@@ -43,7 +43,7 @@ export const Transcript: Feature = {
   },
   Interaction: {
     name: 'transcript',
-    moderatorOnly: true,
+    needPermit: 'ChannelMessages',
     async command({ interaction, guild, channel }) {
       await interaction.reply('(0 messages, 0.0s) Transcribing...');
 
@@ -94,7 +94,7 @@ const tick = async () => {
       const attachment = new AttachmentBuilder(
         Buffer.from(headers + '\n' + messages.join('\n'), 'utf-8'),
       ).setName(`${channel.name} transcript.csv`);
-      const content = `Transcription of ${channel.url}`;
+      const content = `Transcription of ${channel.url} (${channel.name})`;
       return await job.destination.send({ content, files: [attachment] });
     }
   })();

@@ -11,7 +11,7 @@ export const BlockGifs: Feature = {
   },
   Interaction: {
     name: 'block-gifs',
-    moderatorOnly: true,
+    needPermit: 'LowDangerChannelConfig',
     async command({ interaction, channelSf, channelFlags }) {
       await interaction.deferReply();
 

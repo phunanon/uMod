@@ -15,7 +15,6 @@ export const ChannelStats: Feature = {
   },
   Interaction: {
     name: 'channel-stats',
-    moderatorOnly: false,
     async command({ interaction, guild, guildSf }) {
       await interaction.deferReply();
 

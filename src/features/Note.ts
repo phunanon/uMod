@@ -43,7 +43,7 @@ export const Note: Feature = {
   },
   Interaction: {
     name: 'note',
-    moderatorOnly: true,
+    needPermit: 'EnforceRule',
     async command({ interaction, guildSf, userSf: authorSf }) {
       await interaction.deferReply({ ephemeral: true });
 
@@ -88,7 +88,7 @@ export const ReadNote: Feature = {
   },
   Interaction: {
     name: 'notes',
-    moderatorOnly: true,
+    needPermit: 'EnforceRule',
     async command({ interaction, guildSf }) {
       await interaction.deferReply({ ephemeral: true });
 

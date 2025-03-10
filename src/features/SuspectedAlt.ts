@@ -31,7 +31,7 @@ export const SuspectedAlt: Feature = {
   },
   Interaction: {
     name: 'suspected-alt',
-    moderatorOnly: true,
+    needPermit: 'EnforceRule',
     async command({ interaction, guildSf, userSf }) {
       await interaction.deferReply({ ephemeral: true });
 

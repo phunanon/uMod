@@ -28,7 +28,6 @@ export const Histogram: Feature = {
   },
   Interaction: {
     name: 'histogram',
-    moderatorOnly: false,
     async command({ interaction, guildSf, guild }) {
       await interaction.deferReply();
 

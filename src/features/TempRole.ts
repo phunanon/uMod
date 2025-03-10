@@ -34,7 +34,7 @@ export const TempRole: Feature = {
   },
   Interaction: {
     name: 'temp-role',
-    moderatorOnly: true,
+    needPermit: 'Member',
     async command({ interaction, guild, guildSf }) {
       await interaction.deferReply();
 

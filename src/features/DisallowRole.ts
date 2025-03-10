@@ -45,7 +45,7 @@ export const DisallowRole: Feature = {
   },
   Interaction: {
     name: 'disallow-role',
-    moderatorOnly: true,
+    needPermit: 'Member',
     async command({ interaction, guild, guildSf, userSf: authorSf }) {
       await interaction.deferReply();
 

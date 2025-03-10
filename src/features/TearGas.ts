@@ -10,9 +10,16 @@ export const TearGas: Feature = {
   },
   Interaction: {
     name: 'tear-gas',
-    moderatorOnly: true,
+    needPermit: 'EnforceRule',
     async command({ interaction, guildSf, channel, member }) {
       const ms = 120_000;
+      if (channel.rateLimitPerUser === ms / 1000) {
+        await interaction.reply({
+          content: 'Slowmode is already used in this channel',
+          ephemeral: true,
+        });
+        return;
+      }
       await interaction.reply({
         content: `Ends <t:${Math.floor((Date.now() + ms) / 1000)}:R>`,
         ephemeral: true,

@@ -28,7 +28,7 @@ export const WhitelistChannel: Feature = {
   },
   Interaction: {
     name: 'whitelist-channel',
-    moderatorOnly: true,
+    needPermit: 'ChannelConfig',
     async command({ interaction, channelFlags, channelSf }) {
       await interaction.deferReply({ ephemeral: true });
 

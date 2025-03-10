@@ -15,7 +15,7 @@ export const MirrorGuild: Feature = {
   },
   Interaction: {
     name: 'mirror-guild',
-    moderatorOnly: true,
+    needPermit: 'ChannelConfig',
     async command({ interaction, guildSf, channelSf }) {
       await interaction.deferReply();
 

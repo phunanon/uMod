@@ -33,7 +33,7 @@ export const RoleList: Feature = {
   },
   Interaction: {
     name: 'role-list',
-    moderatorOnly: true,
+    needPermit: 'ChannelConfig',
     async command({ interaction, channel, guildSf, channelSf }) {
       await interaction.deferReply({ ephemeral: true });
 
@@ -104,7 +104,6 @@ export const RoleList: Feature = {
 export const RoleListAddRole: Feature = {
   Interaction: {
     name: 'add-role-*',
-    moderatorOnly: false,
     async button({ interaction, guild, member }) {
       await interaction.deferReply({ ephemeral: true });
       const roleSf = BigInt(interaction.customId.split('-').pop()!);
@@ -119,7 +118,6 @@ export const RoleListAddRole: Feature = {
 export const RoleListRemoveRole: Feature = {
   Interaction: {
     name: 'remove-role-*',
-    moderatorOnly: false,
     async button({ interaction, member }) {
       await interaction.deferReply({ ephemeral: true });
       const roleSf = BigInt(interaction.customId.split('-').pop()!);

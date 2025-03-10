@@ -116,7 +116,7 @@ model Note {
 }
 
 model Censor {
-  id       Int    @id @default(autoincrement())
+  id       Int     @id @default(autoincrement())
   guildSf  BigInt
   word     String
   censored String
@@ -144,12 +144,13 @@ model PingProtectWarns {
   @@unique([userSf, aboutSf])
 }
 
-model GuildMods {
-  id      Int    @id @default(autoincrement())
-  guildSf BigInt
-  roleSf  BigInt
+model GuildPermission {
+  id         Int    @id @default(autoincrement())
+  guildSf    BigInt
+  roleSf     BigInt
+  permission String
 
-  @@unique([guildSf, roleSf])
+  @@unique([guildSf, roleSf, permission])
 }
 
 model Histogram {

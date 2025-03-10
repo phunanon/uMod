@@ -28,7 +28,7 @@ export const SetupRule: Feature = {
   },
   Interaction: {
     name: 'configure-rules',
-    moderatorOnly: true,
+    needPermit: 'ServerConfig',
     async command({ interaction, guildSf }) {
       await interaction.deferReply({ ephemeral: true });
 
@@ -66,7 +66,7 @@ export const EnforceRulePicker: Feature = {
   },
   Interaction: {
     name: 'Enforce rule',
-    moderatorOnly: true,
+    needPermit: 'EnforceRule',
     async contextMenu({ interaction, guildSf }) {
       await interaction.deferReply({ ephemeral: true });
       const { id: messageSf, author, content } = interaction.targetMessage;
@@ -127,7 +127,7 @@ export const EnforceRulePicker: Feature = {
 export const EnforceRule: Feature = {
   Interaction: {
     name: 'rule',
-    moderatorOnly: true,
+    needPermit: 'EnforceRule',
     async stringSelect({ interaction, channel, guild, guildSf, userSf }) {
       await interaction.deferUpdate();
 
@@ -218,7 +218,6 @@ export const ReadRules: Feature = {
   },
   Interaction: {
     name: 'read-rules',
-    moderatorOnly: false,
     async command({ interaction, guildSf }) {
       await interaction.deferReply();
       const rules = await prisma.guildRule.findMany({ where: { guildSf } });

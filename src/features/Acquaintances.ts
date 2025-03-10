@@ -23,7 +23,6 @@ export const Acquaintances: Feature = {
   },
   Interaction: {
     name: 'acquaintances',
-    moderatorOnly: false,
     async command({ interaction, guildSf }) {
       await interaction.deferReply();
 

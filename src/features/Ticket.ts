@@ -31,7 +31,7 @@ export const TicketsHere: Feature = {
   },
   Interaction: {
     name: 'tickets-here',
-    moderatorOnly: true,
+    needPermit: 'ChannelConfig',
     async command({ interaction, channel }) {
       await interaction.deferReply({ ephemeral: true });
 
@@ -60,7 +60,6 @@ export const TicketsHere: Feature = {
 export const CreateTicket: Feature = {
   Interaction: {
     name: 'create_ticket_*',
-    moderatorOnly: false,
     async button({ interaction, guild, channel, member }) {
       await interaction.deferReply({ ephemeral: true });
 
@@ -153,13 +152,18 @@ export const TicketAdd: Feature = {
   },
   Interaction: {
     name: 'ticket-add',
-    moderatorOnly: true,
+    needPermit: true,
     async command({ interaction, channel }) {
       await interaction.deferReply({ ephemeral: true });
 
       const user = interaction.options.getUser('user');
       if (!user) {
         await interaction.editReply('Invalid user.');
+        return;
+      }
+
+      if (!channel.name.startsWith('ticket-')) {
+        await interaction.editReply('This is not a ticket channel.');
         return;
       }
 
@@ -185,7 +189,6 @@ export const TicketAdd: Feature = {
 export const CloseTicket: Feature = {
   Interaction: {
     name: 'close_ticket_*',
-    moderatorOnly: false,
     async button({ interaction, channel, member, channelSf }) {
       await interaction.deferReply({ ephemeral: true });
 

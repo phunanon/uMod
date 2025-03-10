@@ -26,7 +26,7 @@ export const BumpReminder: Feature = {
   },
   Interaction: {
     name: 'bump-reminder',
-    moderatorOnly: true,
+    needPermit: 'ChannelConfig',
     async command({ interaction, guildSf, channelSf }) {
       await interaction.deferReply();
 
@@ -51,7 +51,6 @@ export const BumpReminder: Feature = {
 export const BumpRemind: Feature = {
   Interaction: {
     name: 'bump-remind',
-    moderatorOnly: false,
     async button({ interaction, guildSf, userSf }) {
       await interaction.deferReply({ ephemeral: true });
 
@@ -86,7 +85,6 @@ export const BumpRemind: Feature = {
 export const BumpUnremind: Feature = {
   Interaction: {
     name: 'bump-unremind',
-    moderatorOnly: false,
     async button({ interaction, guildSf, userSf }) {
       await interaction.deferReply({ ephemeral: true });
 

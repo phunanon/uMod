@@ -6,7 +6,7 @@ export const GifMute: Feature = {
   async Init(commands) {
     await commands.create({
       name: 'gif-mute',
-      description: 'Prevent a user from sending GIFs',
+      description: 'Prevent a member from sending GIFs',
       options: [
         {
           name: 'user',
@@ -19,7 +19,7 @@ export const GifMute: Feature = {
   },
   Interaction: {
     name: 'gif-mute',
-    moderatorOnly: true,
+    needPermit: 'Member',
     async command({ interaction, guildSf, userSf }) {
       await interaction.deferReply({ ephemeral: true });
 

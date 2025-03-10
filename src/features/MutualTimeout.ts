@@ -19,7 +19,6 @@ export const MutualTimeout: Feature = {
   },
   Interaction: {
     name: 'mutual-timeout',
-    moderatorOnly: false,
     async command({ interaction, guild, member, userSf }) {
       await interaction.deferReply();
 

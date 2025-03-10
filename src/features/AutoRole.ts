@@ -34,7 +34,7 @@ export const AutoRole: Feature = {
   },
   Interaction: {
     name: 'auto-role',
-    moderatorOnly: true,
+    needPermit: 'ServerConfig',
     async command({ interaction, guild, guildSf }) {
       await interaction.deferReply({ ephemeral: true });
 

@@ -31,7 +31,7 @@ export const Censor: Feature = {
   },
   Interaction: {
     name: 'censor',
-    moderatorOnly: true,
+    needPermit: 'ChannelConfig',
     async command({ guildSf, interaction }) {
       await interaction.deferReply();
 
@@ -110,7 +110,7 @@ export const DeleteCensor: Feature = {
   },
   Interaction: {
     name: 'delete-censor',
-    moderatorOnly: true,
+    needPermit: 'ChannelConfig',
     async command({ guildSf, interaction }) {
       await interaction.deferReply();
 

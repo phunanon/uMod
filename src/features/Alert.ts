@@ -88,7 +88,7 @@ export const Alert: Feature = {
   },
   Interaction: {
     name: 'alert',
-    moderatorOnly: true,
+    needPermit: 'Alerts',
     async command({ interaction, guildSf, channelSf }) {
       const { options } = interaction;
       await interaction.deferReply();
@@ -244,7 +244,7 @@ export const DeleteAlert: Feature = {
   },
   Interaction: {
     name: 'delete-alert',
-    moderatorOnly: true,
+    needPermit: 'Alerts',
     async command({ interaction, guildSf, channelSf }) {
       const { options } = interaction;
       const id = Number(options.get('id')?.value);
@@ -277,7 +277,7 @@ export const DeleteAlerts: Feature = {
   },
   Interaction: {
     name: 'delete-alerts',
-    moderatorOnly: true,
+    needPermit: 'Alerts',
     async command({ interaction, guildSf, channelSf }) {
       await interaction.deferReply();
       const { count } = await prisma.alert.deleteMany({
@@ -297,7 +297,7 @@ export const RecommendedAlerts: Feature = {
   },
   Interaction: {
     name: 'recommended-alerts',
-    moderatorOnly: true,
+    needPermit: 'Alerts',
     async command({ interaction, guildSf, channelSf }) {
       await interaction.deferReply();
 

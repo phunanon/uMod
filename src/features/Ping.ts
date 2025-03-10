@@ -6,7 +6,6 @@ export const Ping: Feature = {
   },
   Interaction: {
     name: 'ping',
-    moderatorOnly: false,
     async command({ interaction }) {
       const ms = Date.now() - interaction.createdAt.getTime();
       await interaction.reply(`Pong! (${ms}ms)`);

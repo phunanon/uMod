@@ -30,7 +30,7 @@ export const StickyMessage: Feature = {
   },
   Interaction: {
     name: 'sticky-message',
-    moderatorOnly: true,
+    needPermit: 'ChannelConfig',
     async command({ interaction, guildSf, channelSf, channel }) {
       await interaction.reply({
         content: 'Creating sticky message...',

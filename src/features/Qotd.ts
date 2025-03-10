@@ -35,7 +35,7 @@ export const QotdEnable: Feature = {
   },
   Interaction: {
     name: 'configure-qotd',
-    moderatorOnly: true,
+    needPermit: 'ChannelConfig',
     async command({ interaction, guildSf }) {
       await interaction.deferReply();
 
@@ -64,7 +64,7 @@ export const QotdDisable: Feature = {
   },
   Interaction: {
     name: 'disable-qotd',
-    moderatorOnly: true,
+    needPermit: 'ChannelConfig',
     async command({ interaction, guildSf }) {
       await interaction.deferReply();
 
@@ -85,7 +85,7 @@ export const QotdDisable: Feature = {
 export const QotdApprove: Feature = {
   Interaction: {
     name: 'qotd-approve-*',
-    moderatorOnly: true,
+    needPermit: 'QotdApprove',
     async button({ interaction, userSf }) {
       await interaction.deferUpdate();
 
@@ -151,7 +151,6 @@ export const QotdSuggest: Feature = {
   },
   Interaction: {
     name: 'suggest-qotd',
-    moderatorOnly: false,
     async command({ interaction, guild, guildSf, userSf: authorSf }) {
       await interaction.deferReply({ ephemeral: true });
 
@@ -194,7 +193,6 @@ export const QotdSuggest: Feature = {
 export const QotdSubscribe: Feature = {
   Interaction: {
     name: 'qotd-subscribe',
-    moderatorOnly: false,
     async button({ interaction, guild, member }) {
       await interaction.deferReply({ ephemeral: true });
 
@@ -223,7 +221,6 @@ export const QotdSubscribe: Feature = {
 export const QotdUnsubscribe: Feature = {
   Interaction: {
     name: 'qotd-unsubscribe',
-    moderatorOnly: false,
     async button({ interaction, guild, member }) {
       await interaction.deferReply({ ephemeral: true });
 

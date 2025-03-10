@@ -69,7 +69,6 @@ export const Leaderboard: Feature = {
   },
   Interaction: {
     name: 'leaderboard',
-    moderatorOnly: false,
     async command({ interaction, guildSf, userSf }) {
       await interaction.deferReply();
       const tag = interaction.user.tag;
@@ -116,7 +115,6 @@ export const IqLeaderboard: Feature = {
   },
   Interaction: {
     name: 'iq-leaderboard',
-    moderatorOnly: false,
     async command({ interaction, guildSf, userSf }) {
       await interaction.deferReply();
       const tag = interaction.user.tag;
@@ -170,7 +168,6 @@ export const LoyaltyLeaderboard: Feature = {
   },
   Interaction: {
     name: 'loyalty-leaderboard',
-    moderatorOnly: false,
     async command({ interaction, guildSf, userSf }) {
       await interaction.deferReply();
       const tag = interaction.user.tag;

@@ -21,7 +21,7 @@ export const AiMod: Feature = {
   },
   Interaction: {
     name: 'ai-mod',
-    moderatorOnly: true,
+    needPermit: 'LowDangerChannelConfig',
     async command({ interaction, channelSf, channelFlags }) {
       await interaction.deferReply();
       try {

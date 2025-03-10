@@ -162,12 +162,23 @@ async function _handleInteraction(interaction: Interaction): Promise<void> {
     return;
   }
 
-  const details = await FetchDetails(guild, member, userSf);
-  if (feature.moderatorOnly && !details.isMod) {
-    const { noMods } = details;
-    const content = noMods
-      ? `No moderators have been set up yet! Contact <@${guild.ownerId}> to use \`/guild-mods\` to assign moderators.`
-      : 'You must be a moderator to use this command!';
+  const details = await FetchUserDetails(guild, member, userSf);
+  const anyOfPermission =
+    typeof feature.needPermit === 'string'
+      ? [feature.needPermit]
+      : Array.isArray(feature.needPermit)
+      ? feature.needPermit
+      : [feature.name];
+  if (
+    feature.needPermit &&
+    !details.isOwner &&
+    !details.permissions.includes('all') &&
+    !details.permissions.some(p => anyOfPermission.includes(p))
+  ) {
+    const { noPermissions } = details;
+    const content = noPermissions
+      ? `No permissions have been set up yet! Contact <@${guild.ownerId}> to use \`/guild-permit\` to assign permissions.`
+      : 'You must have the correct permissions to use this command.';
     await interaction.reply({ content, allowedMentions: { parse: [] } });
     return;
   }
@@ -233,7 +244,7 @@ function handleMessage(kind: 'create' | 'update' | 'delete') {
     const isBot = message.author.bot;
     const isEdit = kind === 'update';
     const isDelete = kind === 'delete';
-    const details = await FetchDetails(guild, member, userSf);
+    const details = await FetchUserDetails(guild, member, userSf);
     const channelFlags = await FetchChannelFlags(channelSf);
 
     const context = {
@@ -318,25 +329,32 @@ async function handleAudit(log: GuildAuditLogsEntry, guild: Guild) {
   }
 }
 
-const FetchDetails = async (
+const FetchUserDetails = async (
   guild: Guild,
   member: GuildMember | null,
   userSf: bigint,
 ) => {
   const isOwner = BigInt(guild.ownerId) === userSf;
-  const modRoles = await prisma.guildMods.findMany({
+  const guildPermissions = await prisma.guildPermission.findMany({
     where: { guildSf: BigInt(guild.id) },
   });
-  const hasModRole =
-    member && modRoles.some(role => member.roles.cache.has(`${role.roleSf}`));
-  const isMod = (isOwner || hasModRole) ?? false;
+  const permissions = member
+    ? guildPermissions
+        .filter(p => member.roles.cache.has(`${p.roleSf}`))
+        .map(p => p.permission)
+    : [];
+  const itsMe = member && userSf === BigInt(client.user?.id ?? 0);
   const unmoddable =
-    (isMod ||
-      (client.user && userSf === BigInt(client.user.id)) ||
+    (itsMe ||
       (guild.members.me &&
         member &&
         member.roles.highest.position >=
           guild.members.me.roles.highest.position)) ??
     false;
-  return { isMod, unmoddable, isOwner, noMods: !modRoles.length };
+  return {
+    permissions,
+    unmoddable,
+    isOwner,
+    noPermissions: !guildPermissions.length,
+  };
 };

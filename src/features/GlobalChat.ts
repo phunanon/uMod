@@ -65,8 +65,8 @@ export const GlobalChat: Feature = {
   },
   Interaction: {
     name: 'global-chat',
-    moderatorOnly: true,
-    async command({ interaction, channelSf, channelFlags }) {
+    needPermit: 'ChannelConfig',
+    async command({ interaction, channelSf }) {
       await interaction.deferReply({ ephemeral: true });
 
       const room = interaction.options.getString('room') ?? 'General';
@@ -105,7 +105,6 @@ export const GlobalChatList: Feature = {
   },
   Interaction: {
     name: 'global-chat-list',
-    moderatorOnly: false,
     async command({ interaction }) {
       await interaction.deferReply();
 
@@ -130,7 +129,7 @@ export const GlobalChatMute: Feature = {
   },
   Interaction: {
     name: 'GlobalChat mute',
-    moderatorOnly: true,
+    needPermit: 'EnforceRule',
     async contextMenu({ interaction, guildSf, channelSf, userSf }) {
       await interaction.deferReply({ ephemeral: true });
 

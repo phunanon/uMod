@@ -43,7 +43,7 @@ A moderation bot I made so I could kick Carlbot, but which now has now become qu
     - Optionally with a custom alert message with tokens: `$content, $url, $tag, $user, $ping`
     - Optionally with a cooldown
     - Also **DeleteAlert**, **DeleteAlerts**, and **RecommendedAlerts**
-  - **GuildMods**: assign moderator roles for your guild
+  - **GuildPermit**: assign granular permissions for using μMod's features
     - Only the guild owner can use this command
   - **TempRole**: assign a role to a user for a specified amount of time
   - **DisallowRole**: prevent a user from having a role
@@ -76,10 +76,11 @@ A moderation bot I made so I could kick Carlbot, but which now has now become qu
 
 In order of priority, aspirations & TODO:
 
+- don't punish for reaction on same message
+- JoinLeaves table and logs
 - refactor leaderboard SQL so that there's only one query including both the top ten and the current user
 - Command to close ticket in a day or /timestamp
 - different handler for registering slash commands which is only called via process.env
-- Granular permissions system (i.e. allow certain roles to use certain commands)
 - censor GlobalChat (might already be done)
 - censor fake user
 - ticket custom reasons
@@ -87,7 +88,6 @@ In order of priority, aspirations & TODO:
 - caching for various things
 - per feature, collect writes to the same tables to be performed at the end
 - delete global messages that uMod deleted itself?
-- JoinLeaves table and logs
 
 ## To host it yourself
 
