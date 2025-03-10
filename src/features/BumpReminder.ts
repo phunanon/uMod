@@ -3,7 +3,9 @@ import { ButtonStyle, ActionRowBuilder, ButtonBuilder } from 'discord.js';
 import { client, isGoodChannel, prisma } from '../infrastructure';
 
 const DisboardSf = '302050872383242240';
-const inTwoHours = () => new Date(new Date().getTime() + 2 * 60 * 60_000);
+const inTwoHours = () => new Date(Date.now() + 2 * 60 * 60_000);
+const inTwoAndAHalfHours = () => new Date(Date.now() + 2.5 * 60 * 60_000);
+const inThirtyMinutes = () => new Date(Date.now() + 30 * 60_000);
 
 export const BumpReminder: Feature = {
   async Init(commands) {
@@ -16,12 +18,12 @@ export const BumpReminder: Feature = {
   },
   async HandleBotMessage({ message, guildSf }) {
     if (message.author.id !== DisboardSf) return;
-    if (message.embeds.length === 0) return;
-    if (!message.embeds[0]?.description?.includes('Bump done!')) return;
+    const [embed] = message.embeds;
+    if (!embed?.description?.includes('Bump done!')) return;
 
     await prisma.bumpReminder.updateMany({
       where: { guildSf },
-      data: { remindAt: inTwoHours() },
+      data: { remindAt: inTwoHours(), softRemindAt: inTwoAndAHalfHours() },
     });
   },
   Interaction: {
@@ -40,10 +42,66 @@ export const BumpReminder: Feature = {
       }
 
       await prisma.bumpReminder.create({
-        data: { guildSf, channelSf, remindAt: new Date() },
+        data: {
+          guildSf,
+          channelSf,
+          remindAt: new Date(),
+          softRemindAt: inThirtyMinutes(),
+        },
       });
 
       await interaction.editReply('Bump reminder enabled.');
+    },
+  },
+};
+
+export const SoftBumpReminder: Feature = {
+  async Init(commands) {
+    await commands.create({
+      name: 'soft-bump-reminder',
+      description:
+        'Toggle an additional thirty minute reminder in another channel for bumps.',
+    });
+  },
+  Interaction: {
+    name: 'soft-bump-reminder',
+    needPermit: 'ChannelConfig',
+    async command({ interaction, guildSf, channelSf }) {
+      await interaction.deferReply({ ephemeral: true });
+
+      const reminder = await prisma.bumpReminder.findFirst({
+        where: { guildSf },
+      });
+
+      if (!reminder) {
+        await interaction.editReply(
+          'You need to set up a `/bump-reminder` in another channel first.',
+        );
+        return;
+      }
+
+      if (reminder.channelSf === channelSf) {
+        await interaction.editReply(
+          'Soft reminders should be used elsewhere, not in the existing bump reminder channel.',
+        );
+        return;
+      }
+
+      if (reminder.softChannelSf) {
+        await prisma.bumpReminder.update({
+          where: { id: reminder.id },
+          data: { softChannelSf: null },
+        });
+        await interaction.editReply('Soft bump reminder disabled.');
+        return;
+      }
+
+      await prisma.bumpReminder.update({
+        where: { id: reminder.id },
+        data: { softChannelSf: channelSf },
+      });
+
+      await interaction.editReply('Soft bump reminder enabled.');
     },
   },
 };
@@ -112,39 +170,62 @@ function TickSoon() {
 }
 
 async function tick() {
-  const reminders = await prisma.bumpReminder.findMany({
+  const hardReminders = await prisma.bumpReminder.findMany({
     where: { remindAt: { lte: new Date() } },
     select: { Users: { select: { userSf: true } }, channelSf: true, id: true },
   });
 
-  for (const reminder of reminders) {
+  for (const reminder of hardReminders) {
     try {
-      await remind(reminder);
+      await hardRemind(reminder);
       //Postpone the reminder by two more hours
       await prisma.bumpReminder.update({
         where: { id: reminder.id },
-        data: { remindAt: inTwoHours() },
+        data: { remindAt: inTwoHours(), softRemindAt: inTwoAndAHalfHours() },
       });
     } catch (e) {
       console.error(reminder, e);
       if (RegExp(/Unknown Channel|Missing Access/).test(`${e}`)) {
         await prisma.bumpReminder.delete({ where: { id: reminder.id } });
-        console.log("Deleted reminder");
+        console.log('Deleted reminder');
+      }
+    }
+  }
+
+  const softReminders = await prisma.bumpReminder.findMany({
+    where: { softRemindAt: { lte: new Date() }, softChannelSf: { not: null } },
+    select: { softChannelSf: true, id: true },
+  });
+
+  for (const reminder of softReminders) {
+    try {
+      await softRemind({ channelSf: reminder.softChannelSf!, id: reminder.id });
+      //Postpone the reminder by thirty minutes
+      await prisma.bumpReminder.update({
+        where: { id: reminder.id },
+        data: { softRemindAt: inThirtyMinutes() },
+      });
+    } catch (e) {
+      console.error(reminder, e);
+      if (RegExp(/Unknown Channel|Missing Access/).test(`${e}`)) {
+        await prisma.bumpReminder.update({
+          where: { id: reminder.id },
+          data: { softChannelSf: null },
+        });
+        console.log('Disabled soft reminder');
       }
     }
   }
 }
 
-type Reminder = {
-  id: number;
-  channelSf: bigint;
-  Users: { userSf: bigint }[];
-};
+type SoftReminder = { id: number; channelSf: bigint };
+type HardReminder = SoftReminder & { Users: { userSf: bigint }[] };
 
-async function remind({ id, channelSf, Users }: Reminder) {
+async function hardRemind({ id, channelSf, Users }: HardReminder) {
   const channel = await client.channels.fetch(`${channelSf}`);
   if (!isGoodChannel(channel)) {
     await prisma.bumpReminder.delete({ where: { id } });
+    console.log(`Deleting reminder for channel ${channelSf}`);
     return;
   }
 
@@ -185,5 +266,27 @@ async function remind({ id, channelSf, Users }: Reminder) {
       },
     ],
     components: [row],
+  });
+}
+
+async function softRemind({ id, channelSf }: SoftReminder) {
+  const channel = await client.channels.fetch(`${channelSf}`);
+  if (!isGoodChannel(channel)) {
+    await prisma.bumpReminder.update({
+      where: { id },
+      data: { softChannelSf: null },
+    });
+    console.log(`Disabling soft reminder for channel ${channelSf}`);
+    return;
+  }
+
+  await channel.send({
+    embeds: [
+      {
+        title: 'Bump Reminder',
+        description: 'Nobody has bumped the server yet! Use `/bump` to do so.',
+        color: 0x2f6f7f,
+      },
+    ],
   });
 }

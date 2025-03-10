@@ -47,7 +47,8 @@ import { GuildPermit, GuildPermitList } from './GuildPermit';
 import { Histogram } from './Histogram';
 import { TempRole } from './TempRole';
 import { Acquaintances } from './Acquaintances';
-import { BumpReminder, BumpRemind, BumpUnremind } from './BumpReminder';
+import { BumpReminder, SoftBumpReminder } from './BumpReminder';
+import { BumpRemind, BumpUnremind } from './BumpReminder';
 import { DisallowRole } from './DisallowRole';
 import { GifMute } from './GifMute';
 import { AutoRole } from './AutoRole';
@@ -78,7 +79,7 @@ export const features = {
   ...{ RoleList, RoleListAddRole, RoleListRemoveRole },
   ...{ PingSpam, PingProtect, GlobalChat, GlobalChatList, GlobalChatMute },
   ...{ GuildPermit, GuildPermitList, Histogram, TempRole, Acquaintances },
-  ...{ BumpReminder, BumpRemind, BumpUnremind },
+  ...{ BumpReminder, SoftBumpReminder, BumpRemind, BumpUnremind },
   ...{ DisallowRole, GifMute, AutoRole, TearGas, SuspectedAlt },
   ...{ QotdApprove, QotdDisable, QotdEnable, QotdSuggest },
   ...{ QotdSubscribe, QotdUnsubscribe, ChannelStats, FakeUser },
