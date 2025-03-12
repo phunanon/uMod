@@ -41,7 +41,7 @@ export const SetupRule: Feature = {
 
       for (const rule of rules) {
         if (rule.length > 90) {
-          await interaction.editReply('Rules must be 90 characters or less.');
+          await interaction.editReply(`Each rule must be 90 characters or fewer ("${rule.slice(0, 10)}...")`); 
           return;
         }
       }

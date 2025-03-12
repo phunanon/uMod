@@ -73,6 +73,7 @@ A moderation bot I made so I could kick Carlbot, but which now has now become qu
   - **BumpReminder**: reminds users to bump on Disboard in a channel
   - **ChannelStats**: shows list of channels ordered by number of messages
   - **ReadRules**: lists the rules set up for a server
+  - **Reminder**: users can create ping reminders for themselves
 
 In order of priority, aspirations & TODO:
 

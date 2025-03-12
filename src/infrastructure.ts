@@ -73,3 +73,25 @@ export const RecordRealAuthor = async (
     where: { at: { lt: new Date(Date.now() - 30 * 24 * 60 * 60_000) } },
   });
 };
+
+export const ParseDurationAsMs = (duration: string) => {
+  const time = duration.match(/(\d+)([mhdwMy])/g);
+  if (!time) return 'Invalid duration';
+  const mss: Record<string, number> = {
+    m: 60_000,
+    h: 60 * 60_000,
+    d: 24 * 60 * 60_000,
+    w: 7 * 24 * 60 * 60_000,
+    M: 30 * 24 * 60 * 60_000,
+    y: 365 * 24 * 60 * 60_000,
+  };
+  const ms = time.reduce(
+    (acc, t) => acc + parseInt(t.slice(0, -1)) * (mss[t.slice(-1)] ?? 1),
+    0,
+  );
+  if (!ms) return 'Invalid duration (0) - should be e.g. "1m 2h 3d 4w 5M 6y"';
+  return ms;
+};
+
+export const R = (ms: number | Date) =>
+  `<t:${Math.floor(new Date(ms).getTime() / 1000)}:R>`;

@@ -1,6 +1,6 @@
 import { ApplicationCommandOptionType } from 'discord.js';
 import { Feature } from '.';
-import { client, prisma } from '../infrastructure';
+import { client, ParseDurationAsMs, prisma } from '../infrastructure';
 
 export const TempRole: Feature = {
   async Init(commands) {
@@ -25,7 +25,7 @@ export const TempRole: Feature = {
         {
           name: 'duration',
           description:
-            'The duration to apply the role for (e.g. "1h 1d 1w 1M")',
+            'The duration to apply the role for (e.g. "1m 1h 1d 1w 1M 1y")',
           type: ApplicationCommandOptionType.String,
           required: true,
         },
@@ -49,10 +49,9 @@ export const TempRole: Feature = {
       const userSf = BigInt(user.id);
       const roleSf = BigInt(role.id);
 
-      // Parse the duration
-      const time = duration.match(/(\d+)([mhdwMy])/g);
-      if (!time) {
-        await interaction.editReply('Invalid duration');
+      const ms = ParseDurationAsMs(duration);
+      if (typeof ms === 'string') {
+        await interaction.editReply(ms);
         return;
       }
 
@@ -60,26 +59,6 @@ export const TempRole: Feature = {
         await member.roles.add(role.id);
       } catch (e) {
         await interaction.editReply('Failed to add role');
-        return;
-      }
-
-      const mss: Record<string, number> = {
-        m: 60_000,
-        h: 60 * 60_000,
-        d: 24 * 60 * 60_000,
-        w: 7 * 24 * 60 * 60_000,
-        M: 30 * 24 * 60 * 60_000,
-        y: 365 * 24 * 60 * 60_000,
-      };
-      const ms = time.reduce(
-        (acc, t) => acc + parseInt(t.slice(0, -1)) * (mss[t.slice(-1)] ?? 1),
-        0,
-      );
-
-      if (!ms) {
-        await interaction.editReply(
-          'Invalid duration (0) - should be e.g. "1m 2h 3d 4w 5M 6y"',
-        );
         return;
       }
 

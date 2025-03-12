@@ -24,13 +24,19 @@ export const PermaRole: Feature = {
     const guildSf = BigInt(member.guild.id);
     const userSf = BigInt(member.id);
     const permaRoles = await prisma.permaRole.findMany({
-      select: { roleSf: true },
       where: { userSf },
+      select: { roleSf: true },
+    });
+    const permRoles = await prisma.guildPermission.findMany({
+      where: { guildSf },
+      select: { roleSf: true },
     });
     const allRoles = await member.guild.roles.fetch();
-    const theseRoles = allRoles.filter(x =>
-      permaRoles.some(y => y.roleSf === BigInt(x.id)),
-    );
+    const theseRoles = allRoles
+      //Only restore roles that still exist
+      .filter(x => permaRoles.some(y => y.roleSf === BigInt(x.id)))
+      //Don't restore roles that have permissions
+      .filter(x => !permRoles.some(y => y.roleSf === BigInt(x.id)));
     if (!theseRoles.size) return;
     await member.roles.add(theseRoles);
   },

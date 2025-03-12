@@ -5,7 +5,7 @@ import { client, isGoodChannel, prisma } from '../infrastructure';
 const DisboardSf = '302050872383242240';
 const inTwoHours = () => new Date(Date.now() + 2 * 60 * 60_000);
 const inTwoAndAHalfHours = () => new Date(Date.now() + 2.5 * 60 * 60_000);
-const inThirtyMinutes = () => new Date(Date.now() + 30 * 60_000);
+const inThirtyOneMinutes = () => new Date(Date.now() + 31 * 60_000);
 
 export const BumpReminder: Feature = {
   async Init(commands) {
@@ -46,7 +46,7 @@ export const BumpReminder: Feature = {
           guildSf,
           channelSf,
           remindAt: new Date(),
-          softRemindAt: inThirtyMinutes(),
+          softRemindAt: inThirtyOneMinutes(),
         },
       });
 
@@ -178,10 +178,10 @@ async function tick() {
   for (const reminder of hardReminders) {
     try {
       await hardRemind(reminder);
-      //Postpone the reminder by two more hours
+      //Postpone the hard reminder by two more hours, and soft reminder by 31min
       await prisma.bumpReminder.update({
         where: { id: reminder.id },
-        data: { remindAt: inTwoHours(), softRemindAt: inTwoAndAHalfHours() },
+        data: { remindAt: inTwoHours(), softRemindAt: inThirtyOneMinutes() },
       });
     } catch (e) {
       console.error(reminder, e);
@@ -203,7 +203,7 @@ async function tick() {
       //Postpone the reminder by thirty minutes
       await prisma.bumpReminder.update({
         where: { id: reminder.id },
-        data: { softRemindAt: inThirtyMinutes() },
+        data: { softRemindAt: inThirtyOneMinutes() },
       });
     } catch (e) {
       console.error(reminder, e);

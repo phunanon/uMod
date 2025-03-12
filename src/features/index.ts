@@ -65,6 +65,7 @@ import { SuspectedAlt } from './SuspectedAlt';
 import { AiMod } from './AiMod';
 import { AutoClean } from './AutoClean';
 import { PresenceCheck } from './PresenceCheck';
+import { Reminder } from './Reminder';
 import { ChannelFlags } from '@prisma/client';
 
 export const features = {
@@ -84,7 +85,7 @@ export const features = {
   ...{ QotdApprove, QotdDisable, QotdEnable, QotdSuggest },
   ...{ QotdSubscribe, QotdUnsubscribe, ChannelStats, FakeUser },
   ...{ EnforceRule, EnforceRulePicker, SetupRule, ReadRules, DeleteMessage },
-  ...{ AiMod, PresenceCheck },
+  ...{ AiMod, PresenceCheck, Reminder },
 };
 export const featurePermissions = new Set(
   Object.values(features).flatMap(f => {

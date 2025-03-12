@@ -175,10 +175,11 @@ async function _handleInteraction(interaction: Interaction): Promise<void> {
     !details.permissions.includes('all') &&
     !details.permissions.some(p => anyOfPermission.includes(p))
   ) {
+    const permissions = anyOfPermission.map(p => `\`${p}\``).join(', ');
     const { noPermissions } = details;
     const content = noPermissions
       ? `No permissions have been set up yet! Contact <@${guild.ownerId}> to use \`/guild-permit\` to assign permissions.`
-      : 'You must have the correct permissions to use this command.';
+      : `You must have the correct permissions to use this command (either ${permissions}).`;
     await interaction.reply({ content, allowedMentions: { parse: [] } });
     return;
   }
@@ -225,6 +226,7 @@ function handleMessage(kind: 'create' | 'update' | 'delete') {
     oldMessage: Message | PartialMessage,
     newMessage?: Message | PartialMessage,
   ): Promise<void> {
+    if (!client.user) return;
     const maybePartial = newMessage ?? oldMessage;
     const message = await (async () => {
       try {
@@ -236,7 +238,6 @@ function handleMessage(kind: 'create' | 'update' | 'delete') {
     const channelSf = BigInt(message.channel.id);
     if (await IsChannelUnmoderated(channelSf)) return;
     if (!message.guildId || !message.guild) return;
-    if (!client.user) return;
 
     const { guild, channel, member } = message;
     const guildSf = BigInt(message.guildId);

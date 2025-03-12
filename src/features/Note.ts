@@ -1,6 +1,6 @@
 import { ApplicationCommandOptionType } from 'discord.js';
 import { Feature } from '.';
-import { prisma } from '../infrastructure';
+import { prisma, R } from '../infrastructure';
 import { AlertEvent, HandleAlert } from './Alert';
 
 export const MakeNote = async (
@@ -125,6 +125,3 @@ export const ReadNote: Feature = {
     },
   },
 };
-
-export const R = (ms: number | Date) =>
-  `<t:${Math.floor(new Date(ms).getTime() / 1000)}:R>`;

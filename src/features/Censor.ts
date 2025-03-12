@@ -38,7 +38,7 @@ export const Censor: Feature = {
       const word = interaction.options.getString('word', true).toLowerCase();
       const unescaped =
         interaction.options.getString('censored', false) ??
-        word.replaceAll(/./g, '\*');
+        word.replaceAll(/./g, '*');
       const ban = interaction.options.getBoolean('ban', false) ?? undefined;
 
       const censored = unescaped.replaceAll('*', '\\*');
@@ -53,39 +53,30 @@ export const Censor: Feature = {
     if (isDelete || unmoddable) return;
     if (channelFlags?.censor === false) return;
 
-    const words = message.content
-      .toLowerCase()
-      .replaceAll(/[^a-z ]/g, '')
-      .split(' ');
-    const censors = await prisma.censor.findMany({
-      where: { guildSf, word: { in: words } },
-    });
-
-    if (!censors.length) return;
-
-    const banned = censors.filter(({ ban }) => ban);
-    if (banned.length) {
+    const censored = await CensorText(guildSf, message.content);
+    if (censored.banned.length) {
       try {
         await message.member?.ban({
-          reason: 'Used censored word/s: ' + banned.join(', '),
+          reason: 'Used censored word/s: ' + censored.banned.join(', '),
         });
-        await channel.send('**Banned for using a forbidden word**');
+        await channel.send('**Banned for using a forbidden word.**');
         await message.delete();
         return 'stop';
-      } finally {
-      }
+      } catch {}
+      return;
     }
 
-    const rx = (word: string) =>
-      new RegExp(`\\b${[...word].join('.?')}\\b`, 'gi');
-    const content = censors.reduce(
-      (sum, { word, censored }): string => sum.replaceAll(rx(word), censored),
-      message.content,
-    );
+    if (censored.censored === message.content) return;
+
+    const messageReference = message.reference?.messageId;
+    const reply = messageReference
+      ? { messageReference, failIfNotExists: false }
+      : undefined;
     await channel.send({
-      content: `<@${userSf}>: ${content}`,
+      content: `<@${userSf}>: ${censored.censored}`,
       allowedMentions: { parse: [] },
       files: message.attachments.map(a => a.url),
+      reply,
     });
     await message.delete();
 
@@ -129,4 +120,28 @@ export const DeleteCensor: Feature = {
       await interaction.editReply(`${count} censored word(s) deleted`);
     },
   },
+};
+
+export const CensorText = async (
+  guildSf: bigint,
+  content: string,
+): Promise<{ banned: string[]; censored: string }> => {
+  const words = content
+    .toLowerCase()
+    .replaceAll(/[^a-z ]/g, '')
+    .split(' ');
+  const censors = await prisma.censor.findMany({
+    where: { guildSf, word: { in: words } },
+  });
+
+  if (!censors.length) return { banned: [], censored: content };
+
+  const rx = (word: string) =>
+    new RegExp(`\\b${[...word].join('.?')}\\b`, 'gi');
+  const censored = censors.reduce(
+    (sum, { word, censored }): string => sum.replaceAll(rx(word), censored),
+    content,
+  );
+  const banned = censors.filter(({ ban }) => ban);
+  return { censored, banned: banned.map(({ word }) => word) };
 };

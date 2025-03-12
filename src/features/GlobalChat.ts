@@ -67,9 +67,10 @@ export const GlobalChat: Feature = {
     name: 'global-chat',
     needPermit: 'ChannelConfig',
     async command({ interaction, channelSf }) {
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.deferReply();
 
-      const room = interaction.options.getString('room') ?? 'General';
+      const room =
+        interaction.options.getString('room')?.toLowerCase() ?? 'general';
 
       const existingChannel = await prisma.globalChat.findFirst({
         where: { channelSf },
@@ -85,7 +86,7 @@ export const GlobalChat: Feature = {
         prisma.globalChat.create({ data: { channelSf, room } }),
         prisma.channelFlags.update({
           where: { channelSf },
-          data: { unmoderated: true, antiSpam: true, aiModeration: true },
+          data: { unmoderated: false, antiSpam: true, aiModeration: true },
         }),
       ]);
 
@@ -175,9 +176,7 @@ export const GlobalChatMute: Feature = {
 };
 
 const GetChatsForChannel = async (channelSf: bigint) => {
-  const thisChat = await prisma.globalChat.findMany({
-    where: { channelSf },
-  });
+  const thisChat = await prisma.globalChat.findMany({ where: { channelSf } });
 
   if (!thisChat.length) return;
 
@@ -192,17 +191,13 @@ const GetChatsForChannel = async (channelSf: bigint) => {
       try {
         return await client.channels.fetch(`${channelSf}`);
       } catch (e) {
-        if (
-          e &&
-          typeof e === 'object' &&
-          'rawError' in e &&
-          e.rawError &&
-          typeof e.rawError === 'object' &&
-          'message' in e.rawError
-        ) {
-          if (e.rawError.message === 'Unknown Channel') {
-            await prisma.globalChat.delete({ where: { channelSf } });
-          }
+        console.error('GetChatsForChannel', e);
+        if (RegExp(/Unknown Channel|Missing Access/).test(`${e}`)) {
+          await prisma.$transaction([
+            prisma.globalChat.delete({ where: { channelSf } }),
+            prisma.globalChatMute.deleteMany({ where: { channelSf } }),
+          ]);
+          console.log('Disabled GlobalChat for ', channelSf);
         }
         return null;
       }
@@ -223,7 +218,7 @@ async function HandleMessage(
 ) {
   const { message, channelSf, userSf, isEdit, isDelete, member } = ctx;
   const chats = await GetChatsForChannel(channelSf);
-  if (!chats) return;
+  if (!chats?.length) return;
 
   const associations = m2m.find(m =>
     m.some(({ messageId }) => messageId === message.id),
