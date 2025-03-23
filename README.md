@@ -77,6 +77,10 @@ A moderation bot I made so I could kick Carlbot, but which now has now become qu
 
 In order of priority, aspirations & TODO:
 
+- levels
+  - ability to choose between different mathematical functions (e.g. linear, sqrt, etc)
+  - level-up alert
+  - level roles
 - don't punish for reaction on same message
 - JoinLeaves table and logs
 - refactor leaderboard SQL so that there's only one query including both the top ten and the current user

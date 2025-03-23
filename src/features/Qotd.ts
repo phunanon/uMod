@@ -267,6 +267,12 @@ async function PostQuestion(q: QotdQuestion & { Config: GuildQotd }) {
   }
 
   const role = await GetQotdRole(postChannel.guild);
+  const numWaiting = await prisma.qotdQuestion.count({
+    where: { AND: { guildSf, postAt: { not: null, gt: new Date() } } },
+  });
+  const copula = numWaiting === 1 ? 'is' : 'are';
+  const plural = numWaiting === 1 ? '' : 's';
+  const footer = `There ${copula} ${numWaiting} more question${plural} waiting to be posted.`;
 
   const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()
@@ -282,11 +288,14 @@ async function PostQuestion(q: QotdQuestion & { Config: GuildQotd }) {
   const embed = new EmbedBuilder()
     .setTitle('❓ Question of the Day ❓')
     .setDescription(`## ${question}`)
+    .setFooter({ text: footer })
     .setColor('Random');
 
   await postChannel.send({
     embeds: [embed],
-    content: `<@&${role.id}> Suggest your own questions with \`/suggest-qotd\`. Asked by <@${authorSf}>.`,
+    content: `<@&${role.id}>
+Suggest your own questions with \`/suggest-qotd\`.
+Asked by <@${authorSf}>.`,
     components: [row],
     allowedMentions: { users: [`${authorSf}`], roles: [role.id] },
   });

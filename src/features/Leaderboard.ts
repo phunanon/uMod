@@ -174,8 +174,8 @@ export const LoyaltyLeaderboard: Feature = {
       type Row = LeaderboardRow<{ durationMs: bigint }>;
       const getTop10 = async () => {
         return await prisma.$queryRaw<Row[]>`
-SELECT userSf, tag,  latest - strftime('%s', earliest) * 1000 as durationMs,
-ROW_NUMBER() OVER (ORDER BY  latest - strftime('%s', earliest) * 1000 DESC) AS idx
+SELECT userSf, tag,  latest - earliest as durationMs,
+ROW_NUMBER() OVER (ORDER BY  latest - earliest DESC) AS idx
 FROM member
 WHERE guildSf = ${guildSf}
 AND latest
@@ -197,7 +197,7 @@ FROM member
 WHERE guildSf = ${guildSf}
 AND latest
 AND present
-AND latest - strftime('%s', earliest) * 1000 > ${durationMs};
+AND latest - earliest > ${durationMs};
 `.then(([{ idx }]) => idx + 1n);
         return { ...(member ?? { userSf, tag }), idx, durationMs };
       };
