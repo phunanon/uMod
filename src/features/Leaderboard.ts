@@ -33,7 +33,7 @@ const MakeLeaderboard = async <T extends {}>(
 };
 
 export const LeaderboardRecorder: Feature = {
-  async HandleMessage({ message, guildSf }) {
+  async HandleMessageCreate({ message, guildSf }) {
     const { content, author } = message;
     if (content.includes('`') || content.includes('>')) return;
     const numLines = new Set(content.split('\n')).size;
@@ -212,7 +212,10 @@ AND latest - earliest > ${durationMs};
             n: `${Math.ceil(Number(durationMs) / 60_000 / 60 / 24)} days`,
           }),
       );
-      await interaction.editReply('.\n' + leaderboard);
+      await interaction.editReply(
+        'This lists members who have been active in this server for the longest time.\n' +
+          leaderboard,
+      );
     },
   },
 };

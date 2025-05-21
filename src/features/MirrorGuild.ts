@@ -9,6 +9,21 @@ export const MirrorGuild: Feature = {
     });
   },
   HandleMessage,
+  async HandleReactionAdd(reaction, user) {
+    const { guildId } = reaction.message;
+    const { tag } = user;
+    if (user.bot || !guildId || !tag) return;
+    const channel = await GetMirrorChannel(BigInt(guildId));
+    if (!channel || channel.id === reaction.message.channel.id) return;
+    const message = await reaction.message.fetch();
+    const sanitisedTag = sanitiseTag(tag);
+    const emoji = reaction.emoji.toString();
+    const content = `**${sanitisedTag}** reacted to ${message.url}: ${emoji} ||${user.id}||`;
+    const nonce = `${
+      BigInt(message.id) + BigInt(reaction.emoji.id ?? 0) + BigInt(user.id)
+    }`;
+    await channel.send({ content, nonce, enforceNonce: true });
+  },
   async HandleChannelDelete(channel) {
     const channelSf = BigInt(channel.id);
     await prisma.guildMirror.deleteMany({ where: { channelSf } });
@@ -36,17 +51,11 @@ export const MirrorGuild: Feature = {
 };
 
 async function HandleMessage({ message, guildSf, isEdit }: MsgCtx) {
-  const mirror = await prisma.guildMirror.findFirst({ where: { guildSf } });
-
-  if (!mirror) return;
-
-  const channel = await client.channels.fetch(`${mirror.channelSf}`);
-  if (!isGoodChannel(channel)) return;
-
-  if (channel.id === message.channel.id) return;
-
   const author = message.author;
   if (!author) return;
+
+  const channel = await GetMirrorChannel(guildSf);
+  if (!channel || channel.id === message.channel.id) return;
 
   const tag = sanitiseTag(author.tag);
   const content = (isEdit ? '*' : '') + (message.content || '[No content]');
@@ -60,4 +69,12 @@ async function HandleMessage({ message, guildSf, isEdit }: MsgCtx) {
     nonce: message.id,
     enforceNonce: true,
   });
+}
+
+async function GetMirrorChannel(guildSf: bigint) {
+  const mirror = await prisma.guildMirror.findFirst({ where: { guildSf } });
+  if (!mirror) return null;
+  const channel = await client.channels.fetch(`${mirror.channelSf}`);
+  if (!isGoodChannel(channel)) return null;
+  return channel;
 }

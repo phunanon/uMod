@@ -1,11 +1,13 @@
 import { Feature } from '.';
 import { ButtonStyle, ActionRowBuilder, ButtonBuilder } from 'discord.js';
+import { Message } from 'discord.js';
 import { client, isGoodChannel, prisma } from '../infrastructure';
 
 const DisboardSf = '302050872383242240';
 const inTwoHours = () => new Date(Date.now() + 2 * 60 * 60_000);
 const inTwoAndAHalfHours = () => new Date(Date.now() + 2.5 * 60 * 60_000);
 const inThirtyOneMinutes = () => new Date(Date.now() + 31 * 60_000);
+const mostRecentSoftReminders = new Map<string, Message>();
 
 export const BumpReminder: Feature = {
   async Init(commands) {
@@ -16,7 +18,7 @@ export const BumpReminder: Feature = {
         'Enable or disable a two hour bump reminder in this channel (one per guild)',
     });
   },
-  async HandleBotMessage({ message, guildSf }) {
+  async HandleBotMessageCreate({ message, guildSf }) {
     if (message.author.id !== DisboardSf) return;
     const [embed] = message.embeds;
     if (!embed?.description?.includes('Bump done!')) return;
@@ -25,6 +27,42 @@ export const BumpReminder: Feature = {
       where: { guildSf },
       data: { remindAt: inTwoHours(), softRemindAt: inTwoAndAHalfHours() },
     });
+
+    //Replace the Disboard message with a skinnier one
+    const url = embed.description.match(
+      /https:\/\/disboard\.org\/server\/(\d+)/,
+    )?.[1];
+    const by = message.interaction?.user?.id;
+    const checkItOut = url
+      ? `Check it out [on DISBOARD](https://disboard.org/server/${url}).`
+      : '';
+    const thanks = by ? `Thanks, <@${by}>!` : '';
+
+    if (!checkItOut && !thanks) return;
+
+    const nonce = `${Math.floor(new Date().getTime() / 60_000)}`;
+    await message.channel.send({
+      embeds: [
+        {
+          color: embed.color ?? undefined,
+          title: 'Bump done! :thumbsup:',
+          description: `${checkItOut}\n${thanks}`,
+          footer: {
+            text: 'Every two hours anyone can use /bump to attract new people to this server.',
+          },
+        },
+      ],
+      nonce,
+      enforceNonce: true,
+    });
+    await message.delete();
+
+    //Delete the latest soft reminder
+    const softReminder = mostRecentSoftReminders.get(`${message.channelId}`);
+    if (softReminder) {
+      await softReminder.delete();
+      mostRecentSoftReminders.delete(`${message.channelId}`);
+    }
   },
   Interaction: {
     name: 'bump-reminder',
@@ -194,12 +232,14 @@ async function tick() {
 
   const softReminders = await prisma.bumpReminder.findMany({
     where: { softRemindAt: { lte: new Date() }, softChannelSf: { not: null } },
-    select: { softChannelSf: true, id: true },
+    select: { softChannelSf: true, id: true, channelSf: true },
   });
 
   for (const reminder of softReminders) {
     try {
-      await softRemind({ channelSf: reminder.softChannelSf!, id: reminder.id });
+      const channelSf = reminder.softChannelSf!;
+      const hardChannelSf = reminder.channelSf;
+      await softRemind({ channelSf, hardChannelSf, id: reminder.id });
       //Postpone the reminder by thirty minutes
       await prisma.bumpReminder.update({
         where: { id: reminder.id },
@@ -218,8 +258,9 @@ async function tick() {
   }
 }
 
-type SoftReminder = { id: number; channelSf: bigint };
-type HardReminder = SoftReminder & { Users: { userSf: bigint }[] };
+type Reminder = { id: number; channelSf: bigint };
+type SoftReminder = Reminder & { hardChannelSf: bigint };
+type HardReminder = Reminder & { Users: { userSf: bigint }[] };
 
 async function hardRemind({ id, channelSf, Users }: HardReminder) {
   const channel = await client.channels.fetch(`${channelSf}`);
@@ -269,7 +310,7 @@ async function hardRemind({ id, channelSf, Users }: HardReminder) {
   });
 }
 
-async function softRemind({ id, channelSf }: SoftReminder) {
+async function softRemind({ id, channelSf, hardChannelSf }: SoftReminder) {
   const channel = await client.channels.fetch(`${channelSf}`);
   if (!isGoodChannel(channel)) {
     await prisma.bumpReminder.update({
@@ -280,7 +321,7 @@ async function softRemind({ id, channelSf }: SoftReminder) {
     return;
   }
 
-  await channel.send({
+  const message = await channel.send({
     embeds: [
       {
         title: 'Bump Reminder',
@@ -289,4 +330,7 @@ async function softRemind({ id, channelSf }: SoftReminder) {
       },
     ],
   });
+  mostRecentSoftReminders.set(`${hardChannelSf}`, message);
+  //Delete message in an hour
+  setTimeout(() => message.delete(), 60 * 60_000);
 }

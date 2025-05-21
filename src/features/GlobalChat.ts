@@ -34,7 +34,7 @@ export const GlobalChat: Feature = {
     });
   },
   HandleMessage,
-  async HandleBotMessage(ctx) {
+  async HandleBotMessageCreate(ctx) {
     if (ctx.message.author.id === client.user?.id) return;
     await HandleMessage(ctx);
   },

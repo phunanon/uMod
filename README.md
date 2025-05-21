@@ -93,6 +93,8 @@ In order of priority, aspirations & TODO:
 - caching for various things
 - per feature, collect writes to the same tables to be performed at the end
 - delete global messages that uMod deleted itself?
+- keep track of record most users in vc
+- fix HandleBotMessage being called twice
 
 ## To host it yourself
 

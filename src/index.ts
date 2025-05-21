@@ -268,10 +268,13 @@ function handleMessage(kind: 'create' | 'update' | 'delete') {
         if ('HandleMessage' in feature) return feature.HandleMessage;
       })();
       try {
-        const signal =
-          isBot && 'HandleBotMessage' in feature
-            ? await feature.HandleBotMessage?.(context)
-            : member && !isBot && (await handler?.({ ...context, member }));
+        const signal = await (async () => {
+          if (isBot && 'HandleBotMessageCreate' in feature) {
+            if (isEdit || isDelete) return;
+            return feature.HandleBotMessageCreate?.(context);
+          }
+          if (!isBot && member) await handler?.({ ...context, member });
+        })();
         if (signal === 'stop') break;
       } catch (error) {
         console.error(name, error);

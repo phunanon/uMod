@@ -151,7 +151,7 @@ export const ConfessSubmit: Feature = {
       const message = await channel.send({ embeds: [embed] });
       await RecordRealAuthor(userSf, BigInt(message.id));
 
-      log(`Confession by ${userSf}: ${confession}`);
+      log(`Confession by ${userSf}: ${confession.slice(0, 20)}...`);
 
       await RenewStickyMessage(channel);
     },
