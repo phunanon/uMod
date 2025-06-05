@@ -3,5 +3,6 @@ node_modules
 .env
 prisma/*
 !prisma/schema.prisma
+!prisma/sql/
 *.exe
 out/

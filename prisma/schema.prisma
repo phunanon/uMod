@@ -124,15 +124,17 @@ model Censor {
 }
 
 model ChannelFlags {
-  id             Int     @id @default(autoincrement())
-  channelSf      BigInt  @unique
-  unmoderated    Boolean @default(false)
-  blockGifs      Boolean @default(false)
-  censor         Boolean @default(true)
-  antiSpam       Boolean @default(true)
+  id             Int      @id @default(autoincrement())
+  channelSf      BigInt   @unique
+  activityAt     DateTime @default(now())
+  unmoderated    Boolean  @default(false)
+  blockGifs      Boolean  @default(false)
+  censor         Boolean  @default(true)
+  antiSpam       Boolean  @default(true)
   confessMessage BigInt?
   confessRules   String?
-  aiModeration   Boolean @default(false)
+  aiModeration   Boolean  @default(false)
+  autoHere       Boolean  @default(false)
 }
 
 model PingProtectWarns {
@@ -279,4 +281,11 @@ model Reminder {
   userSf    BigInt
   remindAt  DateTime
   text      String
+}
+
+model GuildLevel {
+  id        Int     @id @default(autoincrement())
+  guildSf   BigInt  @unique
+  function  String
+  channelSf BigInt?
 }

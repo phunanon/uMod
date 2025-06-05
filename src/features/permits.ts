@@ -5,6 +5,6 @@ export default {
   ChannelMessages: 'purge, transcript',
   EnforceRule: 'note, notes, suspected-alt, tear-gas; Enforce rule, Mute confessor, GlobalChat mute',
   Member: 'channel-ban, disallow-role, gif-mute, confess-unmute, temp-role, ping-protect',
-  ServerConfig: 'configure-rules, auto-role',
+  ServerConfig: 'configure-rules, auto-role, enable-guild-levels',
   QotdApprove: 'Approve QotD questions',
 };

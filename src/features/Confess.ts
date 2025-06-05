@@ -74,6 +74,7 @@ export const ConfessionsHere: Feature = {
           data: { confessMessage, confessRules },
         });
       } else {
+        //FIXME: test adding a new confession channel without rules
         await interaction.editReply('There was an issue enabling confessions.');
         return;
       }
@@ -141,7 +142,8 @@ export const ConfessSubmit: Feature = {
 
       const confession = interaction.fields
         .getTextInputValue('confession')
-        .replace(/#{1,} /g, '');
+        .replace(/#{1,} /g, '')
+        .replace(/\n{2,}/g, '\n');
       const someToken = process.env.DISCORD_TOKEN?.slice(0, 5);
       const embed = new EmbedBuilder()
         .setColor(stringToColour(userSf.toString() + someToken))

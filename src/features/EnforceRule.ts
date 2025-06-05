@@ -3,12 +3,15 @@ import {
   ApplicationCommandOptionType,
   ApplicationCommandType,
   EmbedBuilder,
+  Message,
   StringSelectMenuBuilder,
 } from 'discord.js';
 import { Feature } from '.';
 import { prisma, TryFetchMessage } from '../infrastructure';
 import { DeleteMessageRow } from './DeleteMessage';
 import { MakeNote } from './Note';
+
+//TODO: support threads
 
 export const SetupRule: Feature = {
   async Init(commands) {
@@ -41,7 +44,10 @@ export const SetupRule: Feature = {
 
       for (const rule of rules) {
         if (rule.length > 90) {
-          await interaction.editReply(`Each rule must be 90 characters or fewer ("${rule.slice(0, 10)}...")`); 
+          const truncated = rule.slice(0, 10);
+          await interaction.editReply(
+            `Each rule must be 90 characters or fewer ("${truncated}...")`,
+          );
           return;
         }
       }
@@ -103,17 +109,16 @@ export const EnforceRulePicker: Feature = {
       );
 
       try {
-        const urls = interaction.targetMessage.attachments
-          .map(x => x.url)
-          .join('\n');
+        const quotedContent = quoteContent(interaction.targetMessage);
         await author.send(
-          `A moderator is reviewing your message:\n> ${
-            content || '[Unknown content]'
-          }\n${urls}`,
+          `A moderator is reviewing your message ${quotedContent}`,
         );
       } catch {
-        await interaction.editReply('Could not DM the author.');
-        return;
+        try {
+          await interaction.targetMessage.reply(
+            'A moderator is reviewing your message.',
+          );
+        } catch {}
       }
 
       await interaction.editReply({
@@ -163,46 +168,52 @@ export const EnforceRule: Feature = {
 
       const message = await TryFetchMessage(channel, messageSf);
       const byline = ` by <@${userSf}>`;
+      const content = quoteContent(message);
       const makeContent = (withByline: boolean) =>
         `Rule ${duration ? 'enforcement' : 'warning'}${
           withByline ? byline : ''
-        }: ${rule.rule}\n> ${
-          (message?.content ?? '[deleted]') ||
-          message?.attachments.map(x => x.url).join('\n')
-        }`;
+        }: ${rule.rule}\n${content}`;
 
-      if (duration) {
+      const timeoutProblem = await (async () => {
+        if (!duration) return false;
         try {
           await member.timeout(duration, makeContent(true));
+          return false;
         } catch {
-          await interaction.editReply('Could not timeout the author.');
-          return;
+          return true;
         }
-      } else {
+      })();
+      if (timeoutProblem || !duration) {
         const content = makeContent(false);
         await MakeNote(guildSf, offenderSf, userSf, content);
       }
 
-      try {
-        await member.send(
-          duration
-            ? `You have been timed out for ${minutes} minutes for breaking the rule: **${rule.rule}**`
-            : `You have been warned for breaking the rule: **${rule.rule}**`,
-        );
-      } catch {
-        await interaction.editReply(
-          'Could not DM the author. Please inform them yourself.',
-        );
-        return;
-      }
+      const dmProblem = await (async () => {
+        try {
+          await member.send(
+            duration
+              ? `You have been timed out for ${minutes} minutes for breaking the rule: **${rule.rule}**`
+              : `You have been warned for breaking the rule: **${rule.rule}**`,
+          );
+        } catch {
+          return true;
+        }
+        return false;
+      })();
 
       const row = DeleteMessageRow(messageSf);
 
       const didWhat = duration
         ? "timed out and DM'd about why"
         : 'warned via DMs';
+      const dmProblemSpiel = dmProblem
+        ? 'Could not DM the author, but the warning has been logged. Please inform them yourself.'
+        : '';
+      const timeoutProblemSpiel = timeoutProblem
+        ? 'Could not timeout the member. Seek help from a server admin if necessary.'
+        : '';
       await interaction.editReply({
-        content: `Rule enforced: ${rule.rule}\nMember ${didWhat}.`,
+        content: `Rule enforced: ${rule.rule}\nMember ${didWhat}.\n${timeoutProblemSpiel}\n${dmProblemSpiel}`,
         components: [row],
       });
     },
@@ -228,3 +239,12 @@ export const ReadRules: Feature = {
     },
   },
 };
+
+function quoteContent(message: Message | null): `${string}:\n${string}` {
+  const textContent = message?.content
+    .split('\n')
+    .map(x => `> ${x}`)
+    .join('\n');
+  const attachmentContent = message?.attachments.map(x => x.url).join('\n');
+  return `${message?.url ?? ''}:\n${textContent}\n${attachmentContent}`;
+}

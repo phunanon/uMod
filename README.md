@@ -50,9 +50,11 @@ A moderation bot I made so I could kick Carlbot, but which now has now become qu
   - **TearGas**: temporarily enables slowmode in a channel
   - **SuspectedAlt**: an easier way to log suspected alt accounts
 - Fun
-  - **Leaderboard**: keeps track of user messages and ranks them
+  - **Leaderboard**: keeps track of users' number of messages and ranks them
     - **IqLeaderboard**: ranks users by their total number of distinct words per message divided by the number of message lines
     - **LoyaltyLeaderboard**: ranks users by the number of days between their earliest and latest activity
+    - **AgeLeaderboard**: ranks users by their Discord account age
+  - **GuildLevels**: uses a mathematical function of your choice to award people levels
   - **Confessions**: allows users to post anonymous messages in a channel
     - Also **ConfessMute** (preserving anonymity) and **ConfessUnmute**
   - **GlobalChat**: mirrors messages between guilds using public or private rooms
@@ -74,27 +76,26 @@ A moderation bot I made so I could kick Carlbot, but which now has now become qu
   - **ChannelStats**: shows list of channels ordered by number of messages
   - **ReadRules**: lists the rules set up for a server
   - **Reminder**: users can create ping reminders for themselves
+  - **AutoHere**: ping [@here](#) when somebody hadn't texted in a channel for one day
 
 In order of priority, aspirations & TODO:
 
-- levels
-  - ability to choose between different mathematical functions (e.g. linear, sqrt, etc)
-  - level-up alert
-  - level roles
-- don't punish for reaction on same message
+- different handler for registering slash commands which is only called via process.env
+- don't punish for multiple reactions on same message
+- caching and aggregation:
+  - cache common database queries e.g. fetch member from database
+  - collect feature database writes for the end of message processing
+- level roles
 - JoinLeaves table and logs
 - refactor leaderboard SQL so that there's only one query including both the top ten and the current user
-- Command to close ticket in a day or /timestamp
-- different handler for registering slash commands which is only called via process.env
+  - use typed SQL
 - censor GlobalChat (might already be done)
 - censor fake user
-- ticket custom reasons
+- ticket custom reasons and closure summaries
 - EnforceRule suggestions (e.g. if they've already been warned in the past week, timeout instead)
-- caching for various things
-- per feature, collect writes to the same tables to be performed at the end
 - delete global messages that uMod deleted itself?
 - keep track of record most users in vc
-- fix HandleBotMessage being called twice
+- vc leaderboard (minutes)
 
 ## To host it yourself
 

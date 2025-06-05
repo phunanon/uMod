@@ -19,13 +19,14 @@ import {
   StringSelectMenuInteraction,
 } from 'discord.js';
 import permits from './permits';
+import { ChannelFlags } from '@prisma/client';
 
 import { PermaRole } from './PermaRole';
 import { InviteSpam } from './InviteSpam';
 import { Ping } from './Ping';
 import { WhitelistChannel } from './WhitelistChannel';
 import { MirrorGuild } from './MirrorGuild';
-import { LeaderboardRecorder } from './Leaderboard';
+import { LeaderboardRecorder, AgeLeaderboard } from './Leaderboard';
 import { Leaderboard, IqLeaderboard, LoyaltyLeaderboard } from './Leaderboard';
 import { StickyMessage } from './StickyMessage';
 import { Confess, ConfessMute, ConfessUnmute, ConfessSubmit } from './Confess';
@@ -66,13 +67,14 @@ import { AiMod } from './AiMod';
 import { AutoClean } from './AutoClean';
 import { PresenceCheck } from './PresenceCheck';
 import { Reminder } from './Reminder';
-import { ChannelFlags } from '@prisma/client';
+import { AutoHere } from './AutoHere';
+import { GuildLevels } from './GuildLevels';
 
 export const features = {
   ...{ MirrorGuild, BlockGifs, KickSus, AutoClean },
   ...{ PermaRole, InviteSpam, Ping, WhitelistChannel, ActivitySort },
   ...{ LeaderboardRecorder, Leaderboard, IqLeaderboard, LoyaltyLeaderboard },
-  ...{ StickyMessage, Purge, Transcript },
+  ...{ AgeLeaderboard, StickyMessage, Purge, Transcript },
   ...{ Note, ReadNote, ChannelBan, Censor, DeleteCensor },
   ...{ Confess, ConfessMute, ConfessUnmute, ConfessSubmit, ConfessionsHere },
   ...{ Alert, DeleteAlert, DeleteAlerts, RecommendedAlerts },
@@ -85,7 +87,7 @@ export const features = {
   ...{ QotdApprove, QotdDisable, QotdEnable, QotdSuggest },
   ...{ QotdSubscribe, QotdUnsubscribe, ChannelStats, FakeUser },
   ...{ EnforceRule, EnforceRulePicker, SetupRule, ReadRules, DeleteMessage },
-  ...{ AiMod, PresenceCheck, Reminder },
+  ...{ AiMod, PresenceCheck, Reminder, AutoHere, GuildLevels },
 };
 export const featurePermissions = new Set(
   Object.values(features).flatMap(f => {

@@ -1,6 +1,7 @@
 import { ApplicationCommandOptionType } from 'discord.js';
 import { Feature } from '.';
 import { prisma } from '../infrastructure';
+import { friendliestMembers } from '@prisma/client/sql';
 
 const latestAuthorSf = new Map<bigint, bigint>();
 const sort = (x: bigint, y: bigint) =>
@@ -8,15 +9,15 @@ const sort = (x: bigint, y: bigint) =>
 
 export const Acquaintances: Feature = {
   async Init(commands) {
-    commands.create({
+    await commands.create({
       name: 'acquaintances',
-      description: 'List likely acquaintances of a user',
+      description: 'List friendliest server members or acquaintances of a user',
       options: [
         {
           name: 'user',
           description: 'User to list acquaintances for',
           type: ApplicationCommandOptionType.User,
-          required: true,
+          required: false,
         },
       ],
     });
@@ -26,7 +27,26 @@ export const Acquaintances: Feature = {
     async command({ interaction, guildSf }) {
       await interaction.deferReply();
 
-      const { id, displayName } = interaction.options.getUser('user', true);
+      const user = interaction.options.getUser('user');
+
+      if (!user) {
+        const query = friendliestMembers(guildSf);
+        const results = await prisma.$queryRawTyped(query);
+        const description =
+          'Those who have chatted with the most people:\n' +
+          results
+            .map(({ userSf, friendliness }, n) => {
+              const f = Number(friendliness).toLocaleString();
+              return `${n + 1}. <@${userSf}> - ${f} people`;
+            })
+            .join('\n');
+        await interaction.editReply({
+          embeds: [{ title: `Friendliest server members`, description }],
+        });
+        return;
+      }
+
+      const { id, displayName } = user;
       const sf = BigInt(id);
 
       const [userASf, userBSf] = [sf, sf];
