@@ -81,7 +81,6 @@ A moderation bot I made so I could kick Carlbot, but which now has now become qu
 In order of priority, aspirations & TODO:
 
 - different handler for registering slash commands which is only called via process.env
-- don't punish for multiple reactions on same message
 - caching and aggregation:
   - cache common database queries e.g. fetch member from database
   - collect feature database writes for the end of message processing
@@ -101,11 +100,9 @@ In order of priority, aspirations & TODO:
 
 Instructions for Node.js, in the terminal:
 
-```
-npm i -g pm2                       # Keeps the bot running even if it crashes
-npm ci                             # Installs exact dependencies
+```bash
+pnpm i -g pm2                      # Keeps the bot running even if it crashes
+pnpm i                             # Installs exact dependencies
 npx prisma migrate dev --name init # Migrates the database and generates client
 pm2 start out/index.js --name uMod # Starts up the bot
 ```
-
-Though, you could probably instead use [Bun](https://bun.sh/).

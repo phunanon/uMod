@@ -16,7 +16,7 @@ enum Heuristic {
   SameMessageSpam = 'SameMessageSpam',
   /** (5min) posting a message with an attachment or link five times */
   MediaSpam = 'MediaSpam',
-  /** (5min) reacting to messages ten times */
+  /** (3min) reacting to messages ten times */
   ReactSpam = 'ReactSpam',
   /** (1h) posting a t.me link twice */
   TelegramSpam = 'TelegramSpam',
@@ -50,7 +50,7 @@ const heuristicTtl = {
   [Heuristic.SameLinkSpam]: '5min',
   [Heuristic.SameMessageSpam]: '5min',
   [Heuristic.MediaSpam]: '5min',
-  [Heuristic.ReactSpam]: '5min',
+  [Heuristic.ReactSpam]: '3min',
   [Heuristic.TelegramSpam]: '1h',
 } as const;
 const heuristicMax = {
@@ -66,6 +66,7 @@ const heuristicMax = {
 } as const;
 const ttlMs = {
   '30sec': 30_000,
+  '3min': 3 * 60_000,
   '5min': 5 * 60_000,
   '10min': 10 * 60_000,
   '1h': 60 * 60_000,
@@ -87,11 +88,12 @@ export const KickSus: Feature = {
     const hasMention = (message.mentions.members?.size ?? 0) > 0;
     const hasLink = message.content.includes('https://');
     const hasTmeLink = message.content.includes('t.me/');
-    const hasMedia = message.attachments.size > 0;
+    const hasMedia = message.attachments.filter(x => !x.duration).size > 0;
     const entry = { at: new Date(), member, message };
     cache.push({ ...entry, kind: Heuristic.FastSpam });
     cache.push({ ...entry, kind: Heuristic.ChannelSpam, content, channelSf });
-    cache.push({ ...entry, kind: Heuristic.SameMessageSpam, content });
+    if (content)
+      cache.push({ ...entry, kind: Heuristic.SameMessageSpam, content });
     if (hasMention) cache.push({ ...entry, kind: Heuristic.PingSpam });
     if (
       content.length > 200 ||
@@ -119,6 +121,13 @@ export const KickSus: Feature = {
     const at = new Date();
     const member = await message.guild?.members.fetch(user.id);
     if (!member) return;
+    const alreadyCached = cache.find(
+      entry =>
+        entry.member.id === member.id &&
+        entry.message.id === message.id &&
+        entry.kind === Heuristic.ReactSpam,
+    );
+    if (alreadyCached) return;
     cache.push({ at, member, message, kind: Heuristic.ReactSpam });
     //Revew the cache for this user
     await ReviewCache(member);

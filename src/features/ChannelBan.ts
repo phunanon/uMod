@@ -29,7 +29,7 @@ export const ChannelBan: Feature = {
     needPermit: 'Member',
     async command({ interaction, ...ctx }) {
       const { guildSf, userSf: authorSf, channelSf, channel } = ctx;
-      await interaction.deferReply();
+      await interaction.deferReply({ ephemeral: true });
 
       const { options } = interaction;
       const { id } = options.getUser('user', true);
