@@ -256,6 +256,7 @@ export const ConfessUnmute: Feature = {
   },
 };
 
+let timer: NodeJS.Timeout | undefined;
 const RenewStickyMessage = async (
   channel: TextBasedChannel,
   newRules?: string | null,
@@ -298,9 +299,10 @@ const RenewStickyMessage = async (
     data: { confessMessage },
   });
 
-  setTimeout(async () => {
+  clearTimeout(timer);
+  timer = setTimeout(async () => {
     await RenewStickyMessage(channel);
-  }, 5 * 60_000);
+  }, 60_000);
 
   return BigInt(newMessage.id);
 };

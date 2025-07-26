@@ -7,24 +7,25 @@ export const DisallowRole: Feature = {
   async Init(commands) {
     await commands.create({
       name: 'disallow-role',
-      description: 'Disallow a certain user being assigned a certain role',
+      description:
+        'Disallow (or re-allow) a certain user being assigned a certain role',
       options: [
         {
           type: ApplicationCommandOptionType.User,
           name: 'user',
-          description: 'The user to disallow the role from',
+          description: 'The user to disallow (or re-allow) the role from',
           required: true,
         },
         {
           type: ApplicationCommandOptionType.Role,
           name: 'role',
-          description: 'The role to disallow',
+          description: 'The role to disallow (or re-allow)',
           required: true,
         },
         {
           type: ApplicationCommandOptionType.String,
           name: 'reason',
-          description: 'The reason for disallowing the role',
+          description: 'The reason for disallowing (or re-allowing) the role',
           required: true,
         },
       ],
@@ -64,17 +65,19 @@ export const DisallowRole: Feature = {
 
       if (existing) {
         await prisma.disallowRole.delete(where);
+        await interaction.editReply({ content, allowedMentions });
       } else {
+        await prisma.disallowRole.create({ data: userSf_roleSf });
         try {
           const member = await guild.members.fetch(user.id);
           await member.roles.remove(`${roleSf}`);
-          await prisma.disallowRole.create({ data: userSf_roleSf });
+          await interaction.editReply({ content, allowedMentions });
         } catch (e) {
-          await interaction.editReply('Failed to remove role from user.');
-          return;
+          await interaction.editReply(
+            "Failed to remove role from user (perhaps they didn't have it or left the server) but they are still disallowed from gaining the role.",
+          );
         }
       }
-      await interaction.editReply({ content, allowedMentions });
       await MakeNote(guildSf, userSf, authorSf, content);
     },
   },

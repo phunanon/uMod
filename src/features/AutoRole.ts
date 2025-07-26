@@ -43,6 +43,18 @@ export const AutoRole: Feature = {
       const everyNth = interaction.options.getInteger('every-nth-id', false);
       const guildSf_roleSf = { guildSf, roleSf: BigInt(role.id) };
 
+      //Check it has no permissions
+      const permissions = await prisma.guildPermission.findMany({
+        where: { guildSf, roleSf: guildSf_roleSf.roleSf },
+      });
+      if (permissions.length) {
+        await interaction.editReply(
+          `The role <@&${role.id}> has permissions, which is disallowed for auto roles.
+Permissions: \`${permissions.map(p => p.permission).join(', ')}\``,
+        );
+        return;
+      }
+
       const existing = await prisma.autoRole.findUnique({
         where: { guildSf_roleSf },
       });
@@ -80,14 +92,23 @@ export const AutoRole: Feature = {
   },
   async HandleMemberAdd(member) {
     const guildSf = BigInt(member.guild.id);
-    const roles = await prisma.autoRole.findMany({ where: { guildSf } });
+    const allRoles = await prisma.autoRole.findMany({ where: { guildSf } });
     const guildRoles = await member.guild.roles.fetch();
 
     //Check if these roles still exist
-    for (const { roleSf } of roles) {
+    for (const { roleSf } of allRoles) {
       if (guildRoles.has(`${roleSf}`)) continue;
       const where = { guildSf_roleSf: { guildSf, roleSf } };
       await prisma.autoRole.delete({ where });
+    }
+
+    //Filter out roles that have permissions
+    const roles: DbAutoRole[] = [];
+    for (const role of allRoles) {
+      const permissions = await prisma.guildPermission.findMany({
+        where: { guildSf, roleSf: role.roleSf },
+      });
+      if (!permissions.length) roles.push(role);
     }
 
     await MemberRoles(member, roles.filter(Applies(member, 'add')), 'add');
@@ -98,7 +119,7 @@ function Applies(member: GuildMember, mode: 'add' | 'remove') {
   return ({ everyNth, roleSf }: DbAutoRole) =>
     (mode === 'add') !== member.roles.cache.has(`${roleSf}`) &&
     (everyNth === null ||
-      BigInt(member.id) % BigInt(Math.max(2, everyNth)) ===
+      (BigInt(member.id) >> 22n) % BigInt(Math.max(2, everyNth)) ===
         (everyNth === 1 ? 1n : 0n));
 }
 

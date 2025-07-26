@@ -122,12 +122,30 @@ export const QotdApprove: Feature = {
       await prisma.qotdQuestion.update({ where: { id }, data: { postAt } });
 
       const t = Math.floor(postAt.getTime() / 1000);
+      const now = Math.floor(Date.now() / 1000);
       const content =
         interaction.message.content +
         `
 
-**Question approved** by <@${userSf}>. Planned post time: <t:${t}:R>`;
+**Question approved** by <@${userSf}> at ${now}. Planned post time: <t:${t}:R>`;
       await interaction.editReply({ content, components: [] });
+    },
+  },
+};
+
+export const QotdReject: Feature = {
+  Interaction: {
+    name: 'qotd-reject',
+    needPermit: 'QotdApprove',
+    async button({ interaction }) {
+      await interaction.deferUpdate();
+      const now = Math.floor(Date.now() / 1000);
+      await interaction.editReply({
+        content: interaction.message.content+`
+
+**Question rejected** by <@${interaction.user.id}> at <t:${now}:R>.`,
+        components: [],
+      });
     },
   },
 };
@@ -174,6 +192,10 @@ export const QotdSuggest: Feature = {
           .setCustomId(`qotd-approve-${id}`)
           .setLabel('Approve')
           .setStyle(ButtonStyle.Success),
+        new ButtonBuilder()
+          .setCustomId(`qotd-reject`)
+          .setLabel('Reject')
+          .setStyle(ButtonStyle.Danger),
       );
 
       const splitQuestion = question.split('\n').join('\n> ');

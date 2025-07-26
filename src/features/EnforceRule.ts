@@ -232,6 +232,12 @@ export const ReadRules: Feature = {
     async command({ interaction, guildSf }) {
       await interaction.deferReply();
       const rules = await prisma.guildRule.findMany({ where: { guildSf } });
+      if (!rules.length) {
+        await interaction.editReply(
+          'No rules configured - use `/configure-rules`.',
+        );
+        return;
+      }
       const embed = new EmbedBuilder()
         .setTitle('Some rules of the server')
         .setDescription(rules.map(r => `- ${r.rule}`).join('\n'));

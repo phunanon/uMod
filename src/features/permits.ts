@@ -4,7 +4,8 @@ export default {
   ChannelConfig: 'whitelist-channel, tickets-here, mirror-guild, role-list, sticky-message, global-chat',
   ChannelMessages: 'purge, transcript',
   EnforceRule: 'note, notes, suspected-alt, tear-gas; Enforce rule, Mute confessor, GlobalChat mute',
-  Member: 'channel-ban, disallow-role, gif-mute, confess-unmute, temp-role, ping-protect',
+  Member: 'channel-ban, gif-mute, confess-unmute, ping-protect',
+  Roles: 'disallow-role, temp-role',
   ServerConfig: 'configure-rules, auto-role, enable-guild-levels',
   QotdApprove: 'Approve QotD questions',
 };

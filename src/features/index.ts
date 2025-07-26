@@ -54,7 +54,7 @@ import { DisallowRole } from './DisallowRole';
 import { GifMute } from './GifMute';
 import { AutoRole } from './AutoRole';
 import { QotdApprove, QotdDisable, QotdEnable, QotdSuggest } from './Qotd';
-import { QotdSubscribe, QotdUnsubscribe } from './Qotd';
+import { QotdSubscribe, QotdUnsubscribe, QotdReject } from './Qotd';
 import { KickSus } from './KickSus';
 import { EnforceRule, EnforceRulePicker } from './EnforceRule';
 import { ReadRules, SetupRule } from './EnforceRule';
@@ -85,7 +85,7 @@ export const features = {
   ...{ BumpReminder, SoftBumpReminder, BumpRemind, BumpUnremind },
   ...{ DisallowRole, GifMute, AutoRole, TearGas, SuspectedAlt },
   ...{ QotdApprove, QotdDisable, QotdEnable, QotdSuggest },
-  ...{ QotdSubscribe, QotdUnsubscribe, ChannelStats, FakeUser },
+  ...{ QotdSubscribe, QotdUnsubscribe, QotdReject, ChannelStats, FakeUser },
   ...{ EnforceRule, EnforceRulePicker, SetupRule, ReadRules, DeleteMessage },
   ...{ AiMod, PresenceCheck, Reminder, AutoHere, GuildLevels },
 };
