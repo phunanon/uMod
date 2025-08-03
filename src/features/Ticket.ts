@@ -1,12 +1,9 @@
-import {
-  ActionRowBuilder,
-  ApplicationCommandOptionType,
-  ButtonBuilder,
-  ButtonStyle,
-  PermissionsBitField,
-} from 'discord.js';
+import { ApplicationCommandOptionType, PermissionsBitField } from 'discord.js';
+import { ActionRowBuilder, ButtonBuilder, TextInputBuilder } from 'discord.js';
+import { ModalBuilder, ButtonStyle, TextInputStyle } from 'discord.js';
 import { Feature } from '.';
 import { prisma } from '../infrastructure';
+import { MakeNote } from './Note';
 
 export const TicketsHere: Feature = {
   async Init(commands) {
@@ -189,19 +186,55 @@ export const TicketAdd: Feature = {
 export const CloseTicket: Feature = {
   Interaction: {
     name: 'close_ticket_*',
-    async button({ interaction, channel, member, channelSf }) {
-      await interaction.deferReply({ ephemeral: true });
-
+    async button({ interaction, member }) {
       const role = interaction.customId.split('_')[2];
       if (!role) {
         await interaction.editReply('Error: invalid ticket.');
         return;
       }
-
       if (!member.roles.cache.has(role)) {
         await interaction.editReply(`Only <@&${role}> can close this ticket.`);
         return;
       }
+
+      const field = new TextInputBuilder()
+        .setLabel('Closure reason')
+        .setCustomId('closure_reason')
+        .setPlaceholder('Why is this ticket being closed?')
+        .setMinLength(8)
+        .setMaxLength(1000)
+        .setRequired(true)
+        .setStyle(TextInputStyle.Paragraph);
+      const row = new ActionRowBuilder<TextInputBuilder>().addComponents(field);
+      const modal = new ModalBuilder()
+        .setCustomId(`closure_reason_${role}`)
+        .setTitle('Ticket debrief')
+        .addComponents(row);
+
+      await interaction.showModal(modal);
+    },
+  },
+};
+
+export const TicketClosureReasonSubmit: Feature = {
+  Interaction: {
+    name: 'closure_reason_*',
+    async modalSubmit({ interaction, channel, guildSf, userSf }) {
+      await interaction.deferUpdate();
+
+      const role = interaction.customId.split('_')[2];
+      const closureReason =
+        interaction.fields.getTextInputValue('closure_reason');
+      const note = `closed ticket: ${closureReason}`;
+
+      const ticketUsers = channel.permissionOverwrites.cache
+        .filter(po => po.allow.has(PermissionsBitField.Flags.ViewChannel))
+        .filter(po => po.id !== role)
+        .map(po => BigInt(po.id))
+        .filter(id => id !== userSf);
+
+      for (const userId of ticketUsers)
+        await MakeNote(guildSf, userId, userSf, note);
 
       await channel.delete();
     },

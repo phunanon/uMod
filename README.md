@@ -28,6 +28,7 @@ A moderation bot I made so I could kick Carlbot, but which now has now become qu
 - Manual Moderation
   - **Tickets**: a ticket system for users to ask for help
     - Allows adding users to the ticket
+    - Requires a reason the ticket is being closed, for auditing
   - **Note**: attaches notes to a user that all moderators can see
     - Notes are automatically attached for audit logs (ban, unban, kick, timeout, channel ban)
   - **EnforceRule**: message context menu option to enforce your server rules as either a warning or 5/60min timeout

@@ -39,7 +39,8 @@ import { Note, ReadNote } from './Note';
 import { ChannelBan } from './ChannelBan';
 import { Censor, DeleteCensor } from './Censor';
 import { BlockGifs } from './BlockGifs';
-import { CreateTicket, TicketAdd, TicketsHere, CloseTicket } from './Ticket';
+import { CreateTicket, TicketAdd, TicketsHere } from './Ticket';
+import { CloseTicket, TicketClosureReasonSubmit } from './Ticket';
 import { RoleList, RoleListAddRole, RoleListRemoveRole } from './RoleList';
 import { PingSpam } from './PingSpam';
 import { PingProtect } from './PingProtect';
@@ -78,7 +79,8 @@ export const features = {
   ...{ Note, ReadNote, ChannelBan, Censor, DeleteCensor },
   ...{ Confess, ConfessMute, ConfessUnmute, ConfessSubmit, ConfessionsHere },
   ...{ Alert, DeleteAlert, DeleteAlerts, RecommendedAlerts },
-  ...{ CreateTicket, TicketAdd, TicketsHere, CloseTicket },
+  ...{ CreateTicket, TicketAdd, TicketsHere },
+  ...{ CloseTicket, TicketClosureReasonSubmit },
   ...{ RoleList, RoleListAddRole, RoleListRemoveRole },
   ...{ PingSpam, PingProtect, GlobalChat, GlobalChatList, GlobalChatMute },
   ...{ GuildPermit, GuildPermitList, Histogram, TempRole, Acquaintances },
