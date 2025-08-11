@@ -1,4 +1,5 @@
 import { ApplicationCommandOptionType } from 'discord.js';
+import { ApplicationCommandType } from 'discord.js';
 import { Feature } from '.';
 import { prisma, R } from '../infrastructure';
 import { AlertEvent, HandleAlert } from './Alert';
@@ -122,6 +123,31 @@ export const ReadNote: Feature = {
       await interaction.editReply(
         `Notes for ${user.username}:\n${content}${warn}`,
       );
+    },
+  },
+};
+
+export const ContextNote: Feature = {
+  async Init(commands) {
+    await commands.create({
+      type: ApplicationCommandType.Message,
+      name: 'Note this message',
+    });
+  },
+  Interaction: {
+    name: 'Note this message',
+    needPermit: 'EnforceRule',
+    async contextMenu({ interaction, guildSf, userSf }) {
+      await interaction.deferReply({ ephemeral: true });
+      const { url, author, content } = interaction.targetMessage;
+      //TODO: message reference
+      await MakeNote(
+        guildSf,
+        BigInt(author.id),
+        userSf,
+        `${url}: ${content}`,
+      );
+      await interaction.editReply('Note added successfully');
     },
   },
 };

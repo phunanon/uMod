@@ -10,7 +10,7 @@ export const Censor: Feature = {
       options: [
         {
           name: 'word',
-          description: 'The word to censor',
+          description: 'The word to censor or uncensor',
           type: ApplicationCommandOptionType.String,
           required: true,
         },
@@ -36,6 +36,15 @@ export const Censor: Feature = {
       await interaction.deferReply();
 
       const word = interaction.options.getString('word', true).toLowerCase();
+
+      const where = { guildSf, word };
+      const existing = await prisma.censor.findFirst({ where });
+      if (existing) {
+        await prisma.censor.deleteMany({ where });
+        await interaction.editReply(`"${word}" is no longer censored.`);
+        return;
+      }
+
       const unescaped =
         interaction.options.getString('censored', false) ??
         word.replaceAll(/./g, '*');

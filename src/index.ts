@@ -176,7 +176,7 @@ async function _handleInteraction(interaction: Interaction): Promise<void> {
     !details.permissions.some(p => anyOfPermission.includes(p))
   ) {
     const permissions = anyOfPermission.map(p => `\`${p}\``).join(', ');
-    const either = anyOfPermission.length ? 'either ' : '';
+    const either = anyOfPermission.length > 1 ? 'either ' : '';
     const { noPermissions } = details;
     const content = noPermissions
       ? `No permissions have been set up yet! Contact <@${guild.ownerId}> to use \`/guild-permit\` to assign permissions.`

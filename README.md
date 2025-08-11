@@ -31,6 +31,8 @@ A moderation bot I made so I could kick Carlbot, but which now has now become qu
     - Requires a reason the ticket is being closed, for auditing
   - **Note**: attaches notes to a user that all moderators can see
     - Notes are automatically attached for audit logs (ban, unban, kick, timeout, channel ban)
+    - Arbitrary notes can be made with `/note`
+    - Messages can be directly added to notes using the "Note this message" message context command
   - **EnforceRule**: message context menu option to enforce your server rules as either a warning or 5/60min timeout
     - Up to 25 rules can be configured
     - Message author is informed that a moderator is reviewing their message, then they are informed of the outcome
