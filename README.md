@@ -33,6 +33,7 @@ A moderation bot I made so I could kick Carlbot, but which now has now become qu
     - Notes are automatically attached for audit logs (ban, unban, kick, timeout, channel ban)
     - Arbitrary notes can be made with `/note`
     - Messages can be directly added to notes using the "Note this message" message context command
+    - User notes can be read with `/notes`, and notes per staff with `/notes-by-author`
   - **EnforceRule**: message context menu option to enforce your server rules as either a warning or 5/60min timeout
     - Up to 25 rules can be configured
     - Message author is informed that a moderator is reviewing their message, then they are informed of the outcome
