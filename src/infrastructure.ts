@@ -1,15 +1,7 @@
 import { PrismaClient } from '@prisma/client';
-import {
-  Channel,
-  ChannelType,
-  Client,
-  GatewayIntentBits,
-  IntentsBitField,
-  Partials,
-  TextBasedChannel,
-  TextChannel,
-  VoiceChannel,
-} from 'discord.js';
+import { TextBasedChannel, TextChannel, VoiceChannel } from 'discord.js';
+import { Channel, ChannelType, Client, Message } from 'discord.js';
+import { GatewayIntentBits, IntentsBitField, Partials } from 'discord.js';
 
 export const prisma = new PrismaClient();
 
@@ -95,3 +87,18 @@ export const ParseDurationAsMs = (duration: string) => {
 
 export const R = (ms: number | Date) =>
   `<t:${Math.floor(new Date(ms).getTime() / 1000)}:R>`;
+
+export function quoteContent({ id, url, ...message }: Message) {
+  const { content, guildId, channelId, reference, attachments } = message;
+  const textContent =
+    content
+      .split('\n')
+      .map(x => `> ${x}`)
+      .join('\n')
+      .trim() || '> [no text]';
+  const attachmentContent = attachments.map(x => x.url).join('\n');
+  const ref = reference
+    ? `(replying to https://discord.com/channels/${guildId}/${channelId}/${id})`
+    : '';
+  return `${url}:\n${textContent}\n${attachmentContent}\n${ref}`.trim();
+}

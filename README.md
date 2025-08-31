@@ -41,6 +41,7 @@ A moderation bot I made so I could kick Carlbot, but which now has now become qu
   - **Purge**: deletes a number of messages in a channel
   - **ChannelBan**: prevents a user from sending messages in a channel
     - these are automatically restored if the user leaves and joins again
+    - this can also be done from the message context menu, citing the message in notes
   - **Alerts**: sends a message to a channel reacting to a specific event
     - Events: join, leave, role assignment, role restoration, moderation note, moderator action (ban, unban, kick, timeout, channel ban), first message in server, join VC, leave VC, membership milestone
     - Criteria: user ID, role ID, message pattern

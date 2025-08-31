@@ -127,7 +127,7 @@ export const QotdApprove: Feature = {
         interaction.message.content +
         `
 
-**Question approved** by <@${userSf}> at ${now}. Planned post time: <t:${t}:R>`;
+**Question approved** by <@${userSf}> at <t:${now}:R>. Planned post time: <t:${t}:R>`;
       await interaction.editReply({ content, components: [] });
     },
   },
@@ -141,7 +141,7 @@ export const QotdReject: Feature = {
       await interaction.deferUpdate();
       const now = Math.floor(Date.now() / 1000);
       await interaction.editReply({
-        content: interaction.message.content+`
+        content: `${interaction.message.content}
 
 **Question rejected** by <@${interaction.user.id}> at <t:${now}:R>.`,
         components: [],

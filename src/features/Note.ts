@@ -1,7 +1,7 @@
 import { ApplicationCommandOptionType } from 'discord.js';
 import { ApplicationCommandType } from 'discord.js';
 import { Feature } from '.';
-import { prisma, R } from '../infrastructure';
+import { prisma, quoteContent, R } from '../infrastructure';
 import { AlertEvent, HandleAlert } from './Alert';
 import { Note as DbNote } from '@prisma/client';
 
@@ -182,12 +182,9 @@ export const ContextNote: Feature = {
     needPermit: 'EnforceRule',
     async contextMenu({ interaction, guildSf, userSf }) {
       await interaction.deferReply({ ephemeral: true });
-      const { url, author, content, reference } = interaction.targetMessage;
-      const ref = reference
-        ? `https://discord.com/channels/${interaction.guildId}/${reference.channelId}/${reference.messageId}`
-        : null;
-      const note = `${url}: ${content}` + (ref ? ` (replying to ${ref})` : '');
-      await MakeNote(guildSf, BigInt(author.id), userSf, note);
+      const aboutSf = BigInt(interaction.targetMessage.author.id);
+      const note = quoteContent(interaction.targetMessage);
+      await MakeNote(guildSf, aboutSf, userSf, note);
       await interaction.editReply('Note added successfully');
     },
   },

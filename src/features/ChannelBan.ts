@@ -1,6 +1,7 @@
 import { ApplicationCommandOptionType } from 'discord.js';
+import { ApplicationCommandType } from 'discord.js';
 import { Feature } from '.';
-import { prisma } from '../infrastructure';
+import { prisma, quoteContent } from '../infrastructure';
 import { MakeNote } from './Note';
 
 export const ChannelBan: Feature = {
@@ -28,7 +29,7 @@ export const ChannelBan: Feature = {
     name: 'channel-ban',
     needPermit: 'Member',
     async command({ interaction, ...ctx }) {
-      const { guildSf, userSf: authorSf, channelSf, channel } = ctx;
+      const { guildSf, userSf: staffSf, channelSf, channel } = ctx;
       await interaction.deferReply({ ephemeral: true });
 
       const { options } = interaction;
@@ -41,9 +42,8 @@ export const ChannelBan: Feature = {
       });
 
       try {
-        await channel.permissionOverwrites.create(id, {
-          ViewChannel: !!existing,
-        });
+        const permissions = { ViewChannel: !!existing };
+        await channel.permissionOverwrites.create(id, permissions);
       } catch (e) {}
 
       if (existing) {
@@ -51,7 +51,7 @@ export const ChannelBan: Feature = {
           where: { channelSf_userSf: { userSf, channelSf } },
         });
         const content = `unbanned from <#${channel.id}>: ${reason}`;
-        await MakeNote(guildSf, userSf, authorSf, content);
+        await MakeNote(guildSf, userSf, staffSf, content);
         await interaction.editReply(
           `User <@${id}> unbanned from <#${channel.id}>.`,
         );
@@ -61,7 +61,7 @@ export const ChannelBan: Feature = {
       await prisma.channelBan.create({ data: { userSf, channelSf } });
 
       const content = `banned from <#${channel.id}>: ${reason}`;
-      await MakeNote(guildSf, userSf, authorSf, content);
+      await MakeNote(guildSf, userSf, staffSf, content);
 
       await interaction.editReply(
         `User <@${id}> banned from <#${channel.id}>.`,
@@ -80,9 +80,49 @@ export const ChannelBan: Feature = {
       const channel = channels.get(`${channelSf}`);
       console.log('restoring channel ban', userSf, channelSf, channel?.name);
       if (!channel) continue;
-      await channel.permissionOverwrites.create(member.id, {
-        ViewChannel: false,
-      });
+      const permissions = { ViewChannel: false };
+      await channel.permissionOverwrites.create(member.id, permissions);
     }
+  },
+};
+
+export const ChannelBanMessage: Feature = {
+  async Init(commands) {
+    await commands.create({
+      type: ApplicationCommandType.Message,
+      name: 'Channel ban author',
+    });
+  },
+  Interaction: {
+    name: 'Channel ban author',
+    needPermit: 'Member',
+    async contextMenu({ interaction, channel, guildSf, channelSf, userSf }) {
+      await interaction.deferReply({ ephemeral: true });
+
+      const authorSf = BigInt(interaction.targetMessage.author.id);
+      const existing = await prisma.channelBan.findFirst({
+        where: { userSf: authorSf, channelSf },
+      });
+
+      if (existing) {
+        await interaction.editReply(
+          'User is already banned from this channel.',
+        );
+        return;
+      }
+
+      try {
+        const permissions = { ViewChannel: false };
+        await channel.permissionOverwrites.create(`${authorSf}`, permissions);
+      } catch (e) {}
+
+      const quotedContent = quoteContent(interaction.targetMessage);
+      const content = `banned from channel: ${quotedContent}`;
+
+      await MakeNote(guildSf, authorSf, userSf, content);
+      await interaction.editReply(
+        `User <@${authorSf}> banned from <#${channelSf}>.`,
+      );
+    },
   },
 };

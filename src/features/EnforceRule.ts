@@ -1,13 +1,8 @@
-import {
-  ActionRowBuilder,
-  ApplicationCommandOptionType,
-  ApplicationCommandType,
-  EmbedBuilder,
-  Message,
-  StringSelectMenuBuilder,
-} from 'discord.js';
+import { ActionRowBuilder, StringSelectMenuBuilder } from 'discord.js';
+import { ApplicationCommandOptionType, EmbedBuilder } from 'discord.js';
+import { ApplicationCommandType } from 'discord.js';
 import { Feature } from '.';
-import { prisma, TryFetchMessage } from '../infrastructure';
+import { prisma, quoteContent, TryFetchMessage } from '../infrastructure';
 import { DeleteMessageRow } from './DeleteMessage';
 import { MakeNote } from './Note';
 
@@ -75,7 +70,7 @@ export const EnforceRulePicker: Feature = {
     needPermit: 'EnforceRule',
     async contextMenu({ interaction, guildSf }) {
       await interaction.deferReply({ ephemeral: true });
-      const { id: messageSf, author, content } = interaction.targetMessage;
+      const { id: messageSf, author } = interaction.targetMessage;
 
       const rules = await prisma.guildRule.findMany({ where: { guildSf } });
 
@@ -168,7 +163,7 @@ export const EnforceRule: Feature = {
 
       const message = await TryFetchMessage(channel, messageSf);
       const byline = ` by <@${userSf}>`;
-      const content = quoteContent(message);
+      const content = message ? quoteContent(message) : '[unknown message]';
       const makeContent = (withByline: boolean) =>
         `Rule ${duration ? 'enforcement' : 'warning'}${
           withByline ? byline : ''
@@ -245,12 +240,3 @@ export const ReadRules: Feature = {
     },
   },
 };
-
-function quoteContent(message: Message | null): `${string}:\n${string}` {
-  const textContent = message?.content
-    .split('\n')
-    .map(x => `> ${x}`)
-    .join('\n');
-  const attachmentContent = message?.attachments.map(x => x.url).join('\n');
-  return `${message?.url ?? ''}:\n${textContent}\n${attachmentContent}`;
-}
