@@ -93,6 +93,7 @@ export function quoteContent({ id, url, ...message }: Message) {
   const textContent =
     content
       .split('\n')
+      .filter(Boolean)
       .map(x => `> ${x}`)
       .join('\n')
       .trim() || '> [no text]';

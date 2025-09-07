@@ -1,7 +1,7 @@
 import { ApplicationCommandOptionType, PermissionsBitField } from 'discord.js';
 import { ActionRowBuilder, ButtonBuilder, TextInputBuilder } from 'discord.js';
 import { ModalBuilder, ButtonStyle, TextInputStyle } from 'discord.js';
-import { Feature } from '.';
+import { Feature, TextChannels } from '.';
 import { prisma } from '../infrastructure';
 import { MakeNote } from './Note';
 
@@ -186,7 +186,7 @@ export const TicketAdd: Feature = {
 export const CloseTicket: Feature = {
   Interaction: {
     name: 'close_ticket_*',
-    async button({ interaction, member }) {
+    async button({ channel, interaction, member, userSf }) {
       const role = interaction.customId.split('_')[2];
       if (!role) {
         await interaction.editReply('Error: invalid ticket.');
@@ -211,6 +211,12 @@ export const CloseTicket: Feature = {
         .setTitle('Ticket debrief')
         .addComponents(row);
 
+      const ticketUsers = getTicketUsers(channel, role, userSf);
+      if (!ticketUsers.length) {
+        await channel.delete();
+        return;
+      }
+
       await interaction.showModal(modal);
     },
   },
@@ -227,11 +233,7 @@ export const TicketClosureReasonSubmit: Feature = {
         interaction.fields.getTextInputValue('closure_reason');
       const note = `closed ticket: ${closureReason}`;
 
-      const ticketUsers = channel.permissionOverwrites.cache
-        .filter(po => po.allow.has(PermissionsBitField.Flags.ViewChannel))
-        .filter(po => po.id !== role)
-        .map(po => BigInt(po.id))
-        .filter(id => id !== userSf);
+      const ticketUsers = getTicketUsers(channel, role, userSf);
 
       for (const userId of ticketUsers)
         await MakeNote(guildSf, userId, userSf, note);
@@ -240,3 +242,14 @@ export const TicketClosureReasonSubmit: Feature = {
     },
   },
 };
+
+const getTicketUsers = (
+  channel: TextChannels,
+  excludeRoleSf?: string,
+  excludeUserSf?: bigint,
+) =>
+  channel.permissionOverwrites.cache
+    .filter(po => po.allow.has(PermissionsBitField.Flags.ViewChannel))
+    .filter(po => po.id !== excludeRoleSf)
+    .map(po => BigInt(po.id))
+    .filter(id => id !== excludeUserSf);
