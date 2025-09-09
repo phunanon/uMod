@@ -86,7 +86,7 @@ export const QotdApprove: Feature = {
   Interaction: {
     name: 'qotd-approve-*',
     needPermit: 'QotdApprove',
-    async button({ interaction, userSf }) {
+    async button({ interaction, guildSf, userSf }) {
       await interaction.deferUpdate();
 
       const id = parseInt(interaction.customId.split('-').slice(-1)[0] ?? '0');
@@ -101,21 +101,14 @@ export const QotdApprove: Feature = {
         return;
       }
 
-      const { postAt: latestPostAt } =
-        (await prisma.qotdQuestion.findFirst({
-          orderBy: { postAt: 'desc' },
-          select: { postAt: true },
-        })) ?? {};
-      const { postedAt: latestPostedAt } =
-        (await prisma.qotdQuestion.findFirst({
-          orderBy: { postedAt: 'desc' },
-          select: { postedAt: true },
-        })) ?? {};
-
+      const { _max } = await prisma.qotdQuestion.aggregate({
+        where: { guildSf },
+        _max: { postAt: true, postedAt: true },
+      });
       const plus1Day = (x: Date) => x.getTime() + 24 * 60 * 60_000;
       const dates = [
-        ...(latestPostAt ? [plus1Day(latestPostAt)] : []),
-        ...(latestPostedAt ? [plus1Day(latestPostedAt)] : []),
+        ...(_max.postAt ? [plus1Day(_max.postAt)] : []),
+        ...(_max.postedAt ? [plus1Day(_max.postedAt)] : []),
         Date.now(),
       ];
       const postAt = new Date(Math.max(...dates));
@@ -206,7 +199,7 @@ export const QotdSuggest: Feature = {
       });
 
       await interaction.editReply(
-        'Your question will be reviewed by a moderator and potentially added to the question queue. Thank you!',
+        'Your question will be reviewed by staff and potentially added to the question queue. Thank you!',
       );
     },
   },
