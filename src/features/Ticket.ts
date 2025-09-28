@@ -249,10 +249,11 @@ const getTicketUsers = (
   excludeUserSf?: bigint,
 ) => {
   const ticketSnowflake = channel.name.split('-')[1];
-  return channel.permissionOverwrites.cache
+  const users = channel.permissionOverwrites.cache
     .filter(po => po.allow.has(PermissionsBitField.Flags.ViewChannel))
     .filter(po => po.id !== excludeRoleSf)
     .map(po => BigInt(po.id))
     .concat(ticketSnowflake ? [BigInt(ticketSnowflake)] : [])
     .filter(id => id !== excludeUserSf);
+  return [...new Set(users)];
 };
