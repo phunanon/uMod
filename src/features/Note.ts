@@ -4,6 +4,7 @@ import { Feature } from '.';
 import { prisma, quoteContent, R } from '../infrastructure';
 import { AlertEvent, HandleAlert } from './Alert';
 import { Note as DbNote } from '@prisma/client';
+import { DeleteMessageRow } from './DeleteMessage';
 
 export const MakeNote = async (
   guildSf: bigint,
@@ -182,10 +183,16 @@ export const ContextNote: Feature = {
     needPermit: 'EnforceRule',
     async contextMenu({ interaction, guildSf, userSf }) {
       await interaction.deferReply({ ephemeral: true });
+
       const aboutSf = BigInt(interaction.targetMessage.author.id);
       const note = quoteContent(interaction.targetMessage);
       await MakeNote(guildSf, aboutSf, userSf, note);
-      await interaction.editReply('Note added successfully');
+
+      const row = DeleteMessageRow(BigInt(interaction.targetMessage.id));
+      await interaction.editReply({
+        content: 'Note added successfully',
+        components: [row],
+      });
     },
   },
 };

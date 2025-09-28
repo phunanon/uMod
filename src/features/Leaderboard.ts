@@ -43,7 +43,7 @@ const MakeLeaderboard = async <T extends {}>(
 export const LeaderboardRecorder: Feature = {
   async HandleMessageCreate({ message, guildSf }) {
     const { content, author } = message;
-    const ignoreStrings = ['`', '>', '\n-'];
+    const ignoreStrings = ['`', '>', '\n-', ':'];
     if (ignoreStrings.some(str => content.includes(str))) return;
     const numLines = new Set(content.split('\n')).size;
     if (numLines > 10) return;

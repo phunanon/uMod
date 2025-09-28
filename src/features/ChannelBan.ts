@@ -3,6 +3,7 @@ import { ApplicationCommandType } from 'discord.js';
 import { Feature } from '.';
 import { prisma, quoteContent } from '../infrastructure';
 import { MakeNote } from './Note';
+import { DeleteMessageRow } from './DeleteMessage';
 
 export const ChannelBan: Feature = {
   async Init(commands) {
@@ -99,6 +100,7 @@ export const ChannelBanMessage: Feature = {
     async contextMenu({ interaction, channel, guildSf, channelSf, userSf }) {
       await interaction.deferReply({ ephemeral: true });
 
+      const messageSf = BigInt(interaction.targetMessage.id);
       const authorSf = BigInt(interaction.targetMessage.author.id);
       const existing = await prisma.channelBan.findFirst({
         where: { userSf: authorSf, channelSf },
@@ -120,9 +122,11 @@ export const ChannelBanMessage: Feature = {
       const content = `banned from channel: ${quotedContent}`;
 
       await MakeNote(guildSf, authorSf, userSf, content);
-      await interaction.editReply(
-        `User <@${authorSf}> banned from <#${channelSf}>.`,
-      );
+      const row = DeleteMessageRow(messageSf);
+      await interaction.editReply({
+        content: `User <@${authorSf}> banned from <#${channelSf}>.`,
+        components: [row],
+      });
     },
   },
 };

@@ -155,7 +155,9 @@ export const EnforceRule: Feature = {
         return;
       }
 
-      const member = await guild.members.fetch(`${offenderSf}`);
+      const member = await guild.members
+        .fetch(`${offenderSf}`)
+        .catch(() => null);
       if (!member) {
         await interaction.editReply('Member not found.');
         return;
