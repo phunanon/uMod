@@ -113,11 +113,11 @@ const RenewStickyMessages = async () => {
     }
 
     try {
-      await message.delete();
       const newMessage = await channel.send({
         content,
         allowedMentions: { parse: [] },
       });
+      await message.delete().catch(console.error);
       const data = { sf: BigInt(newMessage.id), renewAt };
       await prisma.stickyMessage.update({ where, data });
     } catch (e) {

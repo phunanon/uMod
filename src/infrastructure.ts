@@ -101,5 +101,7 @@ export function quoteContent({ id, url, ...message }: Message) {
   const ref = reference
     ? `(replying to https://discord.com/channels/${guildId}/${channelId}/${id})`
     : '';
-  return `${url}:\n${textContent}\n${attachmentContent}\n${ref}`.trim();
+  return `${url}:
+${textContent}
+${attachmentContent}${attachmentContent ? '\n' : ''}${ref}`.trim();
 }

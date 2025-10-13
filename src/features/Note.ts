@@ -75,18 +75,17 @@ export const Note: Feature = {
 };
 
 const printNotes = (notes: DbNote[], key: 'authorSf' | 'userSf') => {
-  const truncate = 12;
-  const truncated = notes.slice(-truncate);
-
-  const content = truncated
-    .map(note => `- <@${note[key]}> ${R(note.notedAt)}: ${note.content}`.trim())
-    .join('\n');
-  const numEarlier = notes.length - truncate;
+  const mostRecent = notes.slice(-12);
+  const list = mostRecent.map(note =>
+    `- <@${note[key]}> ${R(note.notedAt)}: ${note.content}`.trim(),
+  );
+  while (list.join('\n').length > 1_750 && list.length) list.shift();
+  const numEarlier = notes.length - list.length;
   const warn =
-    truncated.length !== notes.length
+    list.length !== notes.length
       ? `\n${numEarlier.toLocaleString()} earlier notes not shown`
       : '';
-  return `${content}${warn}`;
+  return `${list.join('\n')}${warn}`;
 };
 
 export const ReadNote: Feature = {
@@ -165,7 +164,7 @@ export const ReadNotesByAuthor: Feature = {
       }
 
       await interaction.editReply(
-        `Notes by ${author.username}:\n${printNotes(notes, 'userSf')}`,
+        `Notes by \`${author.username}\`:\n${printNotes(notes, 'userSf')}`,
       );
     },
   },

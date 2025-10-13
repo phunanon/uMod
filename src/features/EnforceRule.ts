@@ -8,6 +8,9 @@ import { MakeNote } from './Note';
 
 //TODO: support threads
 
+/** Sans asteriks */
+const sa = (s: string) => (s.startsWith('*') ? s.slice(1).trim() : s);
+
 export const SetupRule: Feature = {
   async Init(commands) {
     await commands.create({
@@ -17,7 +20,8 @@ export const SetupRule: Feature = {
       options: [
         {
           name: 'rules',
-          description: 'The rules, separated by ;;',
+          description:
+            'Separate with ;; and optionally prepended with * to offer timeout',
           type: ApplicationCommandOptionType.String,
           required: true,
         },
@@ -31,7 +35,10 @@ export const SetupRule: Feature = {
       await interaction.deferReply({ ephemeral: true });
 
       const rulesText = interaction.options.getString('rules', true);
-      const rules = rulesText.split(';;');
+      const rules = rulesText
+        .split(';;')
+        .map(r => r.trim())
+        .filter(r => r);
       if (rules.length > 25) {
         await interaction.editReply('Too many rules (25 max).');
         return;
@@ -71,6 +78,10 @@ export const EnforceRulePicker: Feature = {
     async contextMenu({ interaction, guildSf }) {
       await interaction.deferReply({ ephemeral: true });
       const { id: messageSf, author } = interaction.targetMessage;
+      if (author.bot) {
+        await interaction.editReply('Cannot enforce rules on bots.');
+        return;
+      }
 
       const rules = await prisma.guildRule.findMany({ where: { guildSf } });
 
@@ -82,16 +93,20 @@ export const EnforceRulePicker: Feature = {
       }
 
       const options = [
-        ...rules.map(({ id, rule }) => ({
-          id,
-          label: `(60min timeout) ${rule}`,
-          duration: 60 * 60_000,
-        })),
-        ...rules.map(({ id, rule }) => ({
-          id,
-          label: `(warning) ${rule}`,
-          duration: 0,
-        })),
+        ...rules
+          .filter(r => r.rule.startsWith('*'))
+          .map(({ id, rule }) => ({
+            id,
+            label: `(60m timeout) ${sa(rule)}`,
+            duration: 60 * 60_000,
+          })),
+        ...rules
+          .filter(r => !r.rule.startsWith('*'))
+          .map(({ id, rule }) => ({
+            id,
+            label: `(warning) ${rule}`,
+            duration: 0,
+          })),
       ].map(({ id, label, duration }) => ({
         ...{ label, value: `${id}-${author.id}-${messageSf}-${duration}` },
       }));
@@ -166,10 +181,11 @@ export const EnforceRule: Feature = {
       const message = await TryFetchMessage(channel, messageSf);
       const byline = ` by <@${userSf}>`;
       const content = message ? quoteContent(message) : '[unknown message]';
+      const ruleText = sa(rule.rule);
       const makeContent = (withByline: boolean) =>
         `Rule ${duration ? 'enforcement' : 'warning'}${
           withByline ? byline : ''
-        }: ${rule.rule}\n${content}`;
+        }: ${ruleText}\n${content}`;
 
       const timeoutProblem = await (async () => {
         if (!duration) return false;
@@ -189,8 +205,8 @@ export const EnforceRule: Feature = {
         try {
           await member.send(
             duration
-              ? `You have been timed out for ${minutes} minutes for breaking the rule: **${rule.rule}**`
-              : `You have been warned for breaking the rule: **${rule.rule}**`,
+              ? `You have been timed out for ${minutes} minutes for breaking the rule: **${ruleText}**`
+              : `You have been warned for breaking the rule: **${ruleText}**`,
           );
         } catch {
           return true;
@@ -237,7 +253,7 @@ export const ReadRules: Feature = {
       }
       const embed = new EmbedBuilder()
         .setTitle('Some rules of the server')
-        .setDescription(rules.map(r => `- ${r.rule}`).join('\n'));
+        .setDescription(rules.map(r => `- ${sa(r.rule)}`).join('\n'));
       await interaction.editReply({ embeds: [embed] });
     },
   },
