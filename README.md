@@ -90,7 +90,6 @@ In order of priority, aspirations & TODO:
   - cache common database queries e.g. fetch member from database
   - collect feature database writes for the end of message processing
 - level roles
-- JoinLeaves table and logs
 - refactor leaderboard SQL so that there's only one query including both the top ten and the current user
   - use typed SQL
 - censor GlobalChat (might already be done)

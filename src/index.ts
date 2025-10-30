@@ -239,6 +239,12 @@ function handleMessage(kind: 'create' | 'update' | 'delete') {
     const channelSf = BigInt(message.channel.id);
     if (await IsChannelUnmoderated(channelSf)) return;
     if (!message.guildId || !message.guild) return;
+    //Discord seemingly sometimes updates old messages, which must be ignored
+    if (
+      kind === 'update' &&
+      message.createdAt < new Date(Date.now() - 24 * 60 * 60_000)
+    )
+      return;
 
     const { guild, channel, member } = message;
     const guildSf = BigInt(message.guildId);

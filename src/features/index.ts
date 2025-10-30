@@ -35,7 +35,8 @@ import { Purge } from './Purge';
 import { GlobalChat, GlobalChatList, GlobalChatMute } from './GlobalChat';
 import { ActivitySort } from './ActivitySort';
 import { Alert, DeleteAlert, DeleteAlerts, RecommendedAlerts } from './Alert';
-import { Note, ReadNote, ContextNote, ReadNotesByAuthor } from './Note';
+import { Note, ContextNote } from './Note';
+import { ReadNotes, ReadNotesButton, ReadNotesByAuthor } from './Note';
 import { ChannelBan, ChannelBanMessage } from './ChannelBan';
 import { Censor, DeleteCensor } from './Censor';
 import { BlockGifs } from './BlockGifs';
@@ -76,7 +77,7 @@ export const features = {
   ...{ PermaRole, InviteSpam, Ping, WhitelistChannel, ActivitySort },
   ...{ LeaderboardRecorder, Leaderboard, IqLeaderboard, LoyaltyLeaderboard },
   ...{ AgeLeaderboard, StickyMessage, Purge, Transcript },
-  ...{ Note, ReadNote, ContextNote, ReadNotesByAuthor },
+  ...{ Note, ReadNotes, ContextNote, ReadNotesByAuthor, ReadNotesButton },
   ...{ ChannelBan, ChannelBanMessage, Censor, DeleteCensor },
   ...{ Confess, ConfessMute, ConfessUnmute, ConfessSubmit, ConfessionsHere },
   ...{ Alert, DeleteAlert, DeleteAlerts, RecommendedAlerts },

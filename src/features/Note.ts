@@ -88,7 +88,7 @@ const printNotes = (notes: DbNote[], key: 'authorSf' | 'userSf') => {
   return `${list.join('\n')}${warn}`;
 };
 
-export const ReadNote: Feature = {
+export const ReadNotes: Feature = {
   async Init(commands) {
     await commands.create({
       name: 'notes',
@@ -126,6 +126,50 @@ export const ReadNote: Feature = {
 
       await interaction.editReply(
         `Notes for ${user.username}:\n${printNotes(notes, 'authorSf')}`,
+      );
+    },
+  },
+};
+
+export const ReadNotesButton: Feature = {
+  async Init(commands) {
+    await commands.create({
+      name: 'notes',
+      description: 'Read notes for a user',
+      options: [
+        {
+          name: 'user',
+          description: 'The user to read notes for',
+          type: ApplicationCommandOptionType.User,
+          required: true,
+        },
+      ],
+    });
+  },
+  Interaction: {
+    name: 'read-notes-*',
+    needPermit: 'EnforceRule',
+    async button({ interaction, guildSf }) {
+      await interaction.deferReply({ ephemeral: true });
+
+      const userId = interaction.customId.split('-')[2];
+
+      if (!userId) {
+        await interaction.editReply('There is an issue with this button.');
+        return;
+      }
+
+      const notes = await prisma.note.findMany({
+        where: { guildSf, userSf: BigInt(userId) },
+      });
+
+      if (notes.length === 0) {
+        await interaction.editReply('No notes found');
+        return;
+      }
+
+      await interaction.editReply(
+        `Notes for <@${userId}>:\n${printNotes(notes, 'authorSf')}`,
       );
     },
   },

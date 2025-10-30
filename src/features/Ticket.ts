@@ -13,7 +13,7 @@ export const TicketsHere: Feature = {
       options: [
         {
           name: 'message',
-          description: 'The message to put in the chat',
+          description: 'The message to put in this chat',
           type: ApplicationCommandOptionType.String,
           required: true,
         },
@@ -80,7 +80,8 @@ export const CreateTicket: Feature = {
       const channels = await guild.channels.fetch();
       const existingChannels = channels.filter(c => c?.name.startsWith(prefix));
       const [firstChannel] = existingChannels.values();
-      if (firstChannel && !member.roles.cache.has(role)) {
+      const hasPrivilegedRole = member.roles.cache.has(role);
+      if (firstChannel && !hasPrivilegedRole) {
         await interaction.editReply(
           `You already have a ticket open: ${firstChannel.url}`,
         );
@@ -121,6 +122,22 @@ export const CreateTicket: Feature = {
           .setLabel('Close ticket')
           .setStyle(ButtonStyle.Danger),
       );
+      if (!hasPrivilegedRole) {
+        const noteCount = await prisma.note.count({
+          where: {
+            guildSf: BigInt(guild.id),
+            userSf: BigInt(interaction.user.id),
+          },
+        });
+        if (noteCount) {
+          row.addComponents(
+            new ButtonBuilder()
+              .setCustomId(`read-notes-${interaction.user.id}`)
+              .setLabel(`Read notes (${noteCount})`)
+              .setStyle(ButtonStyle.Secondary),
+          );
+        }
+      }
 
       await newChannel.send({
         content: `<@&${role}> <@${interaction.user.id}>`,
@@ -189,11 +206,17 @@ export const CloseTicket: Feature = {
     async button({ channel, interaction, member, userSf }) {
       const role = interaction.customId.split('_')[2];
       if (!role) {
-        await interaction.editReply('Error: invalid ticket.');
+        await interaction.reply({
+          content: 'Error: invalid ticket.',
+          ephemeral: true,
+        });
         return;
       }
       if (!member.roles.cache.has(role)) {
-        await interaction.editReply(`Only <@&${role}> can close this ticket.`);
+        await interaction.reply({
+          content: `Only <@&${role}> can close this ticket.`,
+          ephemeral: true,
+        });
         return;
       }
 
