@@ -82,6 +82,7 @@ A moderation bot I made so I could kick Carlbot, but which now has now become qu
   - **ReadRules**: lists the rules set up for a server
   - **Reminder**: users can create ping reminders for themselves
   - **AutoHere**: ping [@here](#) when somebody hadn't texted in a channel for one day
+  - **RoleFaucet**: allow members to assign/unassign a role to themselves
 
 In order of priority, aspirations & TODO:
 

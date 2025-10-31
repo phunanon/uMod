@@ -1,6 +1,7 @@
 import { ApplicationCommandOptionType } from 'discord.js';
 import { Feature } from '.';
-import { client, ParseDurationAsMs, prisma } from '../infrastructure';
+import { client, prisma } from '../infrastructure';
+import { ParseDurationAsMs, RoleIsAboveMe } from '../infrastructure';
 
 export const TempRole: Feature = {
   async Init(commands) {
@@ -40,6 +41,14 @@ export const TempRole: Feature = {
 
       const user = interaction.options.getUser('user', true);
       const role = interaction.options.getRole('role', true);
+
+      if (RoleIsAboveMe(role.id, guild)) {
+        await interaction.editReply(
+          'I cannot assign the role because it is above me.',
+        );
+        return;
+      }
+
       const duration = interaction.options.getString('duration', true);
       const member = guild.members.cache.get(user.id);
       if (!member) {

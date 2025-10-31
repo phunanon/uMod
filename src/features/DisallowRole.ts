@@ -1,6 +1,6 @@
 import { ApplicationCommandOptionType } from 'discord.js';
 import { Feature } from '.';
-import { prisma } from '../infrastructure';
+import { prisma, RoleIsAboveMe } from '../infrastructure';
 import { MakeNote } from './Note';
 
 export const DisallowRole: Feature = {
@@ -58,6 +58,13 @@ export const DisallowRole: Feature = {
       const userSf_roleSf = { userSf, roleSf };
       const where = { where: { userSf_roleSf } };
       const allowedMentions = { parse: [] };
+
+      if (RoleIsAboveMe(role.id, guild)) {
+        await interaction.editReply(
+          'I cannot disallow the role because it is above me.',
+        );
+        return;
+      }
 
       const existing = await prisma.disallowRole.findUnique(where);
       const dis = existing ? '' : 'dis';

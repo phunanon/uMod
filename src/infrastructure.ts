@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import { TextBasedChannel, TextChannel, VoiceChannel } from 'discord.js';
+import { Guild, TextBasedChannel, TextChannel, VoiceChannel } from 'discord.js';
 import { Channel, ChannelType, Client, Message } from 'discord.js';
 import { GatewayIntentBits, IntentsBitField, Partials } from 'discord.js';
 
@@ -104,4 +104,12 @@ export function quoteContent({ id, url, ...message }: Message) {
   return `${url}:
 ${textContent}
 ${attachmentContent}${attachmentContent ? '\n' : ''}${ref}`.trim();
+}
+
+export function RoleIsAboveMe(roleId: string, guild: Guild) {
+  const me = guild.members.me;
+  if (!me) return true;
+  const role = guild.roles.cache.get(roleId);
+  if (!role) return true;
+  return role.position >= me.roles.highest.position;
 }
