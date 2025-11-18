@@ -220,7 +220,7 @@ export const CloseTicket: Feature = {
         return;
       }
 
-      const ticketMembers = getTicketUsers(channel, role, userSf);
+      const ticketMembers = getTicketMembers(channel, role, userSf);
       if (!ticketMembers.length) {
         await channel.delete();
         return;
@@ -274,10 +274,10 @@ export const TicketClosureReasonSubmit: Feature = {
       const closureDm = interaction.fields.getTextInputValue('closure_dm');
       const closureDmQuoted = closureDm.split('\n').join('\n> ');
 
-      const ticketUsers = getTicketUsers(channel, role, userSf);
+      const ticketMembers = getTicketMembers(channel, role, userSf);
 
       const unableToDm = new Set<bigint>();
-      for (const userId of ticketUsers) {
+      for (const userId of ticketMembers) {
         const member = await guild.members.fetch(`${userId}`).catch(() => null);
         const dmProblem = await (async () => {
           if (!closureDm) return false;
@@ -328,7 +328,7 @@ export const TicketClosureReasonSubmit: Feature = {
   },
 };
 
-const getTicketUsers = (
+const getTicketMembers = (
   channel: TextChannels,
   excludeRoleSf?: string,
   excludeUserSf?: bigint,
@@ -340,5 +340,12 @@ const getTicketUsers = (
     .map(po => BigInt(po.id))
     .concat(ticketSnowflake ? [BigInt(ticketSnowflake)] : [])
     .filter(id => id !== excludeUserSf);
-  return [...new Set(users)];
+  const membersNotExcludedByRole = new Set<bigint>();
+  for (const userId of users) {
+    const member = channel.guild.members.cache.get(`${userId}`);
+    if (!member || !member.roles.cache.has(excludeRoleSf || '')) {
+      membersNotExcludedByRole.add(userId);
+    }
+  }
+  return [...membersNotExcludedByRole];
 };
