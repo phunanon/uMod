@@ -83,9 +83,11 @@ A moderation bot I made so I could kick Carlbot, but which now has now become qu
   - **Reminder**: users can create ping reminders for themselves
   - **AutoHere**: ping [@here](#) when somebody hadn't texted in a channel for one day
   - **RoleFaucet**: allow members to assign/unassign a role to themselves
+  - **IngestNotes**: use a channel to automatically ingest notes, either from regular members or bots
 
 In order of priority, aspirations & TODO:
 
+- audit logs for staff actions (permit usages)
 - different handler for registering slash commands which is only called via process.env
 - caching and aggregation:
   - cache common database queries e.g. fetch member from database

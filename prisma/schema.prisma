@@ -136,6 +136,7 @@ model ChannelFlags {
   confessRules   String?
   aiModeration   Boolean  @default(false)
   autoHere       Boolean  @default(false)
+  ingestNotes    Boolean  @default(false)
 }
 
 model PingProtectWarns {

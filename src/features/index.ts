@@ -72,6 +72,7 @@ import { Reminder } from './Reminder';
 import { AutoHere } from './AutoHere';
 import { GuildLevels } from './GuildLevels';
 import { RoleFaucet, RoleFaucetButton } from './RoleFaucet';
+import { IngestNotes } from './NoteIngestion';
 
 export const features = {
   ...{ MirrorGuild, BlockGifs, KickSus, AutoClean },
@@ -93,7 +94,7 @@ export const features = {
   ...{ QotdSubscribe, QotdUnsubscribe, QotdReject, ChannelStats, FakeUser },
   ...{ EnforceRule, EnforceRulePicker, SetupRule, ReadRules, DeleteMessage },
   ...{ AiMod, PresenceCheck, Reminder, AutoHere, GuildLevels },
-  ...{ RoleFaucet, RoleFaucetButton },
+  ...{ RoleFaucet, RoleFaucetButton, IngestNotes },
 };
 export const featurePermissions = new Set(
   Object.values(features).flatMap(f => {

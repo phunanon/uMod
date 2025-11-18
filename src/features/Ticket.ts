@@ -220,7 +220,13 @@ export const CloseTicket: Feature = {
         return;
       }
 
-      const field = new TextInputBuilder()
+      const ticketMembers = getTicketUsers(channel, role, userSf);
+      if (!ticketMembers.length) {
+        await channel.delete();
+        return;
+      }
+
+      const closureReason = new TextInputBuilder()
         .setLabel('Closure reason')
         .setCustomId('closure_reason')
         .setPlaceholder('Why is this ticket being closed?')
@@ -228,17 +234,28 @@ export const CloseTicket: Feature = {
         .setMaxLength(1000)
         .setRequired(true)
         .setStyle(TextInputStyle.Paragraph);
-      const row = new ActionRowBuilder<TextInputBuilder>().addComponents(field);
+      const dmMembersPlural = ticketMembers.length === 1 ? '' : 's';
+      const closureDm = new TextInputBuilder()
+        .setLabel(`DM to ticket member${dmMembersPlural}`)
+        .setCustomId('closure_dm')
+        .setPlaceholder(
+          'Optional DM sent either to the member who opened it and/or any manually added members.',
+        )
+        .setMinLength(8)
+        .setMaxLength(1000)
+        .setRequired(false)
+        .setStyle(TextInputStyle.Paragraph);
+
+      const reasonRow = new ActionRowBuilder<TextInputBuilder>().addComponents(
+        closureReason,
+      );
+      const dmRow = new ActionRowBuilder<TextInputBuilder>().addComponents(
+        closureDm,
+      );
       const modal = new ModalBuilder()
         .setCustomId(`closure_reason_${role}`)
         .setTitle('Ticket debrief')
-        .addComponents(row);
-
-      const ticketUsers = getTicketUsers(channel, role, userSf);
-      if (!ticketUsers.length) {
-        await channel.delete();
-        return;
-      }
+        .addComponents(reasonRow, dmRow);
 
       await interaction.showModal(modal);
     },
@@ -248,20 +265,65 @@ export const CloseTicket: Feature = {
 export const TicketClosureReasonSubmit: Feature = {
   Interaction: {
     name: 'closure_reason_*',
-    async modalSubmit({ interaction, channel, guildSf, userSf }) {
+    async modalSubmit({ guild, interaction, channel, guildSf, userSf }) {
       await interaction.deferUpdate();
 
       const role = interaction.customId.split('_')[2];
       const closureReason =
         interaction.fields.getTextInputValue('closure_reason');
-      const note = `closed ticket: ${closureReason}`;
+      const closureDm = interaction.fields.getTextInputValue('closure_dm');
+      const closureDmQuoted = closureDm.split('\n').join('\n> ');
 
       const ticketUsers = getTicketUsers(channel, role, userSf);
 
-      for (const userId of ticketUsers)
+      const unableToDm = new Set<bigint>();
+      for (const userId of ticketUsers) {
+        const member = await guild.members.fetch(`${userId}`).catch(() => null);
+        const dmProblem = await (async () => {
+          if (!closureDm) return false;
+          if (!member) return true;
+          const guildIcon = guild.iconURL({ forceStatic: true });
+          try {
+            await member.send({
+              embeds: [
+                {
+                  title: 'Ticket closure message from staff',
+                  author: {
+                    name: guild.name,
+                    icon_url: guildIcon ? guildIcon : undefined,
+                  },
+                  description: `> ${closureDmQuoted}`,
+                  footer: {
+                    text: 'Please open a new ticket if you wish to discuss further.',
+                  },
+                },
+              ],
+            });
+          } catch {
+            return true;
+          }
+          return false;
+        })();
+        if (dmProblem) {
+          unableToDm.add(userId);
+          const note = `attempted ticket closure: ${closureReason}\nDM: ${closureDm}`;
+          await MakeNote(guildSf, userId, userSf, note);
+          continue;
+        }
+        const closureDmNote = closureDm ? `\nDM: ${closureDm}` : '';
+        const note = `closed ticket: ${closureReason}${closureDmNote}`;
         await MakeNote(guildSf, userId, userSf, note);
+      }
 
-      await channel.delete();
+      if (unableToDm.size) {
+        for (const userId of unableToDm) {
+          await channel.send(
+            `<@${userId}>, I was unable to DM you with this:\n> ${closureDmQuoted}`,
+          );
+        }
+      } else {
+        await channel.delete();
+      }
     },
   },
 };
