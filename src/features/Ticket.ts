@@ -133,7 +133,7 @@ export const CreateTicket: Feature = {
           row.addComponents(
             new ButtonBuilder()
               .setCustomId(`read-notes-${interaction.user.id}`)
-              .setLabel(`Read notes (${noteCount})`)
+              .setLabel(`Staff notes (${noteCount})`)
               .setStyle(ButtonStyle.Secondary),
           );
         }
@@ -225,6 +225,8 @@ export const CloseTicket: Feature = {
         await channel.delete();
         return;
       }
+
+      void channel.send(`<@${interaction.user.id}> is closing this ticket.`);
 
       const closureReason = new TextInputBuilder()
         .setLabel('Closure reason')

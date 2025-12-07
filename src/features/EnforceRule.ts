@@ -4,7 +4,7 @@ import { ApplicationCommandType } from 'discord.js';
 import { Feature } from '.';
 import { prisma, quoteContent, TryFetchMessage } from '../infrastructure';
 import { DeleteMessageRow } from './DeleteMessage';
-import { MakeNote } from './Note';
+import { MakeNote, printNotes } from './Note';
 
 //TODO: support threads
 
@@ -108,7 +108,8 @@ export const EnforceRulePicker: Feature = {
             duration: 0,
           })),
       ].map(({ id, label, duration }) => ({
-        ...{ label, value: `${id}-${author.id}-${messageSf}-${duration}` },
+        label,
+        value: `${id}-${author.id}-${messageSf}-${duration}`,
       }));
 
       const row = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
@@ -121,7 +122,7 @@ export const EnforceRulePicker: Feature = {
       try {
         const quotedContent = quoteContent(interaction.targetMessage);
         await author.send(
-          `A moderator is reviewing your message ${quotedContent}`,
+          `A moderator is reviewing your message\n${quotedContent}`,
         );
       } catch {
         try {
@@ -131,8 +132,19 @@ export const EnforceRulePicker: Feature = {
         } catch {}
       }
 
+      const notes = await prisma.note.findMany({
+        where: { guildSf, userSf: BigInt(author.id) },
+        orderBy: { notedAt: 'desc' },
+        take: 3,
+      });
+      const sort = (a: (typeof notes)[0], b: (typeof notes)[0]) =>
+        a.notedAt.getTime() - b.notedAt.getTime();
+      const printedNotes = notes.length
+        ? printNotes(notes.toSorted(sort))
+        : '- No notes.';
+
       await interaction.editReply({
-        content: 'Select a rule to enforce',
+        content: 'Select a rule to enforce. Last three notes:\n' + printedNotes,
         components: [row],
       });
     },

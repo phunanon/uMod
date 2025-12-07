@@ -74,11 +74,12 @@ export const Note: Feature = {
   },
 };
 
-const printNotes = (notes: DbNote[], key: 'authorSf' | 'userSf') => {
+export const printNotes = (notes: DbNote[], key?: 'authorSf' | 'userSf') => {
   const mostRecent = notes.slice(-12);
-  const list = mostRecent.map(note =>
-    `- <@${note[key]}> ${R(note.notedAt)}: ${note.content}`.trim(),
-  );
+  const list = mostRecent.map(note => {
+    const taggedUser = key ? `<@${note[key]}> ` : '';
+    return `- ${taggedUser}${R(note.notedAt)}: ${note.content}`.trim();
+  });
   while (list.join('\n').length > 1_750 && list.length) list.shift();
   const numEarlier = notes.length - list.length;
   const warn =
@@ -228,7 +229,7 @@ export const ContextNote: Feature = {
       await interaction.deferReply({ ephemeral: true });
 
       const aboutSf = BigInt(interaction.targetMessage.author.id);
-      const note = quoteContent(interaction.targetMessage);
+      const note = '\n' + quoteContent(interaction.targetMessage);
       await MakeNote(guildSf, aboutSf, userSf, note);
 
       const row = DeleteMessageRow(BigInt(interaction.targetMessage.id));

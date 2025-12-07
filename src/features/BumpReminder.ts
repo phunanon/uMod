@@ -41,21 +41,25 @@ export const BumpReminder: Feature = {
     if (!checkItOut && !thanks) return;
 
     const nonce = `${Math.floor(new Date().getTime() / 60_000)}`;
-    await message.channel.send({
-      embeds: [
-        {
-          color: embed.color ?? undefined,
-          title: 'Bump done! :thumbsup:',
-          description: `${checkItOut}\n${thanks}`,
-          footer: {
-            text: 'Every two hours anyone can use /bump to attract new people to this server.',
+    try {
+      await message.delete();
+      await message.channel.send({
+        embeds: [
+          {
+            color: embed.color ?? undefined,
+            title: 'Bump done! :thumbsup:',
+            description: `${checkItOut}\n${thanks}`,
+            footer: {
+              text: 'Every two hours anyone can use /bump to attract new people to this server.',
+            },
           },
-        },
-      ],
-      nonce,
-      enforceNonce: true,
-    });
-    await message.delete();
+        ],
+        nonce,
+        enforceNonce: true,
+      });
+    } catch (e) {
+      console.error('Failed to replace bump message', e);
+    }
 
     //Delete the latest soft reminder
     const softReminder = mostRecentSoftReminders.get(`${message.channelId}`);

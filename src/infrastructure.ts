@@ -90,20 +90,19 @@ export const R = (ms: number | Date) =>
 
 export function quoteContent({ id, url, ...message }: Message) {
   const { content, guildId, channelId, reference, attachments } = message;
-  const textContent =
+  const quoted =
     content
       .split('\n')
-      .filter(Boolean)
+      .filter(x => !!x.trim())
       .map(x => `> ${x}`)
       .join('\n')
       .trim() || '> [no text]';
-  const attachmentContent = attachments.map(x => x.url).join('\n');
+  const attachmentContent = attachments.map(x => x.url).join(' ');
   const ref = reference
-    ? `(replying to https://discord.com/channels/${guildId}/${channelId}/${id})`
+    ? `(reply to https://discord.com/channels/${guildId}/${channelId}/${id}) `
     : '';
-  return `${url}:
-${textContent}
-${attachmentContent}${attachmentContent ? '\n' : ''}${ref}`.trim();
+  return `${quoted}
+${url} ${ref}${attachmentContent}`.trim();
 }
 
 export function RoleIsAboveMe(roleId: string, guild: Guild) {
