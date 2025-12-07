@@ -5,7 +5,7 @@ A moderation bot I made so I could kick Carlbot, but which now has now become qu
 - Auto-Moderation
   - **AI Moderator**: an optional OpenAI-powered moderation feature that times out for five minutes after three strikes
   - **InviteSpam**: auto-timeout users who post invites, and kick those who post invites and ping @everyone
-  - **PingSpam**: auto-timeout users who ping more than one role or user in one message
+  - **PingSpam**: auto-timeout users who ping more than three roles or users in one message
   - **PermaRole**: ensures roles are restored even if somebody leaves and joins
   - **WhitelistChannel**: disables different kinds of auto-moderation for a channel
   - **BlockGifs**: deletes messages with gifs from specified channels
@@ -37,6 +37,7 @@ A moderation bot I made so I could kick Carlbot, but which now has now become qu
   - **EnforceRule**: message context menu option to enforce your server rules as either a warning or 5/60min timeout
     - Up to 25 rules can be configured
     - Message author is informed that a moderator is reviewing their message, then they are informed of the outcome
+  - **GentleReminder**: anonymously drop a server rule reminder in a channel
   - **MirrorGuild**: mirrors messages from entire guild into one channel
   - **Purge**: deletes a number of messages in a channel
   - **ChannelBan**: prevents a user from sending messages in a channel

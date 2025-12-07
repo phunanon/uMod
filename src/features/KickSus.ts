@@ -234,7 +234,7 @@ async function ReviewCache(member: GuildMember) {
           );
         }
         //If the member had not been in the server for over an hour, delete all their messages
-        if (deleteMessages) {
+        if (deleteMessages && heuristic !== Heuristic.ReactSpam) {
           const memberEntries = cache.filter(
             entry => entry.member.id === member.id,
           );

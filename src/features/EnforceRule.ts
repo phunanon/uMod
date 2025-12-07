@@ -270,3 +270,77 @@ export const ReadRules: Feature = {
     },
   },
 };
+
+export const GentleReminderPicker: Feature = {
+  async Init(commands) {
+    await commands.create({
+      name: 'gentle-reminder',
+      description: 'Sends a gentle reminder of a rule in the channel.',
+    });
+  },
+  Interaction: {
+    name: 'gentle-reminder',
+    needPermit: 'EnforceRule',
+    async command({ interaction, guildSf }) {
+      await interaction.deferReply({ ephemeral: true });
+      const rules = await prisma.guildRule.findMany({ where: { guildSf } });
+      if (!rules.length) {
+        await interaction.editReply(
+          'No rules configured - use `/configure-rules`.',
+        );
+        return;
+      }
+
+      const options = rules.map(r => ({ label: sa(r.rule), value: `${r.id}` }));
+      const row = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
+        new StringSelectMenuBuilder()
+          .setCustomId('gentle-reminder-rule')
+          .setPlaceholder('Select a rule to remind about')
+          .addOptions(options),
+      );
+
+      await interaction.editReply({
+        content: 'Select a rule to send a gentle reminder about:',
+        components: [row],
+      });
+    },
+  },
+};
+
+export const GentleReminder: Feature = {
+  Interaction: {
+    name: 'gentle-reminder-rule',
+    needPermit: 'EnforceRule',
+    async stringSelect({ interaction, channel, guild }) {
+      await interaction.deferUpdate();
+
+      const choice = interaction.values[0] ?? '';
+      const ruleId = Number(choice);
+      if (!Number.isFinite(ruleId)) {
+        await interaction.editReply('Invalid choice.');
+        return;
+      }
+
+      const rule = await prisma.guildRule.findUnique({ where: { id: ruleId } });
+      if (!rule) {
+        await interaction.editReply('Rule not found.');
+        return;
+      }
+
+      const embed = new EmbedBuilder()
+        .setTitle('Gentle Reminder')
+        .setDescription(
+          `Please be mindful of the following server rule:
+- ${sa(rule.rule)}`,
+        )
+        .setColor(0x00ae86);
+
+      await channel.send({ embeds: [embed] });
+
+      await interaction.editReply({
+        content: 'Gentle reminder sent.',
+        components: [],
+      });
+    },
+  },
+};
