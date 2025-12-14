@@ -119,7 +119,7 @@ export const ChannelBanMessage: Feature = {
       } catch (e) {}
 
       const quotedContent = quoteContent(interaction.targetMessage);
-      const content = `banned from channel: ${quotedContent}`;
+      const content = `banned from channel:\n${quotedContent}`;
 
       await MakeNote(guildSf, authorSf, userSf, content);
       const row = DeleteMessageRow(messageSf);

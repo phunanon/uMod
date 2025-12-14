@@ -1,6 +1,5 @@
 import { Feature } from '.';
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
-import { TryFetchMessage } from '../infrastructure';
 
 export const DeleteMessage: Feature = {
   Interaction: {
@@ -9,7 +8,9 @@ export const DeleteMessage: Feature = {
     async button({ interaction, channel }) {
       await interaction.deferUpdate();
       const messageSf = BigInt(interaction.customId.split('-').pop() ?? '');
-      const message = await TryFetchMessage(channel, messageSf);
+      const message = await channel.messages
+        .fetch(`${messageSf}`)
+        .catch(() => null);
       if (!message) {
         await interaction.editReply({
           content: 'Message not found.',

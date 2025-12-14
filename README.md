@@ -55,6 +55,7 @@ A moderation bot I made so I could kick Carlbot, but which now has now become qu
   - **DisallowRole**: prevent a user from having a role
   - **TearGas**: temporarily enables slowmode in a channel
   - **SuspectedAlt**: an easier way to log suspected alt accounts
+  - **KickWithDm**: sends a DM with a provided reason to a user before kicking them
 - Fun
   - **Leaderboard**: keeps track of users' number of messages and ranks them
     - **IqLeaderboard**: ranks users by their total number of distinct words per message divided by the number of message lines

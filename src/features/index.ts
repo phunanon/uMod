@@ -74,6 +74,7 @@ import { AutoHere } from './AutoHere';
 import { GuildLevels } from './GuildLevels';
 import { RoleFaucet, RoleFaucetButton } from './RoleFaucet';
 import { IngestNotes } from './NoteIngestion';
+import { KickWithDm } from './KickWithDm';
 
 export const features = {
   ...{ MirrorGuild, BlockGifs, KickSus, AutoClean },
@@ -94,7 +95,7 @@ export const features = {
   ...{ QotdApprove, QotdDisable, QotdEnable, QotdSuggest },
   ...{ QotdSubscribe, QotdUnsubscribe, QotdReject, ChannelStats, FakeUser },
   ...{ EnforceRule, EnforceRulePicker, GentleReminder, GentleReminderPicker },
-  ...{ SetupRule, ReadRules, DeleteMessage },
+  ...{ SetupRule, ReadRules, DeleteMessage, KickWithDm },
   ...{ AiMod, PresenceCheck, Reminder, AutoHere, GuildLevels },
   ...{ RoleFaucet, RoleFaucetButton, IngestNotes },
 };

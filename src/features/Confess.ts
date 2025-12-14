@@ -4,7 +4,6 @@ import { EmbedBuilder, HexColorString, ModalBuilder } from 'discord.js';
 import { TextBasedChannel, TextInputBuilder, TextInputStyle } from 'discord.js';
 import { Feature } from '.';
 import { client, log, prisma, RecordRealAuthor } from '../infrastructure';
-import { TryFetchChannel, TryFetchMessage } from '../infrastructure';
 import { DeleteMessageRow } from './DeleteMessage';
 import { MakeNote } from './Note';
 
@@ -28,7 +27,9 @@ export const ConfessionsHere: Feature = {
       select: { channelSf: true },
     });
     for (const { channelSf } of flags) {
-      const channel = await TryFetchChannel(channelSf);
+      const channel = await client.channels
+        .fetch(`${channelSf}`)
+        .catch(() => null);
       if (!channel?.isTextBased()) {
         await prisma.channelFlags.updateMany({
           where: { channelSf },
@@ -57,7 +58,9 @@ export const ConfessionsHere: Feature = {
           where: { id: config.id },
           data: { confessMessage: null },
         });
-        const message = await TryFetchMessage(channel, config.confessMessage);
+        const message = await channel.messages
+          .fetch(`${config.confessMessage}`)
+          .catch(() => null);
         await message?.delete();
         await interaction.editReply(
           'Confessions for this channel have been disabled.',
@@ -275,7 +278,7 @@ const RenewStickyMessage = async (
   if (mostRecent.first()?.id === `${existingMessageSf}`) return;
 
   const existing = existingMessageSf
-    ? await TryFetchMessage(channel, existingMessageSf)
+    ? await channel.messages.fetch(`${existingMessageSf}`).catch(() => null)
     : null;
   await existing?.delete();
 

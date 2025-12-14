@@ -2,7 +2,7 @@ import { ActionRowBuilder, StringSelectMenuBuilder } from 'discord.js';
 import { ApplicationCommandOptionType, EmbedBuilder } from 'discord.js';
 import { ApplicationCommandType } from 'discord.js';
 import { Feature } from '.';
-import { prisma, quoteContent, TryFetchMessage } from '../infrastructure';
+import { prisma, quoteContent } from '../infrastructure';
 import { DeleteMessageRow } from './DeleteMessage';
 import { MakeNote, printNotes } from './Note';
 
@@ -190,7 +190,9 @@ export const EnforceRule: Feature = {
         return;
       }
 
-      const message = await TryFetchMessage(channel, messageSf);
+      const message = await channel.messages
+        .fetch(`${messageSf}`)
+        .catch(() => null);
       const byline = ` by <@${userSf}>`;
       const content = message ? quoteContent(message) : '[unknown message]';
       const ruleText = sa(rule.rule);

@@ -34,25 +34,6 @@ export const isGoodChannel = (
 export const sanitiseTag = (tag: string) =>
   tag.replace(new RegExp('([_*#])', 'g'), '\\$1');
 
-export const TryFetchMessage = async (
-  channel: TextBasedChannel,
-  sf: bigint,
-) => {
-  try {
-    return await channel.messages.fetch(`${sf}`);
-  } catch {
-    return null;
-  }
-};
-
-export const TryFetchChannel = async (sf: bigint) => {
-  try {
-    return await client.channels.fetch(`${sf}`);
-  } catch {
-    return null;
-  }
-};
-
 export const RecordRealAuthor = async (
   userSf: bigint,
   ...messageSfs: bigint[]

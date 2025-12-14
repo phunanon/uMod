@@ -1,6 +1,6 @@
 import { Feature } from '.';
 import { ApplicationCommandOptionType } from 'discord.js';
-import { client, prisma, TryFetchMessage } from '../infrastructure';
+import { client, prisma } from '../infrastructure';
 
 export const StickyMessage: Feature = {
   async Init(commands) {
@@ -97,7 +97,7 @@ const RenewStickyMessages = async () => {
       continue;
     }
 
-    const message = await TryFetchMessage(channel, sf);
+    const message = await channel.messages.fetch(`${sf}`).catch(() => null);
     const renewAt = calcRenewAt(renewalSeconds);
 
     if (!message) {
