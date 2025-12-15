@@ -1,3 +1,4 @@
+import { VoiceBasedChannel } from 'discord.js';
 import { Feature } from '.';
 import { client, prisma } from '../infrastructure';
 import { GuildLevelCalculator } from './GuildLevels';
@@ -40,9 +41,10 @@ const MakeLeaderboard = async <T extends {}>(
   ].join('\n');
 };
 
+const vcChannels = new Map<bigint, VoiceBasedChannel[]>();
 export const LeaderboardRecorder: Feature = {
   async Init() {
-    async function LogVcMinutes() {
+    async function RenewVcChannels() {
       const guilds = client.guilds.cache;
       for (const [guildSf, guild] of guilds) {
         const voiceChannels = [
@@ -50,31 +52,41 @@ export const LeaderboardRecorder: Feature = {
             .filter(channel => channel.isVoiceBased())
             .values(),
         ];
-        const vcMemberIds = await (async () => {
-          const memberIds: bigint[] = [];
-          for (const channel of voiceChannels) {
-            try {
-              const fetched = await channel.fetch();
-              memberIds.push(
-                ...fetched.members
-                  .filter(m => !m.user.bot)
-                  .map(m => BigInt(m.id))
-                  .values(),
-              );
-            } catch {}
+        vcChannels.set(BigInt(guildSf), voiceChannels);
+      }
+      setTimeout(RenewVcChannels, 600_000);
+    };
+    async function LogVcMinutes() {
+      for (const [guildSf, channels] of vcChannels) {
+        const memberIds: bigint[] = [];
+        for (const channel of channels) {
+          try {
+            const fetched = await channel.fetch();
+            memberIds.push(
+              ...fetched.members
+                .filter(m => !m.user.bot)
+                .map(m => BigInt(m.id))
+                .values(),
+            );
+          } catch {
+            vcChannels.set(
+              guildSf,
+              channels.filter(c => c.id !== channel.id),
+            );
           }
-          return memberIds;
-        })();
+        }
+        if (!memberIds.length) continue;
         await prisma.member.updateMany({
           where: {
             guildSf: BigInt(guildSf),
-            userSf: { in: vcMemberIds.map(BigInt) },
+            userSf: { in: memberIds.map(BigInt) },
           },
           data: { vcMinutes: { increment: 1 } },
         });
       }
       setTimeout(LogVcMinutes, 60_000);
     }
+    setTimeout(RenewVcChannels, 30_000);
     setTimeout(LogVcMinutes, 60_000);
   },
   async HandleMessageCreate({ message, guildSf }) {
@@ -350,7 +362,7 @@ export const VcLeaderboard: Feature = {
             orderBy: { vcMinutes: 'desc' },
             take: 10,
           })
-          .then(r => r.map((row, i) => ({ ...row, idx: BigInt(i) })));
+          .then(r => r.map((row, i) => ({ ...row, idx: BigInt(i + 1) })));
       const getForSf = async (userSf: bigint) => {
         const member = await prisma.member.findUnique({
           where: { userSf_guildSf: { userSf, guildSf } },

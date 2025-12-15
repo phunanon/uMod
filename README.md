@@ -26,9 +26,10 @@ A moderation bot I made so I could kick Carlbot, but which now has now become qu
     - TelegramSpam - two of the same t.me link in 1 hour
   - **AutoClean**: deletes messages with no content (e.g. wall of whitespace)
 - Manual Moderation
-  - **Tickets**: a ticket system for users to ask for help
-    - Allows adding users to the ticket
+  - **Tickets**: a ticket system for members to privately chat with a specified role
+    - Allows adding members to the ticket
     - Requires a reason the ticket is being closed, for auditing
+    - Optionally at closure allows a DM to be sent to the member summarising the ticket
   - **Note**: attaches notes to a user that all moderators can see
     - Notes are automatically attached for audit logs (ban, unban, kick, timeout, channel ban)
     - Arbitrary notes can be made with `/note`
@@ -40,7 +41,7 @@ A moderation bot I made so I could kick Carlbot, but which now has now become qu
   - **GentleReminder**: anonymously drop a server rule reminder in a channel
   - **MirrorGuild**: mirrors messages from entire guild into one channel
   - **Purge**: deletes a number of messages in a channel
-  - **ChannelBan**: prevents a user from sending messages in a channel
+  - **ChannelBan**: prevents a member from sending messages in a channel
     - these are automatically restored if the user leaves and joins again
     - this can also be done from the message context menu, citing the message in notes
   - **Alerts**: sends a message to a channel reacting to a specific event
@@ -51,18 +52,19 @@ A moderation bot I made so I could kick Carlbot, but which now has now become qu
     - Also **DeleteAlert**, **DeleteAlerts**, and **RecommendedAlerts**
   - **GuildPermit**: assign granular permissions for using μMod's features
     - Only the guild owner can use this command
-  - **TempRole**: assign a role to a user for a specified amount of time
-  - **DisallowRole**: prevent a user from having a role
+  - **TempRole**: assign a role to a member for a specified amount of time
+  - **DisallowRole**: prevent a member from having a role
   - **TearGas**: temporarily enables slowmode in a channel
   - **SuspectedAlt**: an easier way to log suspected alt accounts
-  - **KickWithDm**: sends a DM with a provided reason to a user before kicking them
+  - **KickWithDm**: sends a DM with a provided reason to a member before kicking them
 - Fun
-  - **Leaderboard**: keeps track of users' number of messages and ranks them
-    - **IqLeaderboard**: ranks users by their total number of distinct words per message divided by the number of message lines
-    - **LoyaltyLeaderboard**: ranks users by the number of days between their earliest and latest activity
-    - **AgeLeaderboard**: ranks users by their Discord account age
+  - **Leaderboard**: keeps track of members' number of messages and ranks them; and also
+    - **IqLeaderboard**: ranks members by their total number of distinct words per message divided by the number of message lines
+    - **LoyaltyLeaderboard**: ranks members by the number of days between their earliest and latest activity
+    - **AgeLeaderboard**: ranks members by their Discord account age
+    - **VcLeaderboard**: ranks members by the number of minutes they've spent in any voice channel
   - **GuildLevels**: uses a mathematical function of your choice to award people levels
-  - **Confessions**: allows users to post anonymous messages in a channel
+  - **Confessions**: allows members to post anonymous messages in a channel
     - Also **ConfessMute** (preserving anonymity) and **ConfessUnmute**
   - **GlobalChat**: mirrors messages between guilds using public or private rooms
     - Includes message editing, deleting, and typing indication
@@ -79,7 +81,7 @@ A moderation bot I made so I could kick Carlbot, but which now has now become qu
   - **MutualTimeout**: allows anybody to mute another user but only if they are muted in return
     - Disabled in code by default
   - **Transcript**: sends a CSV transcript of a channel to a channel
-  - **BumpReminder**: reminds users to bump on Disboard in a channel
+  - **BumpReminder**: reminds members to bump on Disboard in a channel
   - **ChannelStats**: shows list of channels ordered by number of messages
   - **ReadRules**: lists the rules set up for a server
   - **Reminder**: users can create ping reminders for themselves
