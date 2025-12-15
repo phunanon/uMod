@@ -46,7 +46,7 @@ model Member {
   earliest    DateTime @default(now())
   latest      BigInt   @default(0)
   present     Boolean  @default(true)
-vcMinutes   Int      @default(0)
+  vcMinutes   Int      @default(0)
 
   @@unique([userSf, guildSf])
 }
@@ -195,6 +195,7 @@ model BumpReminder {
   guildSf       BigInt             @unique
   channelSf     BigInt
   softChannelSf BigInt?
+  hours         Int
   remindAt      DateTime
   softRemindAt  DateTime
   Users         BumpReminderUser[]

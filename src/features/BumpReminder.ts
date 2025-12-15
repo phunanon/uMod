@@ -1,13 +1,12 @@
 import { Feature } from '.';
-import { ButtonStyle, ActionRowBuilder, ButtonBuilder } from 'discord.js';
-import { Message } from 'discord.js';
+import { ButtonStyle, ApplicationCommandOptionType } from 'discord.js';
+import { ActionRowBuilder, ButtonBuilder, Message } from 'discord.js';
 import { client, isGoodChannel, prisma } from '../infrastructure';
 
 const DisboardSf = '302050872383242240';
-const inTwoHours = () => new Date(Date.now() + 2 * 60 * 60_000);
-const inTwoAndAHalfHours = () => new Date(Date.now() + 2.5 * 60 * 60_000);
-const inThirtyOneMinutes = () => new Date(Date.now() + 31 * 60_000);
+const after = (hours: number) => new Date(Date.now() + hours * 60 * 60_000);
 const mostRecentSoftReminders = new Map<string, Message>();
+const mostRecentHardReminers = new Map<string, Message>();
 
 export const BumpReminder: Feature = {
   async Init(commands) {
@@ -16,6 +15,15 @@ export const BumpReminder: Feature = {
       name: 'bump-reminder',
       description:
         'Enable or disable a two hour bump reminder in this channel (one per guild)',
+      options: [
+        {
+          name: 'hours',
+          description: 'The number of hours between reminders',
+          type: ApplicationCommandOptionType.Integer,
+          minValue: 2,
+          maxValue: 24 * 7,
+        },
+      ],
     });
   },
   async HandleBotMessageCreate({ message, guildSf }) {
@@ -23,10 +31,18 @@ export const BumpReminder: Feature = {
     const [embed] = message.embeds;
     if (!embed?.description?.includes('Bump done!')) return;
 
-    await prisma.bumpReminder.updateMany({
-      where: { guildSf },
-      data: { remindAt: inTwoHours(), softRemindAt: inTwoAndAHalfHours() },
-    });
+    const where = { guildSf };
+    const reminder = await prisma.bumpReminder.findFirst({ where });
+    if (reminder) {
+      const { hours } = reminder;
+      await prisma.bumpReminder.update({
+        where,
+        data: {
+          remindAt: after(hours),
+          softRemindAt: after(hours + 0.5),
+        },
+      });
+    }
 
     //Replace the Disboard message with a skinnier one
     const url = embed.description.match(
@@ -67,6 +83,21 @@ export const BumpReminder: Feature = {
       await softReminder.delete();
       mostRecentSoftReminders.delete(`${message.channelId}`);
     }
+
+    //Update hard reminder embed
+    if (reminder) {
+      const hardReminder = mostRecentHardReminers.get(`${reminder.channelSf}`);
+      await hardReminder?.edit({
+        embeds: [
+          {
+            title: 'Bump Reminder (expired)',
+            description: `~~It is time to bump the server! Use \`/bump\` to do so.~~
+Already done: ${message.url}`,
+            color: 0x2f6f7f,
+          },
+        ],
+      });
+    }
   },
   Interaction: {
     name: 'bump-reminder',
@@ -83,12 +114,14 @@ export const BumpReminder: Feature = {
         return;
       }
 
+      const hours = interaction.options.getInteger('hours') ?? 2;
       await prisma.bumpReminder.create({
         data: {
           guildSf,
           channelSf,
           remindAt: new Date(),
-          softRemindAt: inThirtyOneMinutes(),
+          softRemindAt: after(0.51),
+          hours,
         },
       });
 
@@ -214,16 +247,24 @@ function TickSoon() {
 async function tick() {
   const hardReminders = await prisma.bumpReminder.findMany({
     where: { remindAt: { lte: new Date() } },
-    select: { Users: { select: { userSf: true } }, channelSf: true, id: true },
+    select: {
+      id: true,
+      channelSf: true,
+      hours: true,
+      Users: { select: { userSf: true } },
+    },
   });
 
   for (const reminder of hardReminders) {
     try {
       await hardRemind(reminder);
-      //Postpone the hard reminder by two more hours, and soft reminder by 31min
+      //Postpone further hard & soft reminders
       await prisma.bumpReminder.update({
         where: { id: reminder.id },
-        data: { remindAt: inTwoHours(), softRemindAt: inThirtyOneMinutes() },
+        data: {
+          remindAt: after(reminder.hours),
+          softRemindAt: after(reminder.hours + 0.51),
+        },
       });
     } catch (e) {
       console.error(reminder, e);
@@ -244,10 +285,10 @@ async function tick() {
       const channelSf = reminder.softChannelSf!;
       const hardChannelSf = reminder.channelSf;
       await softRemind({ channelSf, hardChannelSf, id: reminder.id });
-      //Postpone the reminder by thirty minutes
+      //Postpone a further soft reminder by thirty minutes
       await prisma.bumpReminder.update({
         where: { id: reminder.id },
-        data: { softRemindAt: inThirtyOneMinutes() },
+        data: { softRemindAt: after(0.51) },
       });
     } catch (e) {
       console.error(reminder, e);
@@ -301,7 +342,7 @@ async function hardRemind({ id, channelSf, Users }: HardReminder) {
       .setStyle(ButtonStyle.Danger),
   );
 
-  await channel.send({
+  const message = await channel.send({
     content,
     embeds: [
       {
@@ -312,6 +353,7 @@ async function hardRemind({ id, channelSf, Users }: HardReminder) {
     ],
     components: [row],
   });
+  mostRecentHardReminers.set(channel.id, message);
 }
 
 async function softRemind({ id, channelSf, hardChannelSf }: SoftReminder) {
