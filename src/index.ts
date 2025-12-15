@@ -21,7 +21,7 @@ const pushStat = (name: keyof typeof stats) => {
 client.once('ready', async () => {
   for (const [_, guild] of client.guilds.cache) {
     //(await guild.members.fetchMe()).setNickname('µM');
-    console.log(`${guild.id} ${guild.name}`);
+    process.stdout.write(`  ${guild.id} ${guild.name}`);
   }
 
   client

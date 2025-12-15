@@ -26,7 +26,8 @@ import { InviteSpam } from './InviteSpam';
 import { Ping } from './Ping';
 import { WhitelistChannel } from './WhitelistChannel';
 import { MirrorGuild } from './MirrorGuild';
-import { LeaderboardRecorder, AgeLeaderboard } from './Leaderboard';
+import { LeaderboardRecorder } from './Leaderboard';
+import { AgeLeaderboard, VcLeaderboard } from './Leaderboard';
 import { Leaderboard, IqLeaderboard, LoyaltyLeaderboard } from './Leaderboard';
 import { StickyMessage } from './StickyMessage';
 import { Confess, ConfessMute, ConfessUnmute, ConfessSubmit } from './Confess';
@@ -80,7 +81,7 @@ export const features = {
   ...{ MirrorGuild, BlockGifs, KickSus, AutoClean },
   ...{ PermaRole, InviteSpam, Ping, WhitelistChannel, ActivitySort },
   ...{ LeaderboardRecorder, Leaderboard, IqLeaderboard, LoyaltyLeaderboard },
-  ...{ AgeLeaderboard, StickyMessage, Purge, Transcript },
+  ...{ AgeLeaderboard, VcLeaderboard, StickyMessage, Purge, Transcript },
   ...{ Note, ReadNotes, ContextNote, ReadNotesByAuthor, ReadNotesButton },
   ...{ ChannelBan, ChannelBanMessage, Censor, DeleteCensor },
   ...{ Confess, ConfessMute, ConfessUnmute, ConfessSubmit, ConfessionsHere },

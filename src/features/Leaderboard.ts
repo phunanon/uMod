@@ -1,5 +1,5 @@
 import { Feature } from '.';
-import { prisma } from '../infrastructure';
+import { client, prisma } from '../infrastructure';
 import { GuildLevelCalculator } from './GuildLevels';
 
 //TODO: vc minutes leaderboard (Member.vcMinutes)
@@ -41,6 +41,42 @@ const MakeLeaderboard = async <T extends {}>(
 };
 
 export const LeaderboardRecorder: Feature = {
+  async Init() {
+    async function LogVcMinutes() {
+      const guilds = client.guilds.cache;
+      for (const [guildSf, guild] of guilds) {
+        const voiceChannels = [
+          ...guild.channels.cache
+            .filter(channel => channel.isVoiceBased())
+            .values(),
+        ];
+        const vcMemberIds = await (async () => {
+          const memberIds: bigint[] = [];
+          for (const channel of voiceChannels) {
+            try {
+              const fetched = await channel.fetch();
+              memberIds.push(
+                ...fetched.members
+                  .filter(m => !m.user.bot)
+                  .map(m => BigInt(m.id))
+                  .values(),
+              );
+            } catch {}
+          }
+          return memberIds;
+        })();
+        await prisma.member.updateMany({
+          where: {
+            guildSf: BigInt(guildSf),
+            userSf: { in: vcMemberIds.map(BigInt) },
+          },
+          data: { vcMinutes: { increment: 1 } },
+        });
+      }
+      setTimeout(LogVcMinutes, 60_000);
+    }
+    setTimeout(LogVcMinutes, 60_000);
+  },
   async HandleMessageCreate({ message, guildSf }) {
     const { content, author } = message;
     const ignoreStrings = ['`', '>', '\n-', ':'];
@@ -73,7 +109,7 @@ export const Leaderboard: Feature = {
   async Init(commands) {
     await commands.create({
       name: 'leaderboard',
-      description: 'Show the server leaderboard by number of messages',
+      description: 'Server leaderboard by number of messages',
     });
   },
   Interaction: {
@@ -126,7 +162,7 @@ export const IqLeaderboard: Feature = {
   async Init(commands) {
     await commands.create({
       name: 'iq-leaderboard',
-      description: 'Show the server leaderboard by IQ',
+      description: 'Server leaderboard by IQ',
     });
   },
   Interaction: {
@@ -182,7 +218,7 @@ export const LoyaltyLeaderboard: Feature = {
   async Init(commands) {
     await commands.create({
       name: 'loyalty-leaderboard',
-      description: 'Show the server leaderboard by length of activity',
+      description: 'Server leaderboard by length of activity',
     });
   },
   Interaction: {
@@ -245,7 +281,7 @@ export const AgeLeaderboard: Feature = {
   async Init(commands) {
     await commands.create({
       name: 'age-leaderboard',
-      description: 'Show the server leaderboard by account age',
+      description: 'Server leaderboard by account age',
     });
   },
   Interaction: {
@@ -289,6 +325,52 @@ AND userSf < ${userSf};
       );
       await interaction.editReply(
         `Lists members by Discord account age.\n${leaderboard}`,
+      );
+    },
+  },
+};
+
+export const VcLeaderboard: Feature = {
+  async Init(commands) {
+    await commands.create({
+      name: 'vc-leaderboard',
+      description: 'Server leaderboard by number of vc minutes',
+    });
+  },
+  Interaction: {
+    name: 'vc-leaderboard',
+    async command({ interaction, guildSf, userSf }) {
+      await interaction.deferReply();
+      const { tag } = interaction.user;
+      const getTop10 = async () =>
+        await prisma.member
+          .findMany({
+            select: { userSf: true, tag: true, vcMinutes: true },
+            where: { guildSf, vcMinutes: { not: 0 }, present: true },
+            orderBy: { vcMinutes: 'desc' },
+            take: 10,
+          })
+          .then(r => r.map((row, i) => ({ ...row, idx: BigInt(i) })));
+      const getForSf = async (userSf: bigint) => {
+        const member = await prisma.member.findUnique({
+          where: { userSf_guildSf: { userSf, guildSf } },
+        });
+        const idx = await prisma.member
+          .count({
+            where: { guildSf, vcMinutes: { gt: member?.vcMinutes ?? 0 } },
+          })
+          .then(x => BigInt(x + 1));
+        return { ...(member ?? { userSf, tag, vcMinutes: 0 }), idx };
+      };
+      const leaderboard = await MakeLeaderboard(
+        userSf,
+        getTop10,
+        getForSf,
+        ({ idx, tag, vcMinutes: n }) => userRow({ idx, tag, n: fmt(n, 'min') }),
+      );
+      await interaction.editReply(
+        'Lists members by number of minutes in any voice channel.\n' +
+          leaderboard,
       );
     },
   },

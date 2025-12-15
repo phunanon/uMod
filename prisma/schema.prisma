@@ -46,6 +46,7 @@ model Member {
   earliest    DateTime @default(now())
   latest      BigInt   @default(0)
   present     Boolean  @default(true)
+vcMinutes   Int      @default(0)
 
   @@unique([userSf, guildSf])
 }
