@@ -215,13 +215,6 @@ async function _handleInteraction(interaction: Interaction): Promise<void> {
   }
 }
 
-export const IsChannelUnmoderated = async (channelSf: bigint) => {
-  const record = await prisma.channelFlags.findFirst({
-    where: { channelSf },
-  });
-  return record?.unmoderated === true;
-};
-
 function handleMessage(kind: 'create' | 'update' | 'delete') {
   async function handle(
     oldMessage: Message | PartialMessage,
@@ -237,7 +230,8 @@ function handleMessage(kind: 'create' | 'update' | 'delete') {
     if (!message) return;
     if (!isGoodChannel(message.channel)) return;
     const channelSf = BigInt(message.channel.id);
-    if (await IsChannelUnmoderated(channelSf)) return;
+    const channelFlags = await FetchChannelFlags(channelSf);
+    if (channelFlags.unmoderated === true) return;
     if (!message.guildId || !message.guild) return;
     //Discord seemingly sometimes updates old messages, which must be ignored
     if (
@@ -253,7 +247,6 @@ function handleMessage(kind: 'create' | 'update' | 'delete') {
     const isEdit = kind === 'update';
     const isDelete = kind === 'delete';
     const details = await FetchUserDetails(guild, member, userSf);
-    const channelFlags = await FetchChannelFlags(channelSf);
 
     const context = {
       ...{ guild, channel, channelFlags, message },

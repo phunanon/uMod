@@ -91,7 +91,11 @@ A moderation bot I made so I could kick Carlbot, but which now has now become qu
 
 In order of priority, aspirations & TODO:
 
+- central alert management, doing away with alert IDs
+- paginated user notes
+- private notes
 - audit logs for staff actions (permit usages)
+- reliably create member records during presence check
 - different handler for registering slash commands which is only called via process.env
 - caching and aggregation:
   - cache common database queries e.g. fetch member from database
@@ -101,11 +105,7 @@ In order of priority, aspirations & TODO:
   - use typed SQL
 - censor GlobalChat (might already be done)
 - censor fake user
-- ticket custom reasons and closure summaries
-- EnforceRule suggestions (e.g. if they've already been warned in the past week, timeout instead)
 - delete global messages that uMod deleted itself?
-- keep track of record most users in vc
-- vc leaderboard (minutes)
 
 ## To host it yourself
 

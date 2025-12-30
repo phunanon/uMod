@@ -10,16 +10,15 @@ import {
   ModalSubmitInteraction,
   NonThreadGuildBasedChannel,
   PartialGuildMember,
-  TextChannel,
   Typing,
   User,
-  VoiceChannel,
   VoiceState,
   MessageContextMenuCommandInteraction,
   StringSelectMenuInteraction,
 } from 'discord.js';
 import permits from './permits';
 import { ChannelFlags } from '@prisma/client';
+import { TextChannels } from '../infrastructure';
 
 import { PermaRole } from './PermaRole';
 import { InviteSpam } from './InviteSpam';
@@ -116,8 +115,6 @@ export type FeatureConfig = {
   commandName?: string;
   moderatorOnly?: boolean;
 };
-
-export type TextChannels = TextChannel | VoiceChannel;
 
 export type InteractionCtx<T> = {
   interaction: T;

@@ -3,8 +3,8 @@ import {
   ChatInputCommandInteraction,
   AttachmentBuilder,
 } from 'discord.js';
-import { Feature, TextChannels } from '.';
-import { isGoodChannel } from '../infrastructure';
+import { Feature } from '.';
+import { isGoodChannel, TextChannels } from '../infrastructure';
 
 type Job = {
   startedAt: Date;
@@ -63,7 +63,7 @@ export const Transcript: Feature = {
         channel,
         destination,
         messages: [],
-        before: channel.lastMessageId,
+        before: channel.lastMessageId ?? null,
       });
     },
   },

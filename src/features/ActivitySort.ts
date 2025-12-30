@@ -41,7 +41,7 @@ export const ActivitySort: Feature = {
   async HandleMessageCreate({ guildSf, channel }) {
     const category = channel.parent?.id;
 
-    if (!category || !channel.position) return;
+    if (!category || !('position' in channel) || !channel.position) return;
 
     const sort = await prisma.activitySort.findUnique({
       where: { guildSf_categorySf: { guildSf, categorySf: BigInt(category) } },

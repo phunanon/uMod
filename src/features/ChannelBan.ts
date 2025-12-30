@@ -42,6 +42,13 @@ export const ChannelBan: Feature = {
         where: { userSf, channelSf },
       });
 
+      if (!('permissionOverwrites' in channel)) {
+        await interaction.editReply(
+          'Users cannot be banned from this type of channel.',
+        );
+        return;
+      }
+
       try {
         const permissions = { ViewChannel: !!existing };
         await channel.permissionOverwrites.create(id, permissions);
@@ -109,6 +116,13 @@ export const ChannelBanMessage: Feature = {
       if (existing) {
         await interaction.editReply(
           'User is already banned from this channel.',
+        );
+        return;
+      }
+
+      if (!('permissionOverwrites' in channel)) {
+        await interaction.editReply(
+          'Users cannot be banned from this type of channel.',
         );
         return;
       }

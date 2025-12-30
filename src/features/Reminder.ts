@@ -22,7 +22,7 @@ export const Reminder: Feature = {
           name: 'text',
           description: 'What the reminder should say',
           required: true,
-          maxLength: 128,
+          maxLength: 256,
         },
       ],
     });

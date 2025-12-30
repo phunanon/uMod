@@ -14,7 +14,7 @@ export enum AlertEvent {
   Audit = 'audit',
   Milestone = 'milestone',
   FirstMessage = 'first-message',
-  //TODO: LevelUp = 'level-up',
+  PermitUsage = 'permit-usage',
 }
 
 export const Alert: Feature = {
@@ -39,6 +39,7 @@ export const Alert: Feature = {
             { name: 'Moderation action', value: AlertEvent.Audit },
             { name: 'Membership milestone', value: AlertEvent.Milestone },
             { name: 'First message sent', value: AlertEvent.FirstMessage },
+            { name: 'μMod permit usage', value: AlertEvent.PermitUsage },
           ],
           required: true,
         },
@@ -187,11 +188,13 @@ export const Alert: Feature = {
   },
   async HandleAuditLog({ kind, executor, target, reason }, guild) {
     const guildSf = BigInt(guild.id);
+    const ruleEnforcement = reason?.includes('Rule enforcement');
+    const kickThenDm = reason?.includes("(DM'd");
     const selfExecution =
-      executor?.id === client.user?.id && !reason?.includes('Rule enforcement');
+      executor?.id === client.user?.id && !ruleEnforcement && !kickThenDm;
     const auto = selfExecution ? 'auto-' : '';
     const executorTag = executor ? `<@${executor.id}>` : '[unknown]';
-    const by = selfExecution ? '' : ` by ${executorTag}`;
+    const by = selfExecution || kickThenDm ? '' : ` by ${executorTag}`;
     const of = target ? `<@${target.id}> (\`${target.tag}\`)` : '[unknown]';
     const reasonWithColon = reason ? `: ${reason}` : '';
     const content = `${auto}${kind} of ${of}${by}${reasonWithColon}`;
@@ -332,6 +335,7 @@ export const RecommendedAlerts: Feature = {
           { guildSf, channelSf, event: AlertEvent.Note },
           { guildSf, channelSf, event: AlertEvent.Audit },
           { guildSf, channelSf, event: AlertEvent.Milestone },
+          { guildSf, channelSf, event: AlertEvent.PermitUsage },
         ],
       });
 

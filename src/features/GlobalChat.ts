@@ -3,13 +3,14 @@ import {
   ApplicationCommandType,
   GuildMember,
 } from 'discord.js';
-import { Feature, MsgCtx, TextChannels } from '.';
+import { Feature, MsgCtx } from '.';
 import {
   client,
   isGoodChannel,
   prisma,
   RecordRealAuthor,
   sanitiseTag,
+  TextChannels,
 } from '../infrastructure';
 import { DeleteMessageRow } from './DeleteMessage';
 import { MakeNote } from './Note';

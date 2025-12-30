@@ -1,8 +1,9 @@
-import { ApplicationCommandOptionType, PermissionsBitField } from 'discord.js';
+import { ChannelType, PermissionsBitField } from 'discord.js';
+import { ApplicationCommandOptionType } from 'discord.js';
 import { ActionRowBuilder, ButtonBuilder, TextInputBuilder } from 'discord.js';
 import { ModalBuilder, ButtonStyle, TextInputStyle } from 'discord.js';
-import { Feature, TextChannels } from '.';
-import { prisma } from '../infrastructure';
+import { Feature } from '.';
+import { prisma, TextChannels } from '../infrastructure';
 import { MakeNote } from './Note';
 
 export const TicketsHere: Feature = {
@@ -62,7 +63,7 @@ export const CreateTicket: Feature = {
 
       const category = await channel.parent?.fetch();
 
-      if (!category) {
+      if (category?.type !== ChannelType.GuildCategory) {
         await interaction.editReply(
           'Error: must be within a channel category.',
         );
@@ -118,8 +119,13 @@ export const CreateTicket: Feature = {
 
       const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
         new ButtonBuilder()
+          .setCustomId('staff_only')
+          .setLabel('Staff only:')
+          .setStyle(ButtonStyle.Secondary)
+          .setDisabled(true),
+        new ButtonBuilder()
           .setCustomId(`close_ticket_${role}`)
-          .setLabel('Close ticket')
+          .setLabel('Close')
           .setStyle(ButtonStyle.Danger),
       );
       if (!hasPrivilegedRole) {
@@ -133,16 +139,16 @@ export const CreateTicket: Feature = {
           row.addComponents(
             new ButtonBuilder()
               .setCustomId(`read-notes-${interaction.user.id}`)
-              .setLabel(`Staff notes (${noteCount})`)
+              .setLabel(`Notes (${noteCount})`)
               .setStyle(ButtonStyle.Secondary),
           );
         }
       }
 
-      await newChannel.send({
-        content: `<@&${role}> <@${interaction.user.id}>`,
-        components: [row],
-      });
+      await newChannel.send({ content: `<@&${role}>`, components: [row] });
+      await newChannel.send(
+        `<@${interaction.user.id}>, help us help you by now explaining why you opened this ticket.`,
+      );
 
       await interaction.editReply(`Ticket created: ${newChannel.url}`);
     },
@@ -176,7 +182,10 @@ export const TicketAdd: Feature = {
         return;
       }
 
-      if (!channel.name.startsWith('ticket-')) {
+      if (
+        !channel.name.startsWith('ticket-') ||
+        channel.type !== ChannelType.GuildText
+      ) {
         await interaction.editReply('This is not a ticket channel.');
         return;
       }
@@ -200,6 +209,7 @@ export const TicketAdd: Feature = {
   },
 };
 
+const ticketClosingDebounce = new Set<string>();
 export const CloseTicket: Feature = {
   Interaction: {
     name: 'close_ticket_*',
@@ -226,7 +236,14 @@ export const CloseTicket: Feature = {
         return;
       }
 
-      void channel.send(`<@${interaction.user.id}> is closing this ticket.`);
+      if (!ticketClosingDebounce.has(channel.id)) {
+        void channel.send({
+          content: `<@${interaction.user.id}> is closing this ticket.`,
+          allowedMentions: { parse: [] },
+        });
+        ticketClosingDebounce.add(channel.id);
+        setTimeout(() => ticketClosingDebounce.delete(channel.id), 60_000);
+      }
 
       const closureReason = new TextInputBuilder()
         .setLabel('Closure reason')
@@ -335,6 +352,7 @@ const getTicketMembers = (
   excludeRoleSf?: string,
   excludeUserSf?: bigint,
 ) => {
+  if (channel.type !== ChannelType.GuildText) return [];
   const ticketSnowflake = channel.name.split('-')[1];
   const users = channel.permissionOverwrites.cache
     .filter(po => po.allow.has(PermissionsBitField.Flags.ViewChannel))

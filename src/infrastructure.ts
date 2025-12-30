@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
-import { Guild, TextBasedChannel, TextChannel, VoiceChannel } from 'discord.js';
-import { Channel, ChannelType, Client, Message } from 'discord.js';
+import { DMChannel, PartialDMChannel } from 'discord.js';
+import { PrivateThreadChannel, TextBasedChannel } from 'discord.js';
+import { Guild, Channel, ChannelType, Client, Message } from 'discord.js';
 import { GatewayIntentBits, IntentsBitField, Partials } from 'discord.js';
 
 export const prisma = new PrismaClient();
@@ -24,12 +25,17 @@ export const client = new Client({
 export const log = (...args: any[]) =>
   console.log(new Date().toLocaleTimeString(), ...args);
 
+export type TextChannels = Exclude<
+  TextBasedChannel,
+  DMChannel | PartialDMChannel | PrivateThreadChannel
+>;
+
 export const isGoodChannel = (
   channel: Channel | null,
-): channel is TextChannel | VoiceChannel =>
-  channel?.type === ChannelType.GuildText ||
-  channel?.type === ChannelType.GuildVoice ||
-  channel?.type === ChannelType.GuildAnnouncement;
+): channel is TextChannels =>
+  !!channel?.isTextBased() &&
+  channel.type !== ChannelType.DM &&
+  channel.type !== ChannelType.PrivateThread;
 
 export const sanitiseTag = (tag: string) =>
   tag.replace(new RegExp('([_*#])', 'g'), '\\$1');

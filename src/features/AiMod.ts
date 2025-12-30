@@ -120,18 +120,6 @@ async function Moderate(userSf: bigint, message: Message) {
     //Start with one strike after timeout ends
     userStrikes.push({ userSf, sec: sec + timeoutSec, categories, messageSf });
   }
-
-  const scores = Object.entries(result.category_scores);
-  const longestCategory = Math.max(...scores.map(([k]) => k.length));
-  const report =
-    '\n```' +
-    scores
-      .map(([k, v]) => `${k.padEnd(longestCategory, '.')} ${v.toFixed(5)}`)
-      .join('\n') +
-    '```';
-  await (
-    client.channels.fetch('1317181321293856828') as Promise<TextChannel>
-  )?.then(async channel => await channel.send(message.content + report));
 }
 
 //Alcohol, gambling, drugs, sex, violence, illegal content, hate speech

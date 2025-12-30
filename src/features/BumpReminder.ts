@@ -56,26 +56,28 @@ export const BumpReminder: Feature = {
 
     if (!checkItOut && !thanks) return;
 
-    const nonce = `${Math.floor(new Date().getTime() / 60_000)}`;
-    try {
-      await message.delete();
-      await message.channel.send({
-        embeds: [
-          {
-            color: embed.color ?? undefined,
-            title: 'Bump done! :thumbsup:',
-            description: `${checkItOut}\n${thanks}`,
-            footer: {
-              text: 'Every two hours anyone can use /bump to attract new people to this server.',
+    const bumpDoneMessage = await (async () => {
+      const nonce = `${Math.floor(new Date().getTime() / 60_000)}`;
+      try {
+        await message.delete();
+        return await message.channel.send({
+          embeds: [
+            {
+              color: embed.color ?? undefined,
+              title: 'Bump done! :thumbsup:',
+              description: `${checkItOut}\n${thanks}`,
+              footer: {
+                text: 'Every two hours anyone can use /bump to attract new people to this server.',
+              },
             },
-          },
-        ],
-        nonce,
-        enforceNonce: true,
-      });
-    } catch (e) {
-      console.error('Failed to replace bump message', e);
-    }
+          ],
+          nonce,
+          enforceNonce: true,
+        });
+      } catch (e) {
+        console.error('Failed to replace bump message', e);
+      }
+    })();
 
     //Delete the latest soft reminder
     const softReminder = mostRecentSoftReminders.get(`${message.channelId}`);
@@ -85,14 +87,13 @@ export const BumpReminder: Feature = {
     }
 
     //Update hard reminder embed
-    if (reminder) {
+    if (reminder && bumpDoneMessage) {
       const hardReminder = mostRecentHardReminers.get(`${reminder.channelSf}`);
       await hardReminder?.edit({
         embeds: [
           {
             title: 'Bump Reminder (expired)',
-            description: `~~It is time to bump the server! Use \`/bump\` to do so.~~
-Already done: ${message.url}`,
+            description: `Bumped: ${bumpDoneMessage.url}`,
             color: 0x2f6f7f,
           },
         ],
@@ -270,7 +271,7 @@ async function tick() {
       console.error(reminder, e);
       if (RegExp(/Unknown Channel|Missing Access/).test(`${e}`)) {
         await prisma.bumpReminder.delete({ where: { id: reminder.id } });
-        console.log('Deleted reminder');
+        console.warn('Deleted reminder');
       }
     }
   }
@@ -297,7 +298,7 @@ async function tick() {
           where: { id: reminder.id },
           data: { softChannelSf: null },
         });
-        console.log('Disabled soft reminder');
+        console.warn('Disabled soft reminder');
       }
     }
   }
@@ -311,7 +312,7 @@ async function hardRemind({ id, channelSf, Users }: HardReminder) {
   const channel = await client.channels.fetch(`${channelSf}`);
   if (!isGoodChannel(channel)) {
     await prisma.bumpReminder.delete({ where: { id } });
-    console.log(`Deleting reminder for channel ${channelSf}`);
+    console.warn(`Deleting reminder for channel ${channelSf}`);
     return;
   }
 
@@ -324,8 +325,8 @@ async function hardRemind({ id, channelSf, Users }: HardReminder) {
   const pingUsers = onlineUsers.size
     ? onlineUsers
     : idleUsers.size
-    ? idleUsers
-    : dndUsers;
+      ? idleUsers
+      : dndUsers;
   const content =
     Users.filter(u => pingUsers.has(`${u.userSf}`))
       .map(u => `<@${u.userSf}>`)
@@ -363,7 +364,7 @@ async function softRemind({ id, channelSf, hardChannelSf }: SoftReminder) {
       where: { id },
       data: { softChannelSf: null },
     });
-    console.log(`Disabling soft reminder for channel ${channelSf}`);
+    console.warn(`Disabling soft reminder for channel ${channelSf}`);
     return;
   }
 

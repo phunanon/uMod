@@ -20,12 +20,10 @@ const userRow = (params: { idx: bigint; tag: string; n: string }) => {
   return `\`${i} ${truncTag}`.padEnd(maxTagLength + 4, ' ') + '`' + ` ${n}`;
 };
 
+const toLocale = (x: number) =>
+  x.toLocaleString('en-GB', { maximumFractionDigits: 1 });
 const fmt = (x: number, what: string) =>
-  x < 1000
-    ? `${x} ${what}`
-    : `${(x / 1000).toLocaleString('en-GB', {
-        maximumFractionDigits: 1,
-      })}k ${what}`;
+  x < 1000 ? `${toLocale(x)} ${what}` : `${toLocale(x / 1000)}k ${what}`;
 
 const MakeLeaderboard = async <T extends {}>(
   userSf: bigint,
@@ -55,7 +53,7 @@ export const LeaderboardRecorder: Feature = {
         vcChannels.set(BigInt(guildSf), voiceChannels);
       }
       setTimeout(RenewVcChannels, 600_000);
-    };
+    }
     async function LogVcMinutes() {
       for (const [guildSf, channels] of vcChannels) {
         const memberIds: bigint[] = [];
@@ -378,7 +376,8 @@ export const VcLeaderboard: Feature = {
         userSf,
         getTop10,
         getForSf,
-        ({ idx, tag, vcMinutes: n }) => userRow({ idx, tag, n: fmt(n, 'min') }),
+        ({ idx, tag, vcMinutes: n }) =>
+          userRow({ idx, tag, n: fmt(n / 60, 'hours') }),
       );
       await interaction.editReply(
         'Lists members by number of minutes in any voice channel.\n' +

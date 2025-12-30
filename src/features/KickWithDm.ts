@@ -59,7 +59,7 @@ export const KickWithDm: Feature = {
       }
 
       try {
-        await member.kick(`(DM'd) ${reason}`);
+        await member.kick(`by <@${interaction.user.id}>: (DM'd) ${reason}`);
       } catch {
         await interaction.editReply(
           `Unable to kick <@${user.id}>, but they were DM'd.`,
