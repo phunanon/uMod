@@ -39,53 +39,33 @@ const MakeLeaderboard = async <T extends {}>(
   ].join('\n');
 };
 
-const vcChannels = new Map<bigint, VoiceBasedChannel[]>();
 export const LeaderboardRecorder: Feature = {
   async Init() {
-    async function RenewVcChannels() {
-      const guilds = client.guilds.cache;
-      for (const [guildSf, guild] of guilds) {
-        const voiceChannels = [
-          ...guild.channels.cache
-            .filter(channel => channel.isVoiceBased())
-            .values(),
-        ];
-        vcChannels.set(BigInt(guildSf), voiceChannels);
-      }
-      setTimeout(RenewVcChannels, 600_000);
-    }
-    async function LogVcMinutes() {
-      for (const [guildSf, channels] of vcChannels) {
-        const memberIds: bigint[] = [];
-        for (const channel of channels) {
+    async function IncVcMinutes() {
+      setTimeout(IncVcMinutes, 60_000);
+      const dbMembers = await prisma.member.updateManyAndReturn({
+        select: { guildSf: true, userSf: true },
+        where: { inVc: true },
+        data: { vcMinutes: { increment: 1 } },
+      });
+      const noLongerInVc: bigint[] = [];
+      for (const { guildSf, userSf } of dbMembers) {
+        const member = await (async () => {
           try {
-            const fetched = await channel.fetch();
-            memberIds.push(
-              ...fetched.members
-                .filter(m => !m.user.bot)
-                .map(m => BigInt(m.id))
-                .values(),
-            );
-          } catch {
-            vcChannels.set(
-              guildSf,
-              channels.filter(c => c.id !== channel.id),
-            );
-          }
+            const guild = await client.guilds.fetch(`${guildSf}`);
+            return await guild.members.fetch(`${userSf}`);
+          } catch {}
+        })();
+        if (!member || !member.voice.channelId) {
+          noLongerInVc.push(userSf);
         }
-        if (!memberIds.length) continue;
-        await prisma.member.updateMany({
-          where: {
-            guildSf: BigInt(guildSf),
-            userSf: { in: memberIds.map(BigInt) },
-          },
-          data: { vcMinutes: { increment: 1 } },
-        });
       }
-      setTimeout(LogVcMinutes, 60_000);
+      await prisma.member.updateMany({
+        where: { userSf: { in: noLongerInVc } },
+        data: { inVc: false },
+      });
     }
-    setTimeout(RenewVcChannels, 30_000);
-    setTimeout(LogVcMinutes, 60_000);
+    setTimeout(IncVcMinutes, 60_000);
   },
   async HandleMessageCreate({ message, guildSf }) {
     const { content, author } = message;
@@ -112,6 +92,34 @@ export const LeaderboardRecorder: Feature = {
         tag,
       },
     });
+  },
+  async HandleVoiceStateUpdate(oldState, newState) {
+    if (oldState.channelId === newState.channelId) return;
+    if (newState.member?.user.bot) return;
+    const { member } = newState;
+    if (!member) return;
+
+    const guildSf = BigInt(newState.guild.id);
+    const userSf = BigInt(newState.id);
+    const userSf_guildSf = { guildSf, userSf };
+
+    const { inVc } = (await prisma.member.findUnique({
+      select: { inVc: true },
+      where: { userSf_guildSf },
+    })) ?? { inVc: false };
+
+    const update = async (inVc: boolean) =>
+      await prisma.member.upsert({
+        where: { userSf_guildSf },
+        create: { guildSf, userSf, tag: member.user.tag },
+        update: { inVc },
+      });
+
+    if (inVc && !newState.channelId) {
+      await update(false);
+    } else if (!inVc && member.voice.channelId) {
+      await update(true);
+    }
   },
 };
 

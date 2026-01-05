@@ -264,7 +264,7 @@ async function tick() {
         where: { id: reminder.id },
         data: {
           remindAt: after(reminder.hours),
-          softRemindAt: after(reminder.hours + 0.51),
+          softRemindAt: after(0.51),
         },
       });
     } catch (e) {

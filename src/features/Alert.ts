@@ -115,7 +115,9 @@ export const Alert: Feature = {
         },
       });
       const criteria = alertInfo(
-        ...[event, userSf, roleSf, pattern, cooldownSec, insitu, autoDeleteSec],
+        event,
+        ...[userSf, roleSf, pattern, cooldownSec, insitu, autoDeleteSec],
+        undefined
       );
       await interaction.editReply({
         content: `Alert ${alert.id} created: ${criteria}, ${altReason ?? ''}`,
@@ -400,7 +402,8 @@ export const HandleAlert = async (i: HandleInfo) => {
       )
       .replaceAll(/\$url/g, i.url ?? '[no URL]');
     const info = alertInfo(
-      ...[event, uSf, roleSf, pattern, cooldownSec, insitu, autoDeleteSec],
+      event,
+      ...[uSf, roleSf, pattern, cooldownSec, insitu, autoDeleteSec, i.url],
     );
     const allowedMentions =
       a.altReason?.includes('$ping') && uSf
@@ -437,6 +440,7 @@ const alertInfo = (
   cooldownSec: number | null,
   insitu: boolean | null,
   autoDeleteSec: number | null,
+  url: string | undefined,
 ) => {
   const parts = [
     event,
@@ -446,6 +450,7 @@ const alertInfo = (
     cooldownSec && event !== 'milestone' ? `${cooldownSec}s cooldown` : null,
     insitu ? 'in-situ' : null,
     autoDeleteSec ? `${autoDeleteSec}s auto-delete` : null,
+    url,
   ].filter(Boolean);
   return parts.join(', ');
 };

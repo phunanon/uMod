@@ -108,7 +108,7 @@ function hourHistogram(counts: Count[]) {
     return isNow ? `__${text}__` : `${text}`;
   };
   const hourgram = hours.map(
-    (count, hour) => h(hour) + '█'.repeat(Math.round((count / hourMax) * w)),
+    (count, hour) => '█'.repeat(Math.round((count / hourMax) * w)) + h(hour),
   );
   return { title: 'Hourly Activity', description: hourgram.join('\n') };
 }
