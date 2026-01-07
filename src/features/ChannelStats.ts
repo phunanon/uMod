@@ -1,3 +1,4 @@
+import { ApplicationCommandOptionType } from 'discord.js';
 import { Feature } from '.';
 import { prisma } from '../infrastructure';
 
@@ -11,6 +12,14 @@ export const ChannelStats: Feature = {
     await commands.create({
       name: 'channel-stats',
       description: 'Get stats for all channels',
+      options: [
+        {
+          name: 'public-only',
+          description: 'Only show stats for public channels',
+          type: ApplicationCommandOptionType.Boolean,
+          required: true,
+        },
+      ],
     });
   },
   Interaction: {
@@ -18,9 +27,12 @@ export const ChannelStats: Feature = {
     async command({ interaction, guild, guildSf }) {
       await interaction.deferReply();
 
+      const publicOnly = interaction.options.getBoolean('public-only', true);
+
       const stats = await prisma.channelStat.findMany({
-        where: { guildSf },
+        where: { guildSf, ...(publicOnly ? { isPublic: true } : {}) },
         orderBy: { numMessage: 'desc' },
+        take: 20,
       });
 
       const allChannelSfs = await guild.channels
@@ -37,7 +49,6 @@ export const ChannelStats: Feature = {
       });
 
       const statsMessage = stats
-        .slice(0, 20)
         .map((s, i) => `${i}. \`${fmt(s.numMessage)}\` <#${s.channelSf}>`);
       const earliestAt = Math.min(...stats.map(stat => stat.at.getTime()));
       const t = `<t:${Math.floor(earliestAt / 1000)}:R>`;
@@ -45,15 +56,19 @@ export const ChannelStats: Feature = {
       await interaction.editReply(`Since ${t}\n` + statsMessage.join('\n'));
     },
   },
-  async HandleMessageCreate({ guild, channel, guildSf, channelSf }) {
-    if (!channel.permissionsFor(guild.roles.everyone).has('ViewChannel'))
-      return;
+  async HandleMessageCreate({ guild, channel, message, guildSf, channelSf }) {
+    if (channel.isDMBased()) return;
+    if (message.author.bot) return;
 
+    const isPublic = channel
+      .permissionsFor(guild.roles.everyone)
+      .has('ViewChannel');
     const guildSf_channelSf = { guildSf, channelSf };
+
     await prisma.channelStat.upsert({
       where: { guildSf_channelSf },
-      create: { ...guildSf_channelSf, numMessage: 1 },
-      update: { numMessage: { increment: 1 } },
+      create: { ...guildSf_channelSf, numMessage: 1,  isPublic },
+      update: { numMessage: { increment: 1 }, isPublic },
     });
   },
 };

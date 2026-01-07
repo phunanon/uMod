@@ -274,6 +274,7 @@ model ChannelStat {
   guildSf    BigInt
   channelSf  BigInt
   numMessage Int      @default(0)
+  isPublic   Boolean
 
   @@unique([guildSf, channelSf])
 }
