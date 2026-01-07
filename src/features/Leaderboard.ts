@@ -24,6 +24,13 @@ const toLocale = (x: number) =>
   x.toLocaleString('en-GB', { maximumFractionDigits: 1 });
 const fmt = (x: number, what: string) =>
   x < 1000 ? `${toLocale(x)} ${what}` : `${toLocale(x / 1000)}k ${what}`;
+const hrs = (mins: number) => {
+  const h = (mins / 60).toLocaleString('en-GB', {
+    maximumFractionDigits: 1,
+    minimumFractionDigits: 1,
+  });
+  return `\`${h.padStart(5, ' ')}\` hours`;
+};
 
 const MakeLeaderboard = async <T extends {}>(
   userSf: bigint,
@@ -32,11 +39,14 @@ const MakeLeaderboard = async <T extends {}>(
   fmtRow: (row: LeaderboardRow<T>) => string,
 ) => {
   const top10 = await getTop10();
-  const notInTop10 = !top10.some(x => x.userSf === userSf);
-  return [
-    ...top10.map(fmtRow),
-    ...(notInTop10 ? ['...', fmtRow(await getForSf(userSf))] : []),
-  ].join('\n');
+  const lastRows = await (async () => {
+    const notInTop10 = !top10.some(x => x.userSf === userSf);
+    if (!notInTop10) return [];
+    const row = await getForSf(userSf);
+    const formatted = fmtRow(row);
+    return row.idx === 11n ? [formatted] : ['...', formatted];
+  })();
+  return [...top10.map(fmtRow), ...lastRows].join('\n');
 };
 
 export const LeaderboardRecorder: Feature = {
@@ -384,12 +394,10 @@ export const VcLeaderboard: Feature = {
         userSf,
         getTop10,
         getForSf,
-        ({ idx, tag, vcMinutes: n }) =>
-          userRow({ idx, tag, n: fmt(n / 60, 'hours') }),
+        ({ idx, tag, vcMinutes: min }) => userRow({ idx, tag, n: hrs(min) }),
       );
       await interaction.editReply(
-        'Lists members by number of minutes in any voice channel.\n' +
-          leaderboard,
+        'Lists members by time spent in any voice channel.\n' + leaderboard,
       );
     },
   },

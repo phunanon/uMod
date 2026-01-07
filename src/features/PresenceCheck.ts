@@ -16,16 +16,10 @@ async function CheckPresence() {
     });
     const noLongerPresent: number[] = [];
     const nowPresent: number[] = [];
-    const inVc: bigint[] = [];
-    const outVc: bigint[] = [];
     for (const dbMember of dbMembers) {
       const member = guildMembers.get(dbMember.userSf.toString());
       if (dbMember.present && !member) noLongerPresent.push(dbMember.id);
       if (!dbMember.present && member) nowPresent.push(dbMember.id);
-      if (member) {
-        const list = member.voice.channelId ? inVc : outVc;
-        list.push(BigInt(member.id));
-      }
     }
     await prisma.member.updateMany({
       where: { id: { in: noLongerPresent } },
@@ -34,14 +28,6 @@ async function CheckPresence() {
     await prisma.member.updateMany({
       where: { id: { in: nowPresent } },
       data: { present: true },
-    });
-    await prisma.member.updateMany({
-      where: { userSf: { in: inVc } },
-      data: { inVc: true },
-    });
-    await prisma.member.updateMany({
-      where: { userSf: { in: outVc } },
-      data: { inVc: false },
     });
     await new Promise(resolve => setTimeout(resolve, 1_000));
   }
