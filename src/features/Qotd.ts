@@ -53,6 +53,17 @@ export const QotdEnable: Feature = {
       await interaction.editReply('QOTD enabled or reconfigured.');
     },
   },
+  HandleMessageCreate: async ({ channelSf }) => {
+    const lastQotd = await prisma.qotdQuestion.findFirst({
+      where: { channelSf, postedAt: { not: null }, postAt: { lt: new Date() } },
+      orderBy: { postAt: 'desc' },
+    });
+    if (!lastQotd) return;
+    await prisma.qotdQuestion.update({
+      where: { id: lastQotd.id },
+      data: { popularity: { increment: 1 } },
+    });
+  },
 };
 
 export const QotdDisable: Feature = {
@@ -119,7 +130,6 @@ export const QotdApprove: Feature = {
       const content =
         interaction.message.content +
         `
-
 **Question approved** by <@${userSf}> <t:${now}:R>. Planned post time: <t:${t}:R>`;
       await interaction.editReply({ content, components: [] });
     },
@@ -135,7 +145,6 @@ export const QotdReject: Feature = {
       const now = Math.floor(Date.now() / 1000);
       await interaction.editReply({
         content: `${interaction.message.content}
-
 **Question rejected** by <@${interaction.user.id}> <t:${now}:R>.`,
         components: [],
       });
@@ -165,19 +174,22 @@ export const QotdSuggest: Feature = {
     async command({ interaction, guild, guildSf, userSf: authorSf }) {
       await interaction.deferReply({ ephemeral: true });
 
-      const question = interaction.options.getString('question', true);
+      const question = interaction.options
+        .getString('question', true)
+        .replaceAll(/\s{1,}/g, ' ')
+        .trim();
 
       const config = await prisma.guildQotd.findUnique({ where: { guildSf } });
       const auditChannel =
         config && (await guild.channels.fetch(`${config.auditChannelSf}`));
 
-      if (!auditChannel?.isTextBased()) {
+      if (!auditChannel?.isTextBased() || !config) {
         await interaction.editReply('QOTD is disabled in this server.');
         return;
       }
 
       const { id } = await prisma.qotdQuestion.create({
-        data: { guildSf, authorSf, question },
+        data: { guildSf, authorSf, question, channelSf: config.postChannelSf },
       });
 
       const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
@@ -199,7 +211,8 @@ export const QotdSuggest: Feature = {
       });
 
       await interaction.editReply(
-        'Your question will be reviewed by staff and potentially added to the question queue. Thank you!',
+        `Your question will be reviewed by staff and potentially added to the question queue. Thank you!
+> ${splitQuestion}`,
       );
     },
   },

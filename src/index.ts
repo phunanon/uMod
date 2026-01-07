@@ -42,18 +42,19 @@ client.once('ready', async () => {
     feature.Init ? [[name, feature.Init] as const] : [],
   );
 
-  const initTimer = setInterval(async () => {
+  async function InitFeatureCommands() {
     if (!client.application) return;
     const feature = inits.shift();
     if (!feature) {
-      clearInterval(initTimer);
       log('Features initialised.');
       return;
     }
     const [name, init] = feature;
     process.stdout.write(`${name}... `);
     await init(client.application.commands);
-  }, 1000);
+    setTimeout(InitFeatureCommands, 1_000);
+  }
+  setTimeout(InitFeatureCommands, 1_000);
 
   log('Ready.');
 });
