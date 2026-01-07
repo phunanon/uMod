@@ -119,18 +119,16 @@ export const EnforceRulePicker: Feature = {
           .addOptions(options),
       );
 
-      try {
-        const quotedContent = quoteContent(interaction.targetMessage);
-        await author.send(
-          `A moderator is reviewing your message\n${quotedContent}`,
-        );
-      } catch {
+      const dmProblem = await (async () => {
         try {
-          await interaction.targetMessage.reply(
-            'A moderator is reviewing your message.',
+          const quotedContent = quoteContent(interaction.targetMessage);
+          await author.send(
+            `A moderator is reviewing your message\n${quotedContent}`,
           );
-        } catch {}
-      }
+        } catch {
+          return true;
+        }
+      })();
 
       const notes = await prisma.note.findMany({
         where: { guildSf, userSf: BigInt(author.id) },
@@ -143,8 +141,13 @@ export const EnforceRulePicker: Feature = {
         ? printNotes(notes.toSorted(sort))
         : '- No notes.';
 
+      const dmProblemSpiel = dmProblem
+        ? ':warning: I could not DM the author to inform them that their message is being reviewed. However, you can still issue a warning.\n'
+        : '';
       await interaction.editReply({
-        content: 'Select a rule to enforce. Last three notes:\n' + printedNotes,
+        content:
+          `${dmProblemSpiel}Select a rule to enforce. Last three notes:\n` +
+          printedNotes,
         components: [row],
       });
     },
@@ -230,17 +233,15 @@ export const EnforceRule: Feature = {
 
       const row = DeleteMessageRow(messageSf);
 
-      const didWhat = duration
-        ? "timed out and DM'd about why"
-        : 'warned via DMs';
-      const dmProblemSpiel = dmProblem
-        ? 'Could not DM the author, but the warning has been logged. Please inform them yourself.'
-        : '';
-      const timeoutProblemSpiel = timeoutProblem
-        ? 'Could not timeout the member. Seek help from a server admin if necessary.'
-        : '';
+      const dmSpiel = dmProblem
+        ? ':warning: Could not DM the author, but the warning has been logged. Please inform them yourself.'
+        : 'Member warned via DMs';
+      const timeoutSpiel = timeoutProblem
+        ? ':warning: Could not timeout the member. Seek help from a server admin if necessary.'
+        : "Member timed out and DM'd about why";
+      const spiel = duration ? timeoutSpiel : dmSpiel;
       await interaction.editReply({
-        content: `Rule enforced: ${rule.rule}\nMember ${didWhat}.\n${timeoutProblemSpiel}\n${dmProblemSpiel}`,
+        content: `Rule enforced: ${rule.rule}\n${spiel}`,
         components: [row],
       });
     },
