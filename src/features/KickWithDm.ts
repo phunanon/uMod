@@ -1,5 +1,6 @@
 import { ApplicationCommandOptionType } from 'discord.js';
 import { Feature } from '.';
+import { userOption } from '../infrastructure';
 
 export const KickWithDm: Feature = {
   async Init(commands) {
@@ -7,12 +8,7 @@ export const KickWithDm: Feature = {
       name: 'kick-with-dm',
       description: 'Send a DM just before kicking a user',
       options: [
-        {
-          name: 'user',
-          description: 'The user to DM then kick',
-          type: ApplicationCommandOptionType.User,
-          required: true,
-        },
+        userOption('The user to DM then kick', true),
         {
           name: 'reason',
           description: 'The reason for the kick, sent to the user',

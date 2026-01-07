@@ -1,6 +1,6 @@
 import { ApplicationCommandOptionType } from 'discord.js';
 import { Feature } from '.';
-import { prisma, RoleIsAboveMe } from '../infrastructure';
+import { prisma, RoleIsAboveMe, userOption } from '../infrastructure';
 import { MakeNote } from './Note';
 
 export const DisallowRole: Feature = {
@@ -10,12 +10,7 @@ export const DisallowRole: Feature = {
       description:
         'Disallow (or re-allow) a certain user being assigned a certain role',
       options: [
-        {
-          type: ApplicationCommandOptionType.User,
-          name: 'user',
-          description: 'The user to disallow (or re-allow) the role from',
-          required: true,
-        },
+        userOption('The user to disallow (or re-allow) the role from', true),
         {
           type: ApplicationCommandOptionType.Role,
           name: 'role',

@@ -4,6 +4,8 @@ import { client, prisma, R } from '../infrastructure';
 import { isGoodChannel, ParseDurationAsMs } from '../infrastructure';
 import { CensorText } from './Censor';
 
+//TODO: accept absolute dates
+
 export const Reminder: Feature = {
   async Init(commands) {
     TickSoon();

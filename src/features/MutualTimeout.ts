@@ -1,5 +1,6 @@
-import { ApplicationCommandOptionType, GuildMember } from 'discord.js';
+import { GuildMember } from 'discord.js';
 import { Feature } from '.';
+import { userOption } from '../infrastructure';
 
 export const MutualTimeout: Feature = {
   async Init(commands) {
@@ -7,14 +8,7 @@ export const MutualTimeout: Feature = {
       name: 'mutual-timeout',
       description:
         'Timeout someone for five minutes, but simultaneously timeout yourself for one hour.',
-      options: [
-        {
-          type: ApplicationCommandOptionType.User,
-          name: 'user',
-          description: 'The user to mute.',
-          required: true,
-        },
-      ],
+      options: [userOption('The user to mute.', true)],
     });
   },
   Interaction: {

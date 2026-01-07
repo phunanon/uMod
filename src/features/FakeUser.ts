@@ -1,20 +1,12 @@
-import { ApplicationCommandOptionType } from 'discord.js';
 import { Feature } from '.';
-import { prisma } from '../infrastructure';
+import { prisma, userOption } from '../infrastructure';
 
 export const FakeUser: Feature = {
   async Init(commands) {
     await commands.create({
       name: 'fake-user',
       description: 'Mimic a user',
-      options: [
-        {
-          name: 'user',
-          description: 'User to mimic',
-          type: ApplicationCommandOptionType.User,
-          required: true,
-        },
-      ],
+      options: [userOption('User to mimic', true)],
     });
   },
   Interaction: {

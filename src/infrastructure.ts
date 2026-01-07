@@ -3,6 +3,8 @@ import { DMChannel, PartialDMChannel } from 'discord.js';
 import { PrivateThreadChannel, TextBasedChannel } from 'discord.js';
 import { Guild, Channel, ChannelType, Client, Message } from 'discord.js';
 import { GatewayIntentBits, IntentsBitField, Partials } from 'discord.js';
+import { ApplicationCommandOptionType } from 'discord.js';
+import { APIApplicationCommandOptionBase } from 'discord.js';
 
 export const prisma = new PrismaClient();
 
@@ -76,7 +78,7 @@ export const R = (ms: number | Date) =>
   `<t:${Math.floor(new Date(ms).getTime() / 1000)}:R>`;
 
 export function quoteContent({ id, url, ...message }: Message) {
-  const { content, guildId, channelId, reference, attachments } = message;
+  const { content, reference, attachments } = message;
   const quoted =
     content
       .split('\n')
@@ -86,7 +88,7 @@ export function quoteContent({ id, url, ...message }: Message) {
       .trim() || '> [no text]';
   const attachmentContent = attachments.map(x => x.url).join(' ');
   const ref = reference
-    ? `(reply to https://discord.com/channels/${guildId}/${channelId}/${id}) `
+    ? `(references https://discord.com/channels/${reference.guildId}/${reference.channelId}/${reference.messageId}) `
     : '';
   return `${quoted}
 ${url} ${ref}${attachmentContent}`.trim();
@@ -98,4 +100,16 @@ export function RoleIsAboveMe(roleId: string, guild: Guild) {
   const role = guild.roles.cache.get(roleId);
   if (!role) return true;
   return role.position >= me.roles.highest.position;
+}
+
+export function userOption(
+  description: string,
+  required = false,
+): APIApplicationCommandOptionBase<ApplicationCommandOptionType.User> {
+  return {
+    name: 'user',
+    description,
+    type: ApplicationCommandOptionType.User,
+    required,
+  };
 }

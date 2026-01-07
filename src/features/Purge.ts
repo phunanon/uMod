@@ -1,6 +1,7 @@
 import { ApplicationCommandOptionType } from 'discord.js';
 import { Feature } from '.';
 import { AlertEvent, HandleAlert } from './Alert';
+import { userOption } from '../infrastructure';
 
 const maxValue = 32;
 
@@ -18,11 +19,7 @@ export const Purge: Feature = {
           minValue: 1,
           maxValue,
         },
-        {
-          name: 'user',
-          description: 'A specific user to delete messages of',
-          type: ApplicationCommandOptionType.User,
-        },
+        userOption('A specific user to delete messages of'),
       ],
     });
   },

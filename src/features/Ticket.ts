@@ -3,7 +3,7 @@ import { ApplicationCommandOptionType } from 'discord.js';
 import { ActionRowBuilder, ButtonBuilder, TextInputBuilder } from 'discord.js';
 import { ModalBuilder, ButtonStyle, TextInputStyle } from 'discord.js';
 import { Feature } from '.';
-import { prisma, TextChannels } from '../infrastructure';
+import { prisma, TextChannels, userOption } from '../infrastructure';
 import { MakeNote } from './Note';
 
 export const TicketsHere: Feature = {
@@ -160,14 +160,7 @@ export const TicketAdd: Feature = {
     await commands.create({
       name: 'ticket-add',
       description: 'Add a user to a ticket',
-      options: [
-        {
-          name: 'user',
-          description: 'The user to add',
-          type: ApplicationCommandOptionType.User,
-          required: true,
-        },
-      ],
+      options: [userOption('The user to add', true)],
     });
   },
   Interaction: {

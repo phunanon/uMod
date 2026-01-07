@@ -1,20 +1,12 @@
-import { ApplicationCommandOptionType } from 'discord.js';
 import { Feature } from '.';
-import { prisma } from '../infrastructure';
+import { prisma, userOption } from '../infrastructure';
 
 export const GifMute: Feature = {
   async Init(commands) {
     await commands.create({
       name: 'gif-mute',
       description: 'Prevent a member from sending GIFs',
-      options: [
-        {
-          name: 'user',
-          description: 'The user to mute',
-          type: ApplicationCommandOptionType.User,
-          required: true,
-        },
-      ],
+      options: [userOption('The user to mute', true)],
     });
   },
   Interaction: {

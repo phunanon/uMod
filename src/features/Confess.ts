@@ -3,7 +3,8 @@ import { ApplicationCommandType, ButtonBuilder, ButtonStyle } from 'discord.js';
 import { EmbedBuilder, HexColorString, ModalBuilder } from 'discord.js';
 import { TextBasedChannel, TextInputBuilder, TextInputStyle } from 'discord.js';
 import { Feature } from '.';
-import { client, log, prisma, RecordRealAuthor } from '../infrastructure';
+import { client, log, prisma, userOption } from '../infrastructure';
+import { RecordRealAuthor } from '../infrastructure';
 import { DeleteMessageRow } from './DeleteMessage';
 import { MakeNote } from './Note';
 
@@ -228,14 +229,7 @@ export const ConfessUnmute: Feature = {
     await commands.create({
       name: 'confess-unmute',
       description: 'Unmute a user from using the `/confess` command',
-      options: [
-        {
-          name: 'user',
-          type: ApplicationCommandOptionType.User,
-          description: 'The user to unmute',
-          required: true,
-        },
-      ],
+      options: [userOption('The user to unmute', true)],
     });
   },
   Interaction: {

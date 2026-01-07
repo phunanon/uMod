@@ -1,6 +1,6 @@
 import { ApplicationCommandOptionType } from 'discord.js';
 import { Feature } from '.';
-import { client, prisma, isGoodChannel } from '../infrastructure';
+import { client, prisma, isGoodChannel, userOption } from '../infrastructure';
 
 export enum AlertEvent {
   Message = 'message',
@@ -43,11 +43,7 @@ export const Alert: Feature = {
           ],
           required: true,
         },
-        {
-          name: 'user',
-          description: 'Involving a user',
-          type: ApplicationCommandOptionType.User,
-        },
+        userOption('Involving a user'),
         {
           name: 'role',
           description: 'Involving a role',

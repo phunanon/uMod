@@ -1,6 +1,5 @@
-import { ApplicationCommandOptionType } from 'discord.js';
 import { Feature } from '.';
-import { prisma } from '../infrastructure';
+import { prisma, userOption } from '../infrastructure';
 import { friendliestMembers } from '@prisma/client/sql';
 
 const latestAuthorSf = new Map<bigint, bigint>();
@@ -12,14 +11,7 @@ export const Acquaintances: Feature = {
     await commands.create({
       name: 'acquaintances',
       description: 'List friendliest server members or acquaintances of a user',
-      options: [
-        {
-          name: 'user',
-          description: 'User to list acquaintances for',
-          type: ApplicationCommandOptionType.User,
-          required: false,
-        },
-      ],
+      options: [userOption('User to list acquaintances for')],
     });
   },
   Interaction: {
@@ -62,17 +54,14 @@ export const Acquaintances: Feature = {
         count,
       }));
 
+      const description = users
+        .map(
+          ({ sf, count }, n) =>
+            `${n + 1}. <@${sf}> - ${count.toLocaleString()} messages`,
+        )
+        .join('\n');
       await interaction.editReply({
-        embeds: [
-          {
-            title: `Acquaintances of ${displayName}`,
-            description: users
-              .map(
-                ({ sf, count }, n) => `${n + 1}. <@${sf}> - ${count} messages`,
-              )
-              .join('\n'),
-          },
-        ],
+        embeds: [{ title: `Acquaintances of ${displayName}`, description }],
       });
     },
   },

@@ -1,6 +1,6 @@
 import { ApplicationCommandOptionType } from 'discord.js';
 import { Feature } from '.';
-import { prisma } from '../infrastructure';
+import { prisma, userOption } from '../infrastructure';
 
 export const Histogram: Feature = {
   async Init(commands) {
@@ -18,11 +18,7 @@ export const Histogram: Feature = {
           ],
           required: true,
         },
-        {
-          name: 'user',
-          description: 'The user to generate a histogram for',
-          type: ApplicationCommandOptionType.User,
-        },
+        userOption('The user to generate a histogram for'),
       ],
     });
   },

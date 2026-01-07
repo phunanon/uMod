@@ -1,6 +1,6 @@
-import { ApplicationCommandOptionType, Message } from 'discord.js';
+import { Message } from 'discord.js';
 import { Feature } from '.';
-import { prisma } from '../infrastructure';
+import { prisma, userOption } from '../infrastructure';
 
 export const PingProtect: Feature = {
   async Init(commands) {
@@ -8,14 +8,7 @@ export const PingProtect: Feature = {
       name: 'ping-protect',
       description:
         'Toggle whether users who ping somebody should be auto-timed-out.',
-      options: [
-        {
-          name: 'user',
-          type: ApplicationCommandOptionType.User,
-          description: 'The user to protect',
-          required: true,
-        },
-      ],
+      options: [userOption('The user to protect', true)],
     });
   },
   Interaction: {

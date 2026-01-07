@@ -1,7 +1,7 @@
 import { ApplicationCommandOptionType } from 'discord.js';
 import { ApplicationCommandType } from 'discord.js';
 import { Feature } from '.';
-import { prisma, quoteContent, R } from '../infrastructure';
+import { prisma, quoteContent, R, userOption } from '../infrastructure';
 import { AlertEvent, HandleAlert } from './Alert';
 import { Note as DbNote } from '@prisma/client';
 import { DeleteMessageRow } from './DeleteMessage';
@@ -29,12 +29,7 @@ export const Note: Feature = {
       name: 'note',
       description: 'Add a note to a user only other moderators can see',
       options: [
-        {
-          name: 'user',
-          description: 'The user to add the note to',
-          type: ApplicationCommandOptionType.User,
-          required: true,
-        },
+        userOption('The user to add the note to', true),
         {
           name: 'note',
           description: 'The note to add',
@@ -94,14 +89,7 @@ export const ReadNotes: Feature = {
     await commands.create({
       name: 'notes',
       description: 'Read notes for a user',
-      options: [
-        {
-          name: 'user',
-          description: 'The user to read notes for',
-          type: ApplicationCommandOptionType.User,
-          required: true,
-        },
-      ],
+      options: [userOption('The user to read notes for', true)],
     });
   },
   Interaction: {
@@ -137,14 +125,7 @@ export const ReadNotesButton: Feature = {
     await commands.create({
       name: 'notes',
       description: 'Read notes for a user',
-      options: [
-        {
-          name: 'user',
-          description: 'The user to read notes for',
-          type: ApplicationCommandOptionType.User,
-          required: true,
-        },
-      ],
+      options: [userOption('The user to read notes for', true)],
     });
   },
   Interaction: {
@@ -181,14 +162,7 @@ export const ReadNotesByAuthor: Feature = {
     await commands.create({
       name: 'notes-by-author',
       description: 'Read notes by a specific author (usually staff)',
-      options: [
-        {
-          name: 'author',
-          description: 'The author of the notes to read',
-          type: ApplicationCommandOptionType.User,
-          required: true,
-        },
-      ],
+      options: [userOption('The author of the notes to read', true)],
     });
   },
   Interaction: {

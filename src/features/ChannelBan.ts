@@ -1,7 +1,7 @@
 import { ApplicationCommandOptionType } from 'discord.js';
 import { ApplicationCommandType } from 'discord.js';
 import { Feature } from '.';
-import { prisma, quoteContent } from '../infrastructure';
+import { prisma, quoteContent, userOption } from '../infrastructure';
 import { MakeNote } from './Note';
 import { DeleteMessageRow } from './DeleteMessage';
 
@@ -11,12 +11,7 @@ export const ChannelBan: Feature = {
       name: 'channel-ban',
       description: 'Ban or unban a user from a channel',
       options: [
-        {
-          name: 'user',
-          description: 'The user to un/ban',
-          type: ApplicationCommandOptionType.User,
-          required: true,
-        },
+        userOption('The user to un/ban', true),
         {
           name: 'reason',
           description: 'The reason for the un/ban',

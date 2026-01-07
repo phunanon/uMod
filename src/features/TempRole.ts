@@ -1,6 +1,6 @@
 import { ApplicationCommandOptionType } from 'discord.js';
 import { Feature } from '.';
-import { client, prisma } from '../infrastructure';
+import { client, prisma, userOption } from '../infrastructure';
 import { ParseDurationAsMs, RoleIsAboveMe } from '../infrastructure';
 
 export const TempRole: Feature = {
@@ -11,12 +11,7 @@ export const TempRole: Feature = {
       name: 'temp-role',
       description: 'Give a user a role for a certain amount of time',
       options: [
-        {
-          name: 'user',
-          description: 'The user to apply the role to',
-          type: ApplicationCommandOptionType.User,
-          required: true,
-        },
+        userOption('The user to apply the role to', true),
         {
           name: 'role',
           description: 'The role to apply to the user',
