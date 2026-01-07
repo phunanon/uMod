@@ -1,9 +1,9 @@
 import { PrismaClient } from '@prisma/client';
-import { DMChannel, PartialDMChannel } from 'discord.js';
+import { DMChannel, PartialDMChannel, PartialGroupDMChannel } from 'discord.js';
 import { PrivateThreadChannel, TextBasedChannel } from 'discord.js';
 import { Guild, Channel, ChannelType, Client, Message } from 'discord.js';
 import { GatewayIntentBits, IntentsBitField, Partials } from 'discord.js';
-import { ApplicationCommandOptionType } from 'discord.js';
+import { MessageSnapshot, ApplicationCommandOptionType } from 'discord.js';
 import { APIApplicationCommandOptionBase } from 'discord.js';
 
 export const prisma = new PrismaClient();
@@ -29,7 +29,7 @@ export const log = (...args: any[]) =>
 
 export type TextChannels = Exclude<
   TextBasedChannel,
-  DMChannel | PartialDMChannel | PrivateThreadChannel
+  DMChannel | PartialDMChannel | PrivateThreadChannel | PartialGroupDMChannel
 >;
 
 export const isGoodChannel = (
@@ -77,21 +77,27 @@ export const ParseDurationAsMs = (duration: string) => {
 export const R = (ms: number | Date) =>
   `<t:${Math.floor(new Date(ms).getTime() / 1000)}:R>`;
 
-export function quoteContent({ id, url, ...message }: Message) {
-  const { content, reference, attachments } = message;
-  const quoted =
-    content
-      .split('\n')
-      .filter(x => !!x.trim())
-      .map(x => `> ${x}`)
-      .join('\n')
-      .trim() || '> [no text]';
+export function quoteContent(message: Message | MessageSnapshot): string {
+  const { url, content, reference, attachments, messageSnapshots } = message;
+  const quoted = content
+    .split('\n')
+    .filter(x => !!x.trim())
+    .map(x => `> ${x}`)
+    .join('\n')
+    .trim();
   const attachmentContent = attachments.map(x => x.url).join(' ');
-  const ref = reference
-    ? `(references https://discord.com/channels/${reference.guildId}/${reference.channelId}/${reference.messageId}) `
-    : '';
-  return `${quoted}
-${url} ${ref}${attachmentContent}`.trim();
+  const refContent = (() => {
+    const snapshot = messageSnapshots?.first();
+    const snapshotContent = snapshot ? quoteContent(snapshot) : '';
+    if (snapshotContent) return snapshotContent;
+    return reference
+      ? `https://discord.com/channels/${reference.guildId}/${reference.channelId}/${reference.messageId}`
+      : '';
+  })();
+  const quotedRef = refContent ? `↪️ References:\n${refContent}` : '';
+  const fallback = quotedRef || attachmentContent ? '' : '> [no text]';
+  return `${quoted || fallback}
+${url} ${attachmentContent} ${quotedRef}`.trim();
 }
 
 export function RoleIsAboveMe(roleId: string, guild: Guild) {

@@ -15,6 +15,7 @@ import {
   VoiceState,
   MessageContextMenuCommandInteraction,
   StringSelectMenuInteraction,
+  PartialUser,
 } from 'discord.js';
 import permits from './permits';
 import { ChannelFlags } from '@prisma/client';
@@ -146,14 +147,14 @@ type NarrowMsgCtx = Omit<MsgCtx, 'isEdit' | 'isDelete'>;
 export type AuditEvent =
   | {
       kind: 'ban' | 'unban' | 'kick' | 'timeout';
-      target: User | null;
-      executor: User | null;
+      target: User | PartialUser | null;
+      executor: User | PartialUser | null;
       reason: string;
     }
   | {
       kind: 'untimeout';
-      target: User | null;
-      executor: User | null;
+      target: User | PartialUser | null;
+      executor: User | PartialUser | null;
       reason: undefined;
     };
 

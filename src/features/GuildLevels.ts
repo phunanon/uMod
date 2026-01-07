@@ -92,7 +92,7 @@ export const GuildLevels: Feature = {
 
     if (congratsChannelSf && congratsChannelSf !== channelSf) {
       const channel = await client.channels.fetch(`${congratsChannelSf}`);
-      if (!channel || !channel.isTextBased()) {
+      if (!channel || !channel.isSendable()) {
         await prisma.guildLevel.delete({ where: { guildSf } });
         return;
       }

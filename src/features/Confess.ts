@@ -283,12 +283,14 @@ const RenewStickyMessage = async (
       .setEmoji('🤫'),
   );
 
-  const newMessage = await channel.send({
+  const sendable = channel.isSendable() ? channel : null;
+  const newMessage = await sendable?.send({
     content:
       'Click the button below to confess anonymously.' +
       (confessRules ? `\n${confessRules}` : ''),
     components: [row],
   });
+  if (!newMessage) return;
 
   const confessMessage = BigInt(newMessage.id);
   await prisma.channelFlags.update({

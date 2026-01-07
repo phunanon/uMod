@@ -172,6 +172,7 @@ const UpdateRoleList = async (
     const newComponents = {
       components: addable ? [...(payload.components ?? []), makeAddRow()] : [],
     };
-    return await channel.send({ ...payload, ...newComponents });
+    const sendable = channel.isSendable() ? channel : null;
+    return await sendable?.send({ ...payload, ...newComponents });
   }
 };

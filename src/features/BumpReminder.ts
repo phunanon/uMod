@@ -60,7 +60,8 @@ export const BumpReminder: Feature = {
       const nonce = `${Math.floor(new Date().getTime() / 60_000)}`;
       try {
         await message.delete();
-        return await message.channel.send({
+        const sendable = message.channel.isSendable() ? message.channel : null;
+        return await sendable?.send({
           embeds: [
             {
               color: embed.color ?? undefined,
@@ -325,8 +326,8 @@ async function hardRemind({ id, channelSf, Users }: HardReminder) {
   const pingUsers = onlineUsers.size
     ? onlineUsers
     : idleUsers.size
-      ? idleUsers
-      : dndUsers;
+    ? idleUsers
+    : dndUsers;
   const content =
     Users.filter(u => pingUsers.has(`${u.userSf}`))
       .map(u => `<@${u.userSf}>`)
