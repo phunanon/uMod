@@ -48,8 +48,10 @@ export const ChannelStats: Feature = {
         },
       });
 
-      const statsMessage = stats
-        .map((s, i) => `${i}. \`${fmt(s.numMessage)}\` <#${s.channelSf}>`);
+      const statsMessage = stats.map((s, i) => {
+        const name = s.isPublic ? `<#${s.channelSf}>` : `\`${s.name}\``;
+        return `${i}. \`${fmt(s.numMessage)}\` ${name}`;
+      });
       const earliestAt = Math.min(...stats.map(stat => stat.at.getTime()));
       const t = `<t:${Math.floor(earliestAt / 1000)}:R>`;
 
@@ -60,6 +62,7 @@ export const ChannelStats: Feature = {
     if (channel.isDMBased()) return;
     if (message.author.bot) return;
 
+    const { name } = channel;
     const isPublic = channel
       .permissionsFor(guild.roles.everyone)
       .has('ViewChannel');
@@ -67,8 +70,8 @@ export const ChannelStats: Feature = {
 
     await prisma.channelStat.upsert({
       where: { guildSf_channelSf },
-      create: { ...guildSf_channelSf, numMessage: 1,  isPublic },
-      update: { numMessage: { increment: 1 }, isPublic },
+      create: { ...guildSf_channelSf, numMessage: 1, isPublic, name },
+      update: { numMessage: { increment: 1 }, isPublic, name },
     });
   },
 };

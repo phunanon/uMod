@@ -162,7 +162,14 @@ export const ReadNotesByAuthor: Feature = {
     await commands.create({
       name: 'notes-by-author',
       description: 'Read notes by a specific author (usually staff)',
-      options: [userOption('The author of the notes to read', true)],
+      options: [
+        {
+          name: 'author',
+          description: 'The author of the notes to read',
+          type: ApplicationCommandOptionType.User,
+          required: true,
+        },
+      ],
     });
   },
   Interaction: {
