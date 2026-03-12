@@ -68,6 +68,11 @@ export const GlobalChat: Feature = {
     name: 'global-chat',
     needPermit: 'ChannelConfig',
     async command({ interaction, channelSf }) {
+      await interaction.reply(
+        'This feature is unavailable, as it has not been legally hardened yet.',
+      );
+      return;
+      /*
       await interaction.deferReply();
 
       const room =
@@ -94,6 +99,7 @@ export const GlobalChat: Feature = {
       await interaction.editReply(
         `Global chat enabled using \`${room}\`. This has also enabled moderation, anti-spam, and AiMod.`,
       );
+      */
     },
   },
 };

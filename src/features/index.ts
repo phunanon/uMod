@@ -43,9 +43,7 @@ import { Censor, DeleteCensor } from './Censor';
 import { BlockGifs } from './BlockGifs';
 import { CreateTicket, TicketAdd, TicketsHere } from './Ticket';
 import { CloseTicket, TicketClosureReasonSubmit } from './Ticket';
-import { RoleList, RoleListAddRole, RoleListRemoveRole } from './RoleList';
 import { PingSpam } from './PingSpam';
-import { PingProtect } from './PingProtect';
 import { Transcript } from './Transcript';
 import { GuildPermit, GuildPermitList } from './GuildPermit';
 import { Histogram } from './Histogram';
@@ -65,15 +63,12 @@ import { ReadRules, SetupRule } from './EnforceRule';
 import { DeleteMessage } from './DeleteMessage';
 import { ChannelStats } from './ChannelStats';
 import { TearGas } from './TearGas';
-import { FakeUser } from './FakeUser';
 import { SuspectedAlt } from './SuspectedAlt';
 import { AiMod } from './AiMod';
 import { AutoClean } from './AutoClean';
 import { PresenceCheck } from './PresenceCheck';
 import { Reminder } from './Reminder';
-import { AutoHere } from './AutoHere';
 import { GuildLevels } from './GuildLevels';
-import { RoleFaucet, RoleFaucetButton } from './RoleFaucet';
 import { IngestNotes } from './NoteIngestion';
 import { KickWithDm } from './KickWithDm';
 
@@ -88,17 +83,16 @@ export const features = {
   ...{ Alert, DeleteAlert, DeleteAlerts, RecommendedAlerts },
   ...{ CreateTicket, TicketAdd, TicketsHere },
   ...{ CloseTicket, TicketClosureReasonSubmit },
-  ...{ RoleList, RoleListAddRole, RoleListRemoveRole },
-  ...{ PingSpam, PingProtect, GlobalChat, GlobalChatList, GlobalChatMute },
+  ...{ PingSpam, GlobalChat, GlobalChatList, GlobalChatMute },
   ...{ GuildPermit, GuildPermitList, Histogram, TempRole, Acquaintances },
   ...{ BumpReminder, SoftBumpReminder, BumpRemind, BumpUnremind },
   ...{ DisallowRole, GifMute, AutoRole, TearGas, SuspectedAlt },
   ...{ QotdApprove, QotdDisable, QotdEnable, QotdSuggest },
-  ...{ QotdSubscribe, QotdUnsubscribe, QotdReject, ChannelStats, FakeUser },
+  ...{ QotdSubscribe, QotdUnsubscribe, QotdReject, ChannelStats },
   ...{ EnforceRule, EnforceRulePicker, GentleReminder, GentleReminderPicker },
   ...{ SetupRule, ReadRules, DeleteMessage, KickWithDm },
-  ...{ AiMod, PresenceCheck, Reminder, AutoHere, GuildLevels },
-  ...{ RoleFaucet, RoleFaucetButton, IngestNotes },
+  ...{ AiMod, PresenceCheck, Reminder, GuildLevels },
+  ...{ IngestNotes },
 };
 export const featurePermissions = new Set(
   Object.values(features).flatMap(f => {

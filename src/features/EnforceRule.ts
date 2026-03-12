@@ -32,6 +32,11 @@ export const SetupRule: Feature = {
     name: 'configure-rules',
     needPermit: 'ServerConfig',
     async command({ interaction, guildSf }) {
+      await interaction.reply(
+        'This feature is unavailable, as it has not been legally hardened yet.',
+      );
+      return;
+      /*
       await interaction.deferReply({ ephemeral: true });
 
       const rulesText = interaction.options.getString('rules', true);
@@ -61,6 +66,7 @@ export const SetupRule: Feature = {
       });
 
       await interaction.editReply(`${rules.length} rule(s) configured.`);
+      */
     },
   },
 };
@@ -76,6 +82,11 @@ export const EnforceRulePicker: Feature = {
     name: 'Enforce rule',
     needPermit: 'EnforceRule',
     async contextMenu({ interaction, guildSf }) {
+      await interaction.reply(
+        'This feature is unavailable, as it has not been legally hardened yet.',
+      );
+      return;
+      /*
       await interaction.deferReply({ ephemeral: true });
       const { id: messageSf, author } = interaction.targetMessage;
       if (author.bot) {
@@ -150,6 +161,7 @@ export const EnforceRulePicker: Feature = {
           printedNotes,
         components: [row],
       });
+      */
     },
   },
 };

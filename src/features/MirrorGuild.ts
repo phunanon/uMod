@@ -32,6 +32,11 @@ export const MirrorGuild: Feature = {
     name: 'mirror-guild',
     needPermit: 'ChannelConfig',
     async command({ interaction, guildSf, channelSf }) {
+      await interaction.reply(
+        'This feature is unavailable, as it has not been legally hardened yet.',
+      );
+      return;
+      /*
       await interaction.deferReply();
 
       const where = { guildSf };
@@ -46,6 +51,7 @@ export const MirrorGuild: Feature = {
       await prisma.guildMirror.create({ data: { guildSf, channelSf } });
 
       await interaction.editReply('Mirror channel enabled.');
+      */
     },
   },
 };

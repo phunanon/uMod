@@ -45,6 +45,11 @@ export const ConfessionsHere: Feature = {
     name: 'confessions-here',
     needPermit: 'ChannelConfig',
     async command({ interaction, channel, channelSf, userSf }) {
+      await interaction.reply(
+        'This feature is unavailable, as it has not been legally hardened yet.',
+      );
+      return;
+      /*
       await interaction.deferReply({ ephemeral: true });
 
       const confessRules = interaction.options.getString('rules');
@@ -86,6 +91,7 @@ export const ConfessionsHere: Feature = {
       await interaction.editReply(
         'Confessions for this channel have been enabled.',
       );
+      */
     },
   },
 };

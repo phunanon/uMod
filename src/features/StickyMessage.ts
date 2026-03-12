@@ -32,6 +32,11 @@ export const StickyMessage: Feature = {
     name: 'sticky-message',
     needPermit: 'ChannelConfig',
     async command({ interaction, guildSf, channelSf, channel }) {
+      await interaction.reply(
+        'This feature is unavailable, as it has not been legally hardened yet.',
+      );
+      return;
+      /*
       await interaction.reply({
         content: 'Creating sticky message...',
         ephemeral: true,
@@ -59,6 +64,7 @@ export const StickyMessage: Feature = {
       await prisma.stickyMessage.create({ data });
 
       await interaction.editReply('Sticky message created.');
+      */
     },
   },
 };

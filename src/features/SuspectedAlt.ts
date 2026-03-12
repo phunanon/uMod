@@ -33,6 +33,11 @@ export const SuspectedAlt: Feature = {
     name: 'suspected-alt',
     needPermit: 'EnforceRule',
     async command({ interaction, guildSf, userSf }) {
+      await interaction.reply(
+        'This feature is unavailable, as it has not been legally hardened yet.',
+      );
+      return;
+      /*
       await interaction.deferReply({ ephemeral: true });
 
       const { id: A } = interaction.options.getUser('user-a', true);
@@ -48,6 +53,7 @@ export const SuspectedAlt: Feature = {
         content: `<@${ASF}> and <@${BSF}> alt suspicion noted.`,
         allowedMentions: { parse: [] },
       });
+      */
     },
   },
 };

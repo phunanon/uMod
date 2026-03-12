@@ -87,6 +87,11 @@ export const Alert: Feature = {
     name: 'alert',
     needPermit: 'Alerts',
     async command({ interaction, guildSf, channelSf }) {
+      await interaction.reply(
+        'This feature is unavailable, as it has not been legally hardened yet.',
+      );
+      return;
+      /*
       const { options } = interaction;
       await interaction.deferReply();
 
@@ -119,6 +124,7 @@ export const Alert: Feature = {
         content: `Alert ${alert.id} created: ${criteria}, ${altReason ?? ''}`,
         allowedMentions: { parse: [] },
       });
+      */
     },
   },
   async HandleMemberRemove(member) {
@@ -300,6 +306,11 @@ export const RecommendedAlerts: Feature = {
     name: 'recommended-alerts',
     needPermit: 'Alerts',
     async command({ interaction, guildSf, channelSf }) {
+        await interaction.reply(
+        'This feature is unavailable, as it has not been legally hardened yet.',
+      );
+      return;
+      /*
       await interaction.deferReply();
 
       await prisma.alert.createMany({
@@ -338,6 +349,7 @@ export const RecommendedAlerts: Feature = {
       });
 
       await interaction.editReply('Recommended alerts set up.');
+      */
     },
   },
 };

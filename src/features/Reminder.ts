@@ -32,6 +32,11 @@ export const Reminder: Feature = {
   Interaction: {
     name: 'reminder',
     async command({ interaction, guildSf, channelSf, userSf }) {
+      await interaction.reply(
+        'This feature is unavailable, as it has not been legally hardened yet.',
+      );
+      return;
+      /*
       const duration = interaction.options.getString('when', true);
       const ms = ParseDurationAsMs(duration);
       if (typeof ms === 'string') {
@@ -51,6 +56,7 @@ export const Reminder: Feature = {
       await interaction.editReply(
         `Reminding you ${R(remindAt)} (approximately):\n> ${censored}`,
       );
+      */
     },
   },
 };

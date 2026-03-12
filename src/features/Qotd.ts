@@ -37,6 +37,9 @@ export const QotdEnable: Feature = {
     name: 'configure-qotd',
     needPermit: 'ChannelConfig',
     async command({ interaction, guildSf }) {
+      await interaction.reply("This feature is unavailable, as it has not been legally hardened yet.");
+      return;
+      /*
       await interaction.deferReply();
 
       const postTo = interaction.options.getChannel('post-to', true);
@@ -51,6 +54,7 @@ export const QotdEnable: Feature = {
       });
 
       await interaction.editReply('QOTD enabled or reconfigured.');
+      */
     },
   },
   HandleMessageCreate: async ({ channelSf }) => {

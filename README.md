@@ -1,6 +1,8 @@
-# μMod
+# μMod - Legally Hardened.
 
-A moderation bot I made so I could kick Carlbot, but which now has now become quite featureful.
+A moderation bot I made so I could kick Carlbot, but which now has now become quite featureful.  
+
+This branch is specifically for my personal use, whereby all publicly accessible features that could be mistaken for Indecent Publication under UK law are censored by AI, and others are left to be accessible only to me. Other features I don't make use of are also removed.
 
 - Auto-Moderation
   - **AI Moderator**: an optional OpenAI-powered moderation feature that times out for five minutes after three strikes
@@ -10,7 +12,6 @@ A moderation bot I made so I could kick Carlbot, but which now has now become qu
   - **WhitelistChannel**: disables different kinds of auto-moderation for a channel
   - **BlockGifs**: deletes messages with gifs from specified channels
   - **Censor**: deletes messages with blacklisted words or phrases and replaces them with a censored message
-  - **PingProtect**: warn then timeout users who ping a user who has chosen to be protected
   - **GifMute**: remove the ability to send gifs from messages of particular users
   - **KickSus**: a suite of heuristics that warns a user then kicks them if they continue
     - deletes all messages if they joined the server in the past hour
@@ -71,26 +72,21 @@ A moderation bot I made so I could kick Carlbot, but which now has now become qu
   - **Histogram**: generates a histogram of hourly and week daily message counts for a user or the guild
   - **Acquaintances**: analyses the top three of who each user spends the most time talking to in chat
   - **QotD**: allows people to submit questions, moderators to approve them, and then sends one out daily
-  - **FakeUser**: generates a message for a user that uses words and phrases they have previously said
 - Useful
   - **AutoRole**: assigns a role to a user when they join
   - **Ping**: replies with "Pong!"
   - **StickyMessage**: periodically resends a message to a channel
   - **ActivitySort**: sorts channels in a category by recent activity
-  - **RoleList**: maintains a message with a list of members with a role
-  - **MutualTimeout**: allows anybody to mute another user but only if they are muted in return
-    - Disabled in code by default
   - **Transcript**: sends a CSV transcript of a channel to a channel
   - **BumpReminder**: reminds members to bump on Disboard in a channel
   - **ChannelStats**: shows list of channels ordered by number of messages
   - **ReadRules**: lists the rules set up for a server
   - **Reminder**: users can create ping reminders for themselves
-  - **AutoHere**: ping [@here](#) when somebody hadn't texted in a channel for one day
-  - **RoleFaucet**: allow members to assign/unassign a role to themselves
   - **IngestNotes**: use a channel to automatically ingest notes, either from regular members or bots
 
 In order of priority, aspirations & TODO:
 
+- limit all commands so they can't be used in DMs, using modern Discord.js API to do so
 - central alert management, doing away with alert IDs
 - paginated user notes
 - private notes
@@ -103,8 +99,6 @@ In order of priority, aspirations & TODO:
 - level roles
 - refactor leaderboard SQL so that there's only one query including both the top ten and the current user
   - use typed SQL
-- censor GlobalChat (might already be done)
-- censor fake user
 - delete global messages that uMod deleted itself?
 
 ## To host it yourself
@@ -114,6 +108,7 @@ Instructions for Node.js, in the terminal:
 ```bash
 pnpm i -g pm2                      # Keeps the bot running even if it crashes
 pnpm i                             # Installs exact dependencies
-npx prisma migrate dev --name init # Migrates the database and generates client
+npx prisma migrate dev --name init # Migrates the database
+npx prisma generate --sql          # Generates the client
 pm2 start out/index.js --name uMod # Starts up the bot
 ```

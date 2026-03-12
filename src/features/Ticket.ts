@@ -31,6 +31,11 @@ export const TicketsHere: Feature = {
     name: 'tickets-here',
     needPermit: 'ChannelConfig',
     async command({ interaction, channel }) {
+      await interaction.reply(
+        'This feature is unavailable, as it has not been legally hardened yet.',
+      );
+      return;
+      /*
       await interaction.deferReply({ ephemeral: true });
 
       const content = interaction.options.getString('message');
@@ -51,6 +56,7 @@ export const TicketsHere: Feature = {
       await channel.send({ content, components: [row] });
 
       await interaction.editReply('Ticket message created.');
+      */
     },
   },
 };
