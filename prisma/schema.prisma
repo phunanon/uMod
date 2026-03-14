@@ -109,14 +109,6 @@ model Note {
   content  String
 }
 
-model Censor {
-  id       Int     @id @default(autoincrement())
-  guildSf  BigInt
-  word     String
-  censored String
-  ban      Boolean @default(false)
-}
-
 model ChannelFlags {
   id             Int      @id @default(autoincrement())
   channelSf      BigInt   @unique

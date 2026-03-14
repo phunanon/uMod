@@ -39,7 +39,6 @@ import { Alert, DeleteAlert, DeleteAlerts, RecommendedAlerts } from './Alert';
 import { Note, ContextNote } from './Note';
 import { ReadNotes, ReadNotesButton, ReadNotesByAuthor } from './Note';
 import { ChannelBan, ChannelBanMessage } from './ChannelBan';
-import { Censor, DeleteCensor } from './Censor';
 import { BlockGifs } from './BlockGifs';
 import { CreateTicket, TicketAdd, TicketsHere } from './Ticket';
 import { CloseTicket, TicketClosureReasonSubmit } from './Ticket';
@@ -78,7 +77,7 @@ export const features = {
   ...{ LeaderboardRecorder, Leaderboard, IqLeaderboard, LoyaltyLeaderboard },
   ...{ AgeLeaderboard, VcLeaderboard, StickyMessage, Purge, Transcript },
   ...{ Note, ReadNotes, ContextNote, ReadNotesByAuthor, ReadNotesButton },
-  ...{ ChannelBan, ChannelBanMessage, Censor, DeleteCensor },
+  ...{ ChannelBan, ChannelBanMessage },
   ...{ Confess, ConfessMute, ConfessUnmute, ConfessSubmit, ConfessionsHere },
   ...{ Alert, DeleteAlert, DeleteAlerts, RecommendedAlerts },
   ...{ CreateTicket, TicketAdd, TicketsHere },

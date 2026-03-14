@@ -13,16 +13,16 @@ export const TicketsHere: Feature = {
       description: 'Put a message in the chat to create tickets here',
       options: [
         {
-          name: 'message',
-          description: 'The message to put in this chat',
-          type: ApplicationCommandOptionType.String,
-          required: true,
-        },
-        {
           name: 'role',
           description: 'The role to include and ping',
           type: ApplicationCommandOptionType.Role,
           required: true,
+        },
+        {
+          name: 'message',
+          description: 'The message to put in this chat',
+          type: ApplicationCommandOptionType.String,
+          required: false,
         },
       ],
     });
@@ -31,20 +31,14 @@ export const TicketsHere: Feature = {
     name: 'tickets-here',
     needPermit: 'ChannelConfig',
     async command({ interaction, channel }) {
-      await interaction.reply(
-        'This feature is unavailable, as it has not been legally hardened yet.',
-      );
-      return;
-      /*
+      //TODO: use AI to censor free-text
       await interaction.deferReply({ ephemeral: true });
 
-      const content = interaction.options.getString('message');
-      const role = interaction.options.getRole('role');
-
-      if (!content || !role) {
-        await interaction.editReply('Invalid message or role.');
-        return;
-      }
+      const role = interaction.options.getRole('role', true);
+      const optionalContent = interaction.options.getString('message', false);
+      const content = optionalContent
+        ? optionalContent
+        : `If you need help, click the button below to create a ticket and our staff will assist you as soon as they can!`;
 
       const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
         new ButtonBuilder()
@@ -56,7 +50,6 @@ export const TicketsHere: Feature = {
       await channel.send({ content, components: [row] });
 
       await interaction.editReply('Ticket message created.');
-      */
     },
   },
 };

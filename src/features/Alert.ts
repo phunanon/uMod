@@ -17,6 +17,8 @@ export enum AlertEvent {
   PermitUsage = 'permit-usage',
 }
 
+//TODO: use AI to censor output
+
 export const Alert: Feature = {
   async Init(commands) {
     await commands.create({
@@ -87,11 +89,6 @@ export const Alert: Feature = {
     name: 'alert',
     needPermit: 'Alerts',
     async command({ interaction, guildSf, channelSf }) {
-      await interaction.reply(
-        'This feature is unavailable, as it has not been legally hardened yet.',
-      );
-      return;
-      /*
       const { options } = interaction;
       await interaction.deferReply();
 
@@ -118,13 +115,12 @@ export const Alert: Feature = {
       const criteria = alertInfo(
         event,
         ...[userSf, roleSf, pattern, cooldownSec, insitu, autoDeleteSec],
-        undefined
+        undefined,
       );
       await interaction.editReply({
         content: `Alert ${alert.id} created: ${criteria}, ${altReason ?? ''}`,
         allowedMentions: { parse: [] },
       });
-      */
     },
   },
   async HandleMemberRemove(member) {
@@ -306,11 +302,6 @@ export const RecommendedAlerts: Feature = {
     name: 'recommended-alerts',
     needPermit: 'Alerts',
     async command({ interaction, guildSf, channelSf }) {
-        await interaction.reply(
-        'This feature is unavailable, as it has not been legally hardened yet.',
-      );
-      return;
-      /*
       await interaction.deferReply();
 
       await prisma.alert.createMany({
@@ -349,7 +340,6 @@ export const RecommendedAlerts: Feature = {
       });
 
       await interaction.editReply('Recommended alerts set up.');
-      */
     },
   },
 };
@@ -419,7 +409,7 @@ export const HandleAlert = async (i: HandleInfo) => {
         : { parse: [] };
     const roleContent = roleSf
       ? `<@&${roleSf}>`
-      : i.roles?.map(r => `<@&${r}>`).join(', ') ?? '';
+      : (i.roles?.map(r => `<@&${r}>`).join(', ') ?? '');
     const content =
       `||${id}|| ` +
       (altReason || info) +

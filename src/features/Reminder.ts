@@ -2,7 +2,6 @@ import { Feature } from '.';
 import { ApplicationCommandOptionType } from 'discord.js';
 import { client, prisma, R } from '../infrastructure';
 import { isGoodChannel, ParseDurationAsMs } from '../infrastructure';
-import { CensorText } from './Censor';
 
 //TODO: accept absolute dates
 
@@ -77,11 +76,10 @@ async function tick() {
     try {
       const channel = await client.channels.fetch(`${channelSf}`);
       if (isGoodChannel(channel)) {
-        const { censored } = await CensorText(guildSf, text);
         const title = `You asked me to remind you ${R(at)}`;
         await channel?.send({
           content: `<@${userSf}>`,
-          embeds: [{ title, description: censored, color: 0x2f6f7f }],
+          embeds: [{ title, description: text, color: 0x2f6f7f }],
           allowedMentions: { users: [userSf.toString()] },
         });
       }
