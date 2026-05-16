@@ -43,11 +43,6 @@ export const Note: Feature = {
     name: 'note',
     needPermit: 'EnforceRule',
     async command({ interaction, guildSf, userSf: authorSf }) {
-      await interaction.reply(
-        'This feature is unavailable, as it has not been legally hardened yet.',
-      );
-      return;
-      /*
       await interaction.deferReply({ ephemeral: true });
 
       const user = interaction.options.getUser('user', true);
@@ -59,7 +54,6 @@ export const Note: Feature = {
       await interaction.editReply(
         `Note added for ${user.username}: ${content}`,
       );
-      */
     },
   },
   async HandleAuditLog({ kind, executor, target, reason }, guild) {
@@ -213,11 +207,6 @@ export const ContextNote: Feature = {
     name: 'Note this message',
     needPermit: 'EnforceRule',
     async contextMenu({ interaction, guildSf, userSf }) {
-      await interaction.reply(
-        'This feature is unavailable, as it has not been legally hardened yet.',
-      );
-      return;
-      /*
       await interaction.deferReply({ ephemeral: true });
 
       const aboutSf = BigInt(interaction.targetMessage.author.id);
@@ -229,7 +218,6 @@ export const ContextNote: Feature = {
         content: 'Note added successfully',
         components: [row],
       });
-      */
     },
   },
 };
