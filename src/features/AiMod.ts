@@ -59,15 +59,9 @@ export const AiMod: Feature = {
 };
 
 async function Moderate(userSf: bigint, message: Message) {
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) return;
-  const openai = new OpenAI({ apiKey });
   const input: OpenAI.Moderations.ModerationMultiModalInput[] = [];
   if (message.content)
-    input.push({
-      type: 'text' as const,
-      text: message.content.normalize('NFKD'),
-    });
+    input.push({ type: 'text' as const, text: message.content });
   const [attachment] = message.attachments.values();
   if (attachment && !/\.mp4/.test(attachment.name))
     input.push({
@@ -75,26 +69,13 @@ async function Moderate(userSf: bigint, message: Message) {
       image_url: { url: attachment.url },
     });
 
-  const { results } = await openai.moderations.create({
-    input,
-    model: 'omni-moderation-latest',
-  });
-  const [result] = results;
-  if (!result) {
-    console.warn('No results returned from OpenAI');
-    return;
-  }
+  const { ok, resultCategories } = await Categorise(input, ['violence']);
+  if (ok || !resultCategories.length) return;
 
   const forgivenessSec = forgivenessMin * 60;
   const sec = Math.floor(Date.now() / 1000);
   while (strikes[0] && strikes[0].sec + forgivenessSec < sec) strikes.shift();
 
-  const ignoredCategories = ['violence'];
-  const resultCategories = Object.entries(result.categories)
-    .filter(([k, v]) => !ignoredCategories.includes(k) && Boolean(v))
-    .map(([k]) => k);
-
-  if (!resultCategories.length) return;
   const cats = resultCategories.join(', ');
   const categories = new Set(resultCategories);
   const messageSf = BigInt(message.id);
@@ -122,5 +103,32 @@ async function Moderate(userSf: bigint, message: Message) {
   }
 }
 
-//Alcohol, gambling, drugs, sex, violence, illegal content, hate speech
-//+there's evidence of taking offence
+async function Categorise(
+  input: OpenAI.Moderations.ModerationMultiModalInput[],
+  ignoredCategories: string[] = [],
+) {
+  input.forEach(i => {
+    if (i.type === 'text') {
+      i.text = i.text.normalize('NFKD');
+    }
+  });
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) return { ok: false, resultCategories: [] };
+  const openai = new OpenAI({ apiKey });
+  const { results } = await openai.moderations.create({
+    input,
+    model: 'omni-moderation-latest',
+  });
+  const [result] = results;
+  if (!result) {
+    console.warn('No results returned from OpenAI');
+    return { ok: false, resultCategories: [] };
+  }
+  const resultCategories = Object.entries(result.categories)
+    .filter(([k, v]) => !ignoredCategories.includes(k) && Boolean(v))
+    .map(([k]) => k);
+  return { ok: !resultCategories.length, resultCategories };
+}
+
+export const Bad = async (text: string) =>
+  await Categorise([{ type: 'text', text }]).then(r => !r.ok);

@@ -1,6 +1,7 @@
 import { Feature } from '.';
 import { ApplicationCommandOptionType } from 'discord.js';
 import { client, prisma } from '../infrastructure';
+import { Bad } from './AiMod';
 
 export const StickyMessage: Feature = {
   async Init(commands) {
@@ -14,6 +15,7 @@ export const StickyMessage: Feature = {
           description: 'Use `\\n` for newlines',
           type: ApplicationCommandOptionType.String,
           required: true,
+          maxLength: 2_000,
         },
         {
           name: 'renewal',
@@ -32,27 +34,24 @@ export const StickyMessage: Feature = {
     name: 'sticky-message',
     needPermit: 'ChannelConfig',
     async command({ interaction, guildSf, channelSf, channel }) {
-      await interaction.reply(
-        'This feature is unavailable, as it has not been legally hardened yet.',
-      );
-      return;
-      /*
       await interaction.reply({
         content: 'Creating sticky message...',
         ephemeral: true,
       });
 
-      const rawContent = interaction.options.get('content', true).value;
+      const text = interaction.options.get('content', true).value;
       const renewalSeconds = interaction.options.get('renewal', false)?.value;
-      if (
-        typeof rawContent !== 'string' ||
-        typeof renewalSeconds !== 'number'
-      ) {
+      if (typeof text !== 'string' || typeof renewalSeconds !== 'number') {
         await interaction.editReply('Invalid content or renewal.');
         return;
       }
 
-      const content = rawContent.slice(0, 2000).replaceAll(/\\n/g, '\n');
+      if (await Bad(text)) {
+        await interaction.editReply('Content disallowed by AI.');
+        return;
+      }
+
+      const content = text.replaceAll(/\\n/g, '\n');
       const message = await channel.send({
         content,
         allowedMentions: { parse: [] },
@@ -64,7 +63,6 @@ export const StickyMessage: Feature = {
       await prisma.stickyMessage.create({ data });
 
       await interaction.editReply('Sticky message created.');
-      */
     },
   },
 };

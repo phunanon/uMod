@@ -2,6 +2,7 @@ import { Feature } from '.';
 import { ApplicationCommandOptionType } from 'discord.js';
 import { client, prisma, R } from '../infrastructure';
 import { isGoodChannel, ParseDurationAsMs } from '../infrastructure';
+import { Bad } from './AiMod';
 
 //TODO: accept absolute dates
 
@@ -31,11 +32,6 @@ export const Reminder: Feature = {
   Interaction: {
     name: 'reminder',
     async command({ interaction, guildSf, channelSf, userSf }) {
-      await interaction.reply(
-        'This feature is unavailable, as it has not been legally hardened yet.',
-      );
-      return;
-      /*
       const duration = interaction.options.getString('when', true);
       const ms = ParseDurationAsMs(duration);
       if (typeof ms === 'string') {
@@ -47,15 +43,18 @@ export const Reminder: Feature = {
 
       await interaction.deferReply();
 
+      if (await Bad(text)) {
+        await interaction.editReply('Content disallowed by AI.');
+        return;
+      }
+
       await prisma.reminder.create({
         data: { guildSf, channelSf, userSf, remindAt, text },
       });
 
-      const { censored } = await CensorText(guildSf, text);
       await interaction.editReply(
-        `Reminding you ${R(remindAt)} (approximately):\n> ${censored}`,
+        `Reminding you ${R(remindAt)} (approximately):\n> ${text}`,
       );
-      */
     },
   },
 };
