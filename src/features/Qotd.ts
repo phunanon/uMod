@@ -9,6 +9,7 @@ import {
 } from 'discord.js';
 import { Feature } from '.';
 import { client, prisma } from '../infrastructure';
+import { Bad } from './AiMod';
 import { GuildQotd, QotdQuestion } from '@prisma/client';
 
 export const QotdEnable: Feature = {
@@ -37,9 +38,6 @@ export const QotdEnable: Feature = {
     name: 'configure-qotd',
     needPermit: 'ChannelConfig',
     async command({ interaction, guildSf }) {
-      await interaction.reply("This feature is unavailable, as it has not been legally hardened yet.");
-      return;
-      /*
       await interaction.deferReply();
 
       const postTo = interaction.options.getChannel('post-to', true);
@@ -54,7 +52,6 @@ export const QotdEnable: Feature = {
       });
 
       await interaction.editReply('QOTD enabled or reconfigured.');
-      */
     },
   },
   HandleMessageCreate: async ({ channelSf }) => {
@@ -104,7 +101,7 @@ export const QotdApprove: Feature = {
     async button({ interaction, guildSf, userSf }) {
       await interaction.deferUpdate();
 
-      const id = parseInt(interaction.customId.split('-').slice(-1)[0] ?? '0');
+      const id = Number.parseInt(interaction.customId.split('-').at(-1) ?? '0');
       const question = await prisma.qotdQuestion.findUnique({ where: { id } });
 
       if (!question) {
@@ -180,7 +177,7 @@ export const QotdSuggest: Feature = {
 
       const question = interaction.options
         .getString('question', true)
-        .replaceAll(/\s{1,}/g, ' ')
+        .replaceAll(/\s+/g, ' ')
         .trim();
 
       const config = await prisma.guildQotd.findUnique({ where: { guildSf } });
@@ -189,6 +186,11 @@ export const QotdSuggest: Feature = {
 
       if (!auditChannel?.isTextBased() || !config) {
         await interaction.editReply('QOTD is disabled in this server.');
+        return;
+      }
+
+      if (await Bad(question)) {
+        await interaction.editReply('Content disallowed by AI.');
         return;
       }
 

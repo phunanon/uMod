@@ -1,6 +1,6 @@
-import { Message, TextChannel } from 'discord.js';
+import { Message } from 'discord.js';
 import { Feature } from '.';
-import { client, prisma } from '../infrastructure';
+import { prisma } from '../infrastructure';
 import OpenAI from 'openai';
 
 const forgivenessMin = 5;
@@ -45,6 +45,7 @@ export const AiMod: Feature = {
           } in this channel 🤖`,
         );
       } catch (e) {
+        console.error('Error toggling AI moderation', e);
         await interaction.editReply(
           'There was an error enabling AI moderation',
         );
