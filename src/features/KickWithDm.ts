@@ -1,6 +1,7 @@
 import { ApplicationCommandOptionType } from 'discord.js';
 import { Feature } from '.';
 import { userOption } from '../infrastructure';
+import { Bad } from './AiMod';
 
 export const KickWithDm: Feature = {
   async Init(commands) {
@@ -22,15 +23,18 @@ export const KickWithDm: Feature = {
     name: 'kick-with-dm',
     needPermit: 'Member',
     async command({ interaction, guild }) {
-      await interaction.reply(
-        'This feature is unavailable, as it has not been legally hardened yet.',
-      );
-      return;
-      /*
       await interaction.deferReply({ ephemeral: true });
 
       const user = interaction.options.getUser('user', true);
       const reason = interaction.options.getString('reason', true);
+
+      if (await Bad(reason)) {
+        await interaction.editReply(
+          'Reason content disallowed by AI. Re-write it and try again.',
+        );
+        return;
+      }
+
       const member = await guild.members.fetch(user.id).catch(() => null);
 
       if (!member) {
@@ -69,7 +73,6 @@ export const KickWithDm: Feature = {
       }
 
       await interaction.editReply(`DM'd and then kicked <@${user.id}>.`);
-      */
     },
   },
 };

@@ -1,15 +1,17 @@
-import { ActionRowBuilder, StringSelectMenuBuilder } from 'discord.js';
+import { ActionRowBuilder, Message, StringSelectMenuBuilder } from 'discord.js';
 import { ApplicationCommandOptionType, EmbedBuilder } from 'discord.js';
 import { ApplicationCommandType } from 'discord.js';
 import { Feature } from '.';
 import { prisma, quoteContent } from '../infrastructure';
 import { DeleteMessageRow } from './DeleteMessage';
 import { MakeNote, printNotes } from './Note';
+import { Bad } from './AiMod';
 
 //TODO: support threads
+//TODO: rules themselves also need to be legally hardened
 
-/** Sans asteriks */
-const sa = (s: string) => (s.startsWith('*') ? s.slice(1).trim() : s);
+/** Sans ampersand */
+const sa = (s: string) => (s.startsWith('&') ? s.slice(1).trim() : s);
 
 export const SetupRule: Feature = {
   async Init(commands) {
@@ -21,7 +23,7 @@ export const SetupRule: Feature = {
         {
           name: 'rules',
           description:
-            'Separate with ;; and optionally prepended with * to offer timeout',
+            'Separate with ;; and prepended with & to additionally offer mute',
           type: ApplicationCommandOptionType.String,
           required: true,
         },
@@ -32,11 +34,6 @@ export const SetupRule: Feature = {
     name: 'configure-rules',
     needPermit: 'ServerConfig',
     async command({ interaction, guildSf }) {
-      await interaction.reply(
-        'This feature is unavailable, as it has not been legally hardened yet.',
-      );
-      return;
-      /*
       await interaction.deferReply({ ephemeral: true });
 
       const rulesText = interaction.options.getString('rules', true);
@@ -44,19 +41,12 @@ export const SetupRule: Feature = {
         .split(';;')
         .map(r => r.trim())
         .filter(r => r);
-      if (rules.length > 25) {
-        await interaction.editReply('Too many rules (25 max).');
+      const numMute = rules.filter(r => r.startsWith('&')).length;
+      if (rules.length + numMute > 25) {
+        await interaction.editReply(
+          `Too many rules (including ${numMute} offered mutes, 25 max).`,
+        );
         return;
-      }
-
-      for (const rule of rules) {
-        if (rule.length > 90) {
-          const truncated = rule.slice(0, 10);
-          await interaction.editReply(
-            `Each rule must be 90 characters or fewer ("${truncated}...")`,
-          );
-          return;
-        }
       }
 
       await prisma.guildRule.deleteMany({ where: { guildSf } });
@@ -65,8 +55,9 @@ export const SetupRule: Feature = {
         data: rules.map(rule => ({ guildSf, rule })),
       });
 
-      await interaction.editReply(`${rules.length} rule(s) configured.`);
-      */
+      await interaction.editReply(
+        `${rules.length} rule(s) configured (with ${numMute} offering mute).`,
+      );
     },
   },
 };
@@ -82,11 +73,6 @@ export const EnforceRulePicker: Feature = {
     name: 'Enforce rule',
     needPermit: 'EnforceRule',
     async contextMenu({ interaction, guildSf }) {
-      await interaction.reply(
-        'This feature is unavailable, as it has not been legally hardened yet.',
-      );
-      return;
-      /*
       await interaction.deferReply({ ephemeral: true });
       const { id: messageSf, author } = interaction.targetMessage;
       if (author.bot) {
@@ -103,19 +89,25 @@ export const EnforceRulePicker: Feature = {
         return;
       }
 
+      const fmt = (r: string, prefix: string) => {
+        const sanitised = prefix + r.replaceAll(/(\*\*)/g, '');
+        return sanitised.length > 90
+          ? `${sanitised.slice(0, 87)}...`
+          : sanitised;
+      };
+
       const options = [
         ...rules
-          .filter(r => r.rule.startsWith('*'))
+          .filter(r => r.rule.startsWith('&'))
           .map(({ id, rule }) => ({
             id,
-            label: `(60m timeout) ${sa(rule)}`,
+            label: fmt(sa(rule), '(60m mute) '),
             duration: 60 * 60_000,
           })),
         ...rules
-          .filter(r => !r.rule.startsWith('*'))
           .map(({ id, rule }) => ({
             id,
-            label: `(warning) ${rule}`,
+            label: fmt(sa(rule), '(warn) '),
             duration: 0,
           })),
       ].map(({ id, label, duration }) => ({
@@ -132,7 +124,10 @@ export const EnforceRulePicker: Feature = {
 
       const dmProblem = await (async () => {
         try {
-          const quotedContent = quoteContent(interaction.targetMessage);
+          const raw = interaction.targetMessage.content;
+          const quotedContent = (await Bad(raw))
+            ? '[Message not quoted due to AI considering it inappropriate]'
+            : quoteContent(interaction.targetMessage);
           await author.send(
             `A moderator is reviewing your message\n${quotedContent}`,
           );
@@ -161,7 +156,6 @@ export const EnforceRulePicker: Feature = {
           printedNotes,
         components: [row],
       });
-      */
     },
   },
 };
@@ -209,14 +203,24 @@ export const EnforceRule: Feature = {
         .fetch(`${messageSf}`)
         .catch(() => null);
       const byline = ` by <@${userSf}>`;
-      const content = message ? quoteContent(message) : '[unknown message]';
+      const safelyQuoteContent = async (message: Message) => {
+        const rawContent = message.content ?? '';
+        if (!rawContent) return '[No content]';
+        if (await Bad(rawContent)) {
+          return '[Message content not quoted due to AI considering it inappropriate]';
+        }
+        return quoteContent(message);
+      };
+      const content = message
+        ? await safelyQuoteContent(message)
+        : '[unknown message]';
       const ruleText = sa(rule.rule);
       const makeContent = (withByline: boolean) =>
         `Rule ${duration ? 'enforcement' : 'warning'}${
           withByline ? byline : ''
         }: ${ruleText}\n${content}`;
 
-      const timeoutProblem = await (async () => {
+      const muteProblem = await (async () => {
         if (!duration) return false;
         try {
           await member.timeout(duration, makeContent(true));
@@ -225,7 +229,7 @@ export const EnforceRule: Feature = {
           return true;
         }
       })();
-      if (timeoutProblem || !duration) {
+      if (muteProblem || !duration) {
         const content = makeContent(false);
         await MakeNote(guildSf, offenderSf, userSf, content);
       }
@@ -234,8 +238,8 @@ export const EnforceRule: Feature = {
         try {
           await member.send(
             duration
-              ? `You have been timed out for ${minutes} minutes for breaking the rule: **${ruleText}**`
-              : `You have been warned for breaking the rule: **${ruleText}**`,
+              ? `You have been muted for ${minutes} minutes for breaking this rule:\n${ruleText}`
+              : `You have been warned for breaking this rule:\n${ruleText}`,
           );
         } catch {
           return true;
@@ -248,10 +252,10 @@ export const EnforceRule: Feature = {
       const dmSpiel = dmProblem
         ? ':warning: Could not DM the author, but the warning has been logged. Please inform them yourself.'
         : 'Member warned via DMs';
-      const timeoutSpiel = timeoutProblem
-        ? ':warning: Could not timeout the member. Seek help from a server admin if necessary.'
+      const muteSpiel = muteProblem
+        ? ':warning: Could not mute the member. Seek help from a server admin if necessary.'
         : "Member timed out and DM'd about why";
-      const spiel = duration ? timeoutSpiel : dmSpiel;
+      const spiel = duration ? muteSpiel : dmSpiel;
       await interaction.editReply({
         content: `Rule enforced: ${rule.rule}\n${spiel}`,
         components: [row],

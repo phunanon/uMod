@@ -7,6 +7,7 @@ import { client, log, prisma, userOption } from '../infrastructure';
 import { RecordRealAuthor } from '../infrastructure';
 import { DeleteMessageRow } from './DeleteMessage';
 import { MakeNote } from './Note';
+import { Bad } from './AiMod';
 
 export const ConfessionsHere: Feature = {
   async Init(commands) {
@@ -45,11 +46,6 @@ export const ConfessionsHere: Feature = {
     name: 'confessions-here',
     needPermit: 'ChannelConfig',
     async command({ interaction, channel, channelSf, userSf }) {
-      await interaction.reply(
-        'This feature is unavailable, as it has not been legally hardened yet.',
-      );
-      return;
-      /*
       await interaction.deferReply({ ephemeral: true });
 
       const confessRules = interaction.options.getString('rules');
@@ -83,7 +79,6 @@ export const ConfessionsHere: Feature = {
           data: { confessMessage, confessRules },
         });
       } else {
-        //FIXME: test adding a new confession channel without rules
         await interaction.editReply('There was an issue enabling confessions.');
         return;
       }
@@ -91,7 +86,6 @@ export const ConfessionsHere: Feature = {
       await interaction.editReply(
         'Confessions for this channel have been enabled.',
       );
-      */
     },
   },
 };
@@ -148,16 +142,24 @@ export const ConfessSubmit: Feature = {
   Interaction: {
     name: 'confession',
     async modalSubmit({ interaction, channel, userSf }) {
-      await interaction.deferUpdate();
+      await interaction.deferReply({ flags: ['Ephemeral'] });
 
       const confession = interaction.fields
         .getTextInputValue('confession')
-        .replace(/#{1,} /g, '')
+        .replace(/#+ /g, '')
         .replace(/\n{2,}/g, '\n');
+
+      if (await Bad(confession)) {
+        const quoted = confession.split('\n').join('\n> ');
+        await interaction.editReply(
+          `Content disallowed by AI. Please re-write your confession and try again.\n> ${quoted}`,
+        );
+        return;
+      }
+
       const someToken = process.env.DISCORD_TOKEN?.slice(0, 5);
       const embed = new EmbedBuilder()
         .setColor(stringToColour(userSf.toString() + someToken))
-        .setFooter({ text: '— Anonymous' })
         .setDescription(confession);
 
       const message = await channel.send({ embeds: [embed] });
@@ -165,6 +167,7 @@ export const ConfessSubmit: Feature = {
 
       log(`Confession by ${userSf}: ${confession.slice(0, 20)}...`);
 
+      await interaction.editReply('Your confession has been posted.');
       await RenewStickyMessage(channel);
     },
   },
@@ -265,11 +268,11 @@ const RenewStickyMessage = async (
   newRules?: string | null,
 ) => {
   const channelSf = BigInt(channel.id);
-  const config = newRules
-    ? { confessRules: newRules, confessMessage: null }
-    : await prisma.channelFlags.findFirst({
+  const config = newRules === undefined
+    ? await prisma.channelFlags.findFirst({
         where: { channelSf, confessMessage: { not: null } },
-      });
+      })
+    : { confessRules: newRules, confessMessage: null };
   if (!config) return;
   const { confessMessage: existingMessageSf, confessRules } = config;
 
