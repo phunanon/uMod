@@ -7,20 +7,11 @@ export const InviteSpam: Feature = {
     const wordDiscord = new RegExp(
       /discord\.(gg|com)(?!\/channel|\/events|\/developers)/gi,
     ).test(message.content);
-    const wordEveryone = message.content.includes('@everyone');
-    if (!wordDiscord && !wordEveryone) return;
+    if (!wordDiscord) return;
 
     await message.delete();
 
     const guild = message.guild?.name ?? 'the server';
-
-    if (wordEveryone !== wordDiscord) {
-      const reason = wordEveryone
-        ? 'Attempted to ping everyone'
-        : 'Attempted to post Discord invite';
-      await member.timeout(1000 * 60 * 5, reason);
-      return;
-    }
 
     const dmed = await (async () => {
       try {
@@ -34,13 +25,12 @@ If you suspect your account was hacked:
 You're welcome to rejoin the server again after you've fixed your account.`,
         );
         return true;
-      } catch (e) {
+      } catch {
         return false;
       }
     })();
     await member.kick(
-      'Discord invite link + @everyone spam' +
-        (dmed ? ' (informed via DMs why)' : ''),
+      'Discord invite link' + (dmed ? ' (informed via DMs why)' : ''),
     );
 
     return 'stop';

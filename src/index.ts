@@ -4,7 +4,7 @@ import { Feature, features } from './features';
 import { GuildAuditLogsEntry, GuildMember } from 'discord.js';
 import { ActivityType, AuditLogEvent, Guild } from 'discord.js';
 import { Interaction, Message, PartialMessage, User } from 'discord.js';
-import { assert } from 'console';
+import { assert } from 'node:console';
 dotenv.config();
 const { DISCORD_TOKEN } = process.env;
 assert(DISCORD_TOKEN, 'DISCORD_TOKEN must be set in .env');
@@ -18,7 +18,7 @@ const pushStat = (name: keyof typeof stats) => {
   if (stats[name][0] && stats[name][0] < anHourAgo) stats[name].shift();
 };
 
-client.once('ready', async () => {
+client.once('clientReady', async () => {
   for (const [_, guild] of client.guilds.cache) {
     //(await guild.members.fetchMe()).setNickname('µM');
     process.stdout.write(`  ${guild.id} ${guild.name}`);

@@ -47,11 +47,6 @@ export const Transcript: Feature = {
     name: 'transcript',
     needPermit: 'ChannelMessages',
     async command({ interaction, guild, channel }) {
-      await interaction.reply(
-        'This feature is unavailable, as it has not been legally hardened yet.',
-      );
-      return;
-      /*
       await interaction.reply('(0 messages, 0.0s) Transcribing...');
 
       const dest = interaction.options.getChannel('destination', true);
@@ -72,7 +67,6 @@ export const Transcript: Feature = {
         messages: [],
         before: channel.lastMessageId ?? null,
       });
-      */
     },
   },
 };
