@@ -5,7 +5,9 @@ A moderation bot I made so I could kick Carlbot, but which now has now become qu
 This branch is specifically for my personal use, whereby all publicly accessible features that could be mistaken for Indecent Publication under UK law are censored by AI, and others are left to be accessible only to me. Other features I don't make use of are also removed.
 
 - Auto-Moderation
-  - **AI Moderator**: an optional OpenAI-powered moderation feature that times out for five minutes after three strikes
+  - **AiMod**: an optional AI moderation feature that times out for five minutes after three strikes
+    - uses local model for text
+    - optionally uses free OpenAI model for images
   - **InviteSpam**: auto-timeout users who post invites, and kick those who post invites and ping @everyone
   - **PingSpam**: auto-timeout users who ping more than three roles or users in one message
   - **PermaRole**: ensures roles are restored even if somebody leaves and joins

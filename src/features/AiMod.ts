@@ -3,6 +3,25 @@ import { Feature } from '.';
 import { prisma } from '../infrastructure';
 import OpenAI from 'openai';
 
+type ToxicLabel = { label: string; score: number };
+
+const toxicThreshold = 0.6;
+let toxicClassifierPromise: Promise<
+  (text: string) => Promise<ToxicLabel[]>
+> | null = null;
+
+async function ToxicClassifier() {
+  if (!toxicClassifierPromise) {
+    toxicClassifierPromise = (async () => {
+      const { pipeline } = await import('@xenova/transformers');
+      return (await pipeline('text-classification', 'Xenova/toxic-bert')) as (
+        text: string,
+      ) => Promise<ToxicLabel[]>;
+    })();
+  }
+  return toxicClassifierPromise;
+}
+
 const forgivenessMin = 5;
 const timeoutMin = 5;
 const strikes: {
@@ -70,7 +89,7 @@ async function Moderate(userSf: bigint, message: Message) {
       image_url: { url: attachment.url },
     });
 
-  const { ok, resultCategories } = await Categorise(input, ['violence']);
+  const { ok, resultCategories } = await Categorise(input);
   if (ok || !resultCategories.length) return;
 
   const forgivenessSec = forgivenessMin * 60;
@@ -106,29 +125,49 @@ async function Moderate(userSf: bigint, message: Message) {
 
 async function Categorise(
   input: OpenAI.Moderations.ModerationMultiModalInput[],
-  ignoredCategories: string[] = [],
 ) {
-  input.forEach(i => {
-    if (i.type === 'text') {
-      i.text = i.text.normalize('NFKD');
+  const resultCategories = new Set<string>();
+  const text = input
+    .filter((i): i is { type: 'text'; text: string } => i.type === 'text')
+    .map(i => i.text.normalize('NFKD'))
+    .join('\n');
+
+  if (text) {
+    try {
+      const classify = await ToxicClassifier();
+      const labels = await classify(text);
+      const toxicScore =
+        labels.find(entry => entry.label.toLowerCase() === 'toxic')?.score ?? 0;
+      if (toxicScore >= toxicThreshold) resultCategories.add('toxic');
+    } catch (e) {
+      console.error('Text moderation failed', e);
     }
-  });
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) return { ok: false, resultCategories: [] };
-  const openai = new OpenAI({ apiKey });
-  const { results } = await openai.moderations.create({
-    input,
-    model: 'omni-moderation-latest',
-  });
-  const [result] = results;
-  if (!result) {
-    console.warn('No results returned from OpenAI');
-    return { ok: false, resultCategories: [] };
   }
-  const resultCategories = Object.entries(result.categories)
-    .filter(([k, v]) => !ignoredCategories.includes(k) && Boolean(v))
-    .map(([k]) => k);
-  return { ok: !resultCategories.length, resultCategories };
+
+  const imageInput = input.filter(i => i.type === 'image_url');
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (apiKey && imageInput.length) {
+    try {
+      const openai = new OpenAI({ apiKey });
+      const { results } = await openai.moderations.create({
+        input: imageInput,
+        model: 'omni-moderation-latest',
+      });
+      const [result] = results;
+      if (result) {
+        Object.entries(result.categories)
+          .filter(([, flagged]) => Boolean(flagged))
+          .forEach(([category]) => resultCategories.add(category));
+      } else {
+        console.warn('No results returned from OpenAI');
+      }
+    } catch (e) {
+      console.error('Image moderation failed', e);
+    }
+  }
+
+  const categories = [...resultCategories];
+  return { ok: !categories.length, resultCategories: categories };
 }
 
 export const Bad = async (text: string) =>
