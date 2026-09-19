@@ -43,7 +43,6 @@ import { Censor, DeleteCensor } from './Censor';
 import { BlockGifs } from './BlockGifs';
 import { CreateTicket, TicketAdd, TicketsHere } from './Ticket';
 import { CloseTicket, TicketClosureReasonSubmit } from './Ticket';
-import { RoleList, RoleListAddRole, RoleListRemoveRole } from './RoleList';
 import { PingSpam } from './PingSpam';
 import { PingProtect } from './PingProtect';
 import { Transcript } from './Transcript';
@@ -71,14 +70,14 @@ import { AiMod } from './AiMod';
 import { AutoClean } from './AutoClean';
 import { PresenceCheck } from './PresenceCheck';
 import { Reminder } from './Reminder';
-import { AutoHere } from './AutoHere';
 import { GuildLevels } from './GuildLevels';
 import { RoleFaucet, RoleFaucetButton } from './RoleFaucet';
 import { IngestNotes } from './NoteIngestion';
 import { KickWithDm } from './KickWithDm';
+import { ScamImageSpam } from './ScamImageSpam';
 
 export const features = {
-  ...{ MirrorGuild, BlockGifs, KickSus, AutoClean },
+  ...{ MirrorGuild, BlockGifs, ScamImageSpam, KickSus, AutoClean },
   ...{ PermaRole, InviteSpam, Ping, WhitelistChannel, ActivitySort },
   ...{ LeaderboardRecorder, Leaderboard, IqLeaderboard, LoyaltyLeaderboard },
   ...{ AgeLeaderboard, VcLeaderboard, StickyMessage, Purge, Transcript },
@@ -88,7 +87,6 @@ export const features = {
   ...{ Alert, DeleteAlert, DeleteAlerts, RecommendedAlerts },
   ...{ CreateTicket, TicketAdd, TicketsHere },
   ...{ CloseTicket, TicketClosureReasonSubmit },
-  ...{ RoleList, RoleListAddRole, RoleListRemoveRole },
   ...{ PingSpam, PingProtect, GlobalChat, GlobalChatList, GlobalChatMute },
   ...{ GuildPermit, GuildPermitList, Histogram, TempRole, Acquaintances },
   ...{ BumpReminder, SoftBumpReminder, BumpRemind, BumpUnremind },
@@ -97,7 +95,7 @@ export const features = {
   ...{ QotdSubscribe, QotdUnsubscribe, QotdReject, ChannelStats, FakeUser },
   ...{ EnforceRule, EnforceRulePicker, GentleReminder, GentleReminderPicker },
   ...{ SetupRule, ReadRules, DeleteMessage, KickWithDm },
-  ...{ AiMod, PresenceCheck, Reminder, AutoHere, GuildLevels },
+  ...{ AiMod, PresenceCheck, Reminder, GuildLevels },
   ...{ RoleFaucet, RoleFaucetButton, IngestNotes },
 };
 export const featurePermissions = new Set(

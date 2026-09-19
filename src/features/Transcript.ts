@@ -20,7 +20,9 @@ const headers = 'Message ID,Author ID,Author,Content,Reference ID';
 const csvCells = (...args: (string | undefined)[]) =>
   args
     .map(a => {
-      const quoted = a?.includes(',') ? `"${a.replace(/"/g, '""')}"` : a ?? '';
+      const quoted = a?.includes(',')
+        ? `"${a.replace(/"/g, '""')}"`
+        : (a ?? '');
       return quoted.replace(/\n/g, '\\n');
     })
     .join(',');

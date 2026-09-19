@@ -3,7 +3,9 @@
 A moderation bot I made so I could kick Carlbot, but which now has now become quite featureful.
 
 - Auto-Moderation
-  - **AI Moderator**: an optional OpenAI-powered moderation feature that times out for five minutes after three strikes
+  - **AiMod**: an optional AI moderation feature that times out for five minutes after three strikes
+    - uses a local model for text
+    - optionally uses OpenAI moderation for images
   - **InviteSpam**: auto-timeout users who post invites, and kick those who post invites and ping @everyone
   - **PingSpam**: auto-timeout users who ping more than three roles or users in one message
   - **PermaRole**: ensures roles are restored even if somebody leaves and joins
@@ -24,6 +26,7 @@ A moderation bot I made so I could kick Carlbot, but which now has now become qu
     - SameMessageSpam - six of the same message in 5 min
     - MediaSpam - five media messages in 5 min
     - TelegramSpam - two of the same t.me link in 1 hour
+  - **ScamImageSpam**: mitigates cryptocurrency scam messages, and informs potentially compromised users
   - **AutoClean**: deletes messages with no content (e.g. wall of whitespace)
 - Manual Moderation
   - **Tickets**: a ticket system for members to privately chat with a specified role
@@ -77,7 +80,6 @@ A moderation bot I made so I could kick Carlbot, but which now has now become qu
   - **Ping**: replies with "Pong!"
   - **StickyMessage**: periodically resends a message to a channel
   - **ActivitySort**: sorts channels in a category by recent activity
-  - **RoleList**: maintains a message with a list of members with a role
   - **MutualTimeout**: allows anybody to mute another user but only if they are muted in return
     - Disabled in code by default
   - **Transcript**: sends a CSV transcript of a channel to a channel
@@ -85,7 +87,6 @@ A moderation bot I made so I could kick Carlbot, but which now has now become qu
   - **ChannelStats**: shows list of channels ordered by number of messages
   - **ReadRules**: lists the rules set up for a server
   - **Reminder**: users can create ping reminders for themselves
-  - **AutoHere**: ping [@here](#) when somebody hadn't texted in a channel for one day
   - **RoleFaucet**: allow members to assign/unassign a role to themselves
   - **IngestNotes**: use a channel to automatically ingest notes, either from regular members or bots
 
@@ -112,8 +113,10 @@ In order of priority, aspirations & TODO:
 Instructions for Node.js, in the terminal:
 
 ```bash
-pnpm i -g pm2                      # Keeps the bot running even if it crashes
-pnpm i                             # Installs exact dependencies
-npx prisma migrate dev --name init # Migrates the database and generates client
-pm2 start out/index.js --name uMod # Starts up the bot
+pnpm i -g pm2                            # Keeps the bot running even if it crashes
+pnpm i                                   # Installs exact dependencies
+pnpm exec prisma migrate dev --name init # Migrates the database
+pnpm exec prisma generate --sql          # Generates the client
+pnpm build                               # Compiles the TypeScript code
+pm2 start out/index.js --name uMod       # Starts up the bot
 ```

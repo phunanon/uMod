@@ -1,7 +1,26 @@
-import { Message, TextChannel } from 'discord.js';
+import { Message } from 'discord.js';
 import { Feature } from '.';
-import { client, prisma } from '../infrastructure';
+import { prisma } from '../infrastructure';
 import OpenAI from 'openai';
+
+type ToxicLabel = { label: string; score: number };
+
+const toxicThreshold = 0.6;
+let toxicClassifierPromise: Promise<
+  (text: string) => Promise<ToxicLabel[]>
+> | null = null;
+
+async function ToxicClassifier() {
+  if (!toxicClassifierPromise) {
+    toxicClassifierPromise = (async () => {
+      const { pipeline } = await import('@xenova/transformers');
+      return (await pipeline('text-classification', 'Xenova/toxic-bert')) as (
+        text: string,
+      ) => Promise<ToxicLabel[]>;
+    })();
+  }
+  return toxicClassifierPromise;
+}
 
 const forgivenessMin = 5;
 const timeoutMin = 5;
@@ -45,6 +64,7 @@ export const AiMod: Feature = {
           } in this channel 🤖`,
         );
       } catch (e) {
+        console.error('Error toggling AI moderation', e);
         await interaction.editReply(
           'There was an error enabling AI moderation',
         );
@@ -59,15 +79,9 @@ export const AiMod: Feature = {
 };
 
 async function Moderate(userSf: bigint, message: Message) {
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) return;
-  const openai = new OpenAI({ apiKey });
   const input: OpenAI.Moderations.ModerationMultiModalInput[] = [];
   if (message.content)
-    input.push({
-      type: 'text' as const,
-      text: message.content.normalize('NFKD'),
-    });
+    input.push({ type: 'text' as const, text: message.content });
   const [attachment] = message.attachments.values();
   if (attachment && !/\.mp4/.test(attachment.name))
     input.push({
@@ -75,26 +89,13 @@ async function Moderate(userSf: bigint, message: Message) {
       image_url: { url: attachment.url },
     });
 
-  const { results } = await openai.moderations.create({
-    input,
-    model: 'omni-moderation-latest',
-  });
-  const [result] = results;
-  if (!result) {
-    console.warn('No results returned from OpenAI');
-    return;
-  }
+  const { ok, resultCategories } = await Categorise(input);
+  if (ok || !resultCategories.length) return;
 
   const forgivenessSec = forgivenessMin * 60;
   const sec = Math.floor(Date.now() / 1000);
   while (strikes[0] && strikes[0].sec + forgivenessSec < sec) strikes.shift();
 
-  const ignoredCategories = ['violence'];
-  const resultCategories = Object.entries(result.categories)
-    .filter(([k, v]) => !ignoredCategories.includes(k) && Boolean(v))
-    .map(([k]) => k);
-
-  if (!resultCategories.length) return;
   const cats = resultCategories.join(', ');
   const categories = new Set(resultCategories);
   const messageSf = BigInt(message.id);
@@ -122,5 +123,52 @@ async function Moderate(userSf: bigint, message: Message) {
   }
 }
 
-//Alcohol, gambling, drugs, sex, violence, illegal content, hate speech
-//+there's evidence of taking offence
+async function Categorise(
+  input: OpenAI.Moderations.ModerationMultiModalInput[],
+) {
+  const resultCategories = new Set<string>();
+  const text = input
+    .filter((i): i is { type: 'text'; text: string } => i.type === 'text')
+    .map(i => i.text.normalize('NFKD'))
+    .join('\n');
+
+  if (text) {
+    try {
+      const classify = await ToxicClassifier();
+      const labels = await classify(text);
+      const toxicScore =
+        labels.find(entry => entry.label.toLowerCase() === 'toxic')?.score ?? 0;
+      if (toxicScore >= toxicThreshold) resultCategories.add('toxic');
+    } catch (e) {
+      console.error('Text moderation failed', e);
+    }
+  }
+
+  const imageInput = input.filter(i => i.type === 'image_url');
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (apiKey && imageInput.length) {
+    try {
+      const openai = new OpenAI({ apiKey });
+      const { results } = await openai.moderations.create({
+        input: imageInput,
+        model: 'omni-moderation-latest',
+      });
+      const [result] = results;
+      if (result) {
+        Object.entries(result.categories)
+          .filter(([, flagged]) => Boolean(flagged))
+          .forEach(([category]) => resultCategories.add(category));
+      } else {
+        console.warn('No results returned from OpenAI');
+      }
+    } catch (e) {
+      console.error('Image moderation failed', e);
+    }
+  }
+
+  const categories = [...resultCategories];
+  return { ok: !categories.length, resultCategories: categories };
+}
+
+export const Bad = async (text: string) =>
+  await Categorise([{ type: 'text', text }]).then(r => !r.ok);
