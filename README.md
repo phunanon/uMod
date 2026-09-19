@@ -1,6 +1,6 @@
 # μMod - Legally Hardened.
 
-A moderation bot I made so I could kick Carlbot, but which now has now become quite featureful.  
+A moderation bot I made so I could kick Carlbot, but which now has now become quite featureful.
 
 This branch is specifically for my personal use, whereby all publicly accessible features that could be mistaken for Indecent Publication under UK law are censored by AI, and others are left to be accessible only to me. Other features I don't make use of are also removed.
 
@@ -27,6 +27,7 @@ This branch is specifically for my personal use, whereby all publicly accessible
     - SameMessageSpam - six of the same message in 5 min
     - MediaSpam - five media messages in 5 min
     - TelegramSpam - two of the same t.me link in 1 hour
+  - **ScamImageSpam**: mitigates cryptocurrency scam messages, and informs potentially compromised users
   - **AutoClean**: deletes messages with no content (e.g. wall of whitespace)
 - Manual Moderation
   - **Tickets**: a ticket system for members to privately chat with a specified role
@@ -108,9 +109,10 @@ In order of priority, aspirations & TODO:
 Instructions for Node.js, in the terminal:
 
 ```bash
-pnpm i -g pm2                      # Keeps the bot running even if it crashes
-pnpm i                             # Installs exact dependencies
-npx prisma migrate dev --name init # Migrates the database
-npx prisma generate --sql          # Generates the client
-pm2 start out/index.js --name uMod # Starts up the bot
+pnpm i -g pm2                            # Keeps the bot running even if it crashes
+pnpm i                                   # Installs exact dependencies
+pnpm exec prisma migrate dev --name init # Migrates the database
+pnpm exec prisma generate --sql          # Generates the client
+pnpm build                               # Compiles the TypeScript code
+pm2 start out/index.js --name uMod       # Starts up the bot
 ```

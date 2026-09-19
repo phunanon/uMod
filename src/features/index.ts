@@ -70,9 +70,10 @@ import { Reminder } from './Reminder';
 import { GuildLevels } from './GuildLevels';
 import { IngestNotes } from './NoteIngestion';
 import { KickWithDm } from './KickWithDm';
+import { ScamImageSpam } from './ScamImageSpam';
 
 export const features = {
-  ...{ MirrorGuild, BlockGifs, KickSus, AutoClean },
+  ...{ MirrorGuild, BlockGifs, ScamImageSpam, KickSus, AutoClean },
   ...{ PermaRole, InviteSpam, Ping, WhitelistChannel, ActivitySort },
   ...{ LeaderboardRecorder, Leaderboard, IqLeaderboard, LoyaltyLeaderboard },
   ...{ AgeLeaderboard, VcLeaderboard, StickyMessage, Purge, Transcript },
