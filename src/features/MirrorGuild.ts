@@ -32,10 +32,6 @@ export const MirrorGuild: Feature = {
     name: 'mirror-guild',
     needPermit: 'ChannelConfig',
     async command({ interaction, guildSf, channelSf }) {
-      if (interaction.user.id !== process.env.BOT_OWNER_SF) {
-        await interaction.reply('Only the bot owner can use this command.');
-        return;
-      }
       await interaction.deferReply();
 
       const where = { guildSf };

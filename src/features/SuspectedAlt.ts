@@ -1,7 +1,6 @@
 import { Feature } from '.';
 import { MakeNote } from './Note';
 import { ApplicationCommandOptionType } from 'discord.js';
-import { Bad } from './AiMod';
 
 export const SuspectedAlt: Feature = {
   async Init(commands) {
@@ -42,14 +41,6 @@ export const SuspectedAlt: Feature = {
       const BSF = BigInt(B);
 
       const note = interaction.options.getString('note', true);
-
-      if (await Bad(note)) {
-        await interaction.editReply(
-          'Content disallowed by AI. Please re-write the note and try again.',
-        );
-        return;
-      }
-
       await MakeNote(guildSf, ASF, userSf, `<@${BSF}> alt suspicion: ${note}`);
       await MakeNote(guildSf, BSF, userSf, `<@${ASF}> alt suspicion: ${note}`);
 

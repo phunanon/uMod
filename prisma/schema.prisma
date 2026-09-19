@@ -39,6 +39,7 @@ model Member {
   tag         String
   confessMute Boolean  @default(false)
   gifMute     Boolean  @default(false)
+  pingProtect Boolean  @default(false)
   numMessages Int      @default(0)
   numIqLines  Int      @default(0)
   numIqWords  Int      @default(0)
@@ -109,6 +110,14 @@ model Note {
   content  String
 }
 
+model Censor {
+  id       Int     @id @default(autoincrement())
+  guildSf  BigInt
+  word     String
+  censored String
+  ban      Boolean @default(false)
+}
+
 model ChannelFlags {
   id             Int      @id @default(autoincrement())
   channelSf      BigInt   @unique
@@ -121,6 +130,15 @@ model ChannelFlags {
   confessRules   String?
   aiModeration   Boolean  @default(false)
   ingestNotes    Boolean  @default(false)
+}
+
+model PingProtectWarns {
+  id      Int    @id @default(autoincrement())
+  userSf  BigInt
+  aboutSf BigInt
+  count   Int    @default(1)
+
+  @@unique([userSf, aboutSf])
 }
 
 model GuildPermission {
@@ -217,6 +235,17 @@ model QotdQuestion {
   postedAt   DateTime?
   popularity Int       @default(0)
   Config     GuildQotd @relation(fields: [guildSf], references: [guildSf])
+}
+
+model PairFrequency {
+  id     Int      @id @default(autoincrement())
+  at     DateTime @default(now())
+  userSf BigInt
+  a      String
+  b      String
+  count  Int      @default(1)
+
+  @@unique([userSf, a, b])
 }
 
 model GuildRule {

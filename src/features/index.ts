@@ -39,10 +39,12 @@ import { Alert, DeleteAlert, DeleteAlerts, RecommendedAlerts } from './Alert';
 import { Note, ContextNote } from './Note';
 import { ReadNotes, ReadNotesButton, ReadNotesByAuthor } from './Note';
 import { ChannelBan, ChannelBanMessage } from './ChannelBan';
+import { Censor, DeleteCensor } from './Censor';
 import { BlockGifs } from './BlockGifs';
 import { CreateTicket, TicketAdd, TicketsHere } from './Ticket';
 import { CloseTicket, TicketClosureReasonSubmit } from './Ticket';
 import { PingSpam } from './PingSpam';
+import { PingProtect } from './PingProtect';
 import { Transcript } from './Transcript';
 import { GuildPermit, GuildPermitList } from './GuildPermit';
 import { Histogram } from './Histogram';
@@ -62,12 +64,14 @@ import { ReadRules, SetupRule } from './EnforceRule';
 import { DeleteMessage } from './DeleteMessage';
 import { ChannelStats } from './ChannelStats';
 import { TearGas } from './TearGas';
+import { FakeUser } from './FakeUser';
 import { SuspectedAlt } from './SuspectedAlt';
 import { AiMod } from './AiMod';
 import { AutoClean } from './AutoClean';
 import { PresenceCheck } from './PresenceCheck';
 import { Reminder } from './Reminder';
 import { GuildLevels } from './GuildLevels';
+import { RoleFaucet, RoleFaucetButton } from './RoleFaucet';
 import { IngestNotes } from './NoteIngestion';
 import { KickWithDm } from './KickWithDm';
 import { ScamImageSpam } from './ScamImageSpam';
@@ -78,21 +82,21 @@ export const features = {
   ...{ LeaderboardRecorder, Leaderboard, IqLeaderboard, LoyaltyLeaderboard },
   ...{ AgeLeaderboard, VcLeaderboard, StickyMessage, Purge, Transcript },
   ...{ Note, ReadNotes, ContextNote, ReadNotesByAuthor, ReadNotesButton },
-  ...{ ChannelBan, ChannelBanMessage },
+  ...{ ChannelBan, ChannelBanMessage, Censor, DeleteCensor },
   ...{ Confess, ConfessMute, ConfessUnmute, ConfessSubmit, ConfessionsHere },
   ...{ Alert, DeleteAlert, DeleteAlerts, RecommendedAlerts },
   ...{ CreateTicket, TicketAdd, TicketsHere },
   ...{ CloseTicket, TicketClosureReasonSubmit },
-  ...{ PingSpam, GlobalChat, GlobalChatList, GlobalChatMute },
+  ...{ PingSpam, PingProtect, GlobalChat, GlobalChatList, GlobalChatMute },
   ...{ GuildPermit, GuildPermitList, Histogram, TempRole, Acquaintances },
   ...{ BumpReminder, SoftBumpReminder, BumpRemind, BumpUnremind },
   ...{ DisallowRole, GifMute, AutoRole, TearGas, SuspectedAlt },
   ...{ QotdApprove, QotdDisable, QotdEnable, QotdSuggest },
-  ...{ QotdSubscribe, QotdUnsubscribe, QotdReject, ChannelStats },
+  ...{ QotdSubscribe, QotdUnsubscribe, QotdReject, ChannelStats, FakeUser },
   ...{ EnforceRule, EnforceRulePicker, GentleReminder, GentleReminderPicker },
   ...{ SetupRule, ReadRules, DeleteMessage, KickWithDm },
   ...{ AiMod, PresenceCheck, Reminder, GuildLevels },
-  ...{ IngestNotes },
+  ...{ RoleFaucet, RoleFaucetButton, IngestNotes },
 };
 export const featurePermissions = new Set(
   Object.values(features).flatMap(f => {

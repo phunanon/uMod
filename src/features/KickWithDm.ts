@@ -1,7 +1,6 @@
 import { ApplicationCommandOptionType } from 'discord.js';
 import { Feature } from '.';
 import { userOption } from '../infrastructure';
-import { Bad } from './AiMod';
 
 export const KickWithDm: Feature = {
   async Init(commands) {
@@ -27,14 +26,6 @@ export const KickWithDm: Feature = {
 
       const user = interaction.options.getUser('user', true);
       const reason = interaction.options.getString('reason', true);
-
-      if (await Bad(reason)) {
-        await interaction.editReply(
-          'Reason content disallowed by AI. Re-write it and try again.',
-        );
-        return;
-      }
-
       const member = await guild.members.fetch(user.id).catch(() => null);
 
       if (!member) {

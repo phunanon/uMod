@@ -1,17 +1,15 @@
-import { ActionRowBuilder, Message, StringSelectMenuBuilder } from 'discord.js';
+import { ActionRowBuilder, StringSelectMenuBuilder } from 'discord.js';
 import { ApplicationCommandOptionType, EmbedBuilder } from 'discord.js';
 import { ApplicationCommandType } from 'discord.js';
 import { Feature } from '.';
 import { prisma, quoteContent } from '../infrastructure';
 import { DeleteMessageRow } from './DeleteMessage';
 import { MakeNote, printNotes } from './Note';
-import { Bad } from './AiMod';
 
 //TODO: support threads
-//TODO: rules themselves also need to be legally hardened
 
-/** Sans ampersand */
-const sa = (s: string) => (s.startsWith('&') ? s.slice(1).trim() : s);
+/** Sans asteriks */
+const sa = (s: string) => (s.startsWith('*') ? s.slice(1).trim() : s);
 
 export const SetupRule: Feature = {
   async Init(commands) {
@@ -23,7 +21,7 @@ export const SetupRule: Feature = {
         {
           name: 'rules',
           description:
-            'Separate with ;; and prepended with & to additionally offer mute',
+            'Separate with ;; and optionally prepended with * to offer timeout',
           type: ApplicationCommandOptionType.String,
           required: true,
         },
@@ -41,12 +39,19 @@ export const SetupRule: Feature = {
         .split(';;')
         .map(r => r.trim())
         .filter(r => r);
-      const numMute = rules.filter(r => r.startsWith('&')).length;
-      if (rules.length + numMute > 25) {
-        await interaction.editReply(
-          `Too many rules (including ${numMute} offered mutes, 25 max).`,
-        );
+      if (rules.length > 25) {
+        await interaction.editReply('Too many rules (25 max).');
         return;
+      }
+
+      for (const rule of rules) {
+        if (rule.length > 90) {
+          const truncated = rule.slice(0, 10);
+          await interaction.editReply(
+            `Each rule must be 90 characters or fewer ("${truncated}...")`,
+          );
+          return;
+        }
       }
 
       await prisma.guildRule.deleteMany({ where: { guildSf } });
@@ -55,9 +60,7 @@ export const SetupRule: Feature = {
         data: rules.map(rule => ({ guildSf, rule })),
       });
 
-      await interaction.editReply(
-        `${rules.length} rule(s) configured (with ${numMute} offering mute).`,
-      );
+      await interaction.editReply(`${rules.length} rule(s) configured.`);
     },
   },
 };
@@ -89,25 +92,19 @@ export const EnforceRulePicker: Feature = {
         return;
       }
 
-      const fmt = (r: string, prefix: string) => {
-        const sanitised = prefix + r.replaceAll(/(\*\*)/g, '');
-        return sanitised.length > 90
-          ? `${sanitised.slice(0, 87)}...`
-          : sanitised;
-      };
-
       const options = [
         ...rules
-          .filter(r => r.rule.startsWith('&'))
+          .filter(r => r.rule.startsWith('*'))
           .map(({ id, rule }) => ({
             id,
-            label: fmt(sa(rule), '(60m mute) '),
+            label: `(60m timeout) ${sa(rule)}`,
             duration: 60 * 60_000,
           })),
         ...rules
+          .filter(r => !r.rule.startsWith('*'))
           .map(({ id, rule }) => ({
             id,
-            label: fmt(sa(rule), '(warn) '),
+            label: `(warning) ${rule}`,
             duration: 0,
           })),
       ].map(({ id, label, duration }) => ({
@@ -124,10 +121,7 @@ export const EnforceRulePicker: Feature = {
 
       const dmProblem = await (async () => {
         try {
-          const raw = interaction.targetMessage.content;
-          const quotedContent = (await Bad(raw))
-            ? '[Message not quoted due to AI considering it inappropriate]'
-            : quoteContent(interaction.targetMessage);
+          const quotedContent = quoteContent(interaction.targetMessage);
           await author.send(
             `A moderator is reviewing your message\n${quotedContent}`,
           );
@@ -203,24 +197,14 @@ export const EnforceRule: Feature = {
         .fetch(`${messageSf}`)
         .catch(() => null);
       const byline = ` by <@${userSf}>`;
-      const safelyQuoteContent = async (message: Message) => {
-        const rawContent = message.content ?? '';
-        if (!rawContent) return '[No content]';
-        if (await Bad(rawContent)) {
-          return '[Message content not quoted due to AI considering it inappropriate]';
-        }
-        return quoteContent(message);
-      };
-      const content = message
-        ? await safelyQuoteContent(message)
-        : '[unknown message]';
+      const content = message ? quoteContent(message) : '[unknown message]';
       const ruleText = sa(rule.rule);
       const makeContent = (withByline: boolean) =>
         `Rule ${duration ? 'enforcement' : 'warning'}${
           withByline ? byline : ''
         }: ${ruleText}\n${content}`;
 
-      const muteProblem = await (async () => {
+      const timeoutProblem = await (async () => {
         if (!duration) return false;
         try {
           await member.timeout(duration, makeContent(true));
@@ -229,7 +213,7 @@ export const EnforceRule: Feature = {
           return true;
         }
       })();
-      if (muteProblem || !duration) {
+      if (timeoutProblem || !duration) {
         const content = makeContent(false);
         await MakeNote(guildSf, offenderSf, userSf, content);
       }
@@ -238,8 +222,8 @@ export const EnforceRule: Feature = {
         try {
           await member.send(
             duration
-              ? `You have been muted for ${minutes} minutes for breaking this rule:\n${ruleText}`
-              : `You have been warned for breaking this rule:\n${ruleText}`,
+              ? `You have been timed out for ${minutes} minutes for breaking the rule: **${ruleText}**`
+              : `You have been warned for breaking the rule: **${ruleText}**`,
           );
         } catch {
           return true;
@@ -252,10 +236,10 @@ export const EnforceRule: Feature = {
       const dmSpiel = dmProblem
         ? ':warning: Could not DM the author, but the warning has been logged. Please inform them yourself.'
         : 'Member warned via DMs';
-      const muteSpiel = muteProblem
-        ? ':warning: Could not mute the member. Seek help from a server admin if necessary.'
+      const timeoutSpiel = timeoutProblem
+        ? ':warning: Could not timeout the member. Seek help from a server admin if necessary.'
         : "Member timed out and DM'd about why";
-      const spiel = duration ? muteSpiel : dmSpiel;
+      const spiel = duration ? timeoutSpiel : dmSpiel;
       await interaction.editReply({
         content: `Rule enforced: ${rule.rule}\n${spiel}`,
         components: [row],

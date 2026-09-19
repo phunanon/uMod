@@ -2,7 +2,7 @@ import { Feature } from '.';
 import { ApplicationCommandOptionType } from 'discord.js';
 import { client, prisma, R } from '../infrastructure';
 import { isGoodChannel, ParseDurationAsMs } from '../infrastructure';
-import { Bad } from './AiMod';
+import { CensorText } from './Censor';
 
 //TODO: accept absolute dates
 
@@ -43,17 +43,13 @@ export const Reminder: Feature = {
 
       await interaction.deferReply();
 
-      if (await Bad(text)) {
-        await interaction.editReply('Content disallowed by AI.');
-        return;
-      }
-
       await prisma.reminder.create({
         data: { guildSf, channelSf, userSf, remindAt, text },
       });
 
+      const { censored } = await CensorText(guildSf, text);
       await interaction.editReply(
-        `Reminding you ${R(remindAt)} (approximately):\n> ${text}`,
+        `Reminding you ${R(remindAt)} (approximately):\n> ${censored}`,
       );
     },
   },
@@ -75,10 +71,11 @@ async function tick() {
     try {
       const channel = await client.channels.fetch(`${channelSf}`);
       if (isGoodChannel(channel)) {
+        const { censored } = await CensorText(guildSf, text);
         const title = `You asked me to remind you ${R(at)}`;
         await channel?.send({
           content: `<@${userSf}>`,
-          embeds: [{ title, description: text, color: 0x2f6f7f }],
+          embeds: [{ title, description: censored, color: 0x2f6f7f }],
           allowedMentions: { users: [userSf.toString()] },
         });
       }

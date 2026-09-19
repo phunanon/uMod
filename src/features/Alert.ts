@@ -17,8 +17,6 @@ export enum AlertEvent {
   PermitUsage = 'permit-usage',
 }
 
-//TODO: use AI to censor output
-
 export const Alert: Feature = {
   async Init(commands) {
     await commands.create({
@@ -115,7 +113,7 @@ export const Alert: Feature = {
       const criteria = alertInfo(
         event,
         ...[userSf, roleSf, pattern, cooldownSec, insitu, autoDeleteSec],
-        undefined,
+        undefined
       );
       await interaction.editReply({
         content: `Alert ${alert.id} created: ${criteria}, ${altReason ?? ''}`,
@@ -409,7 +407,7 @@ export const HandleAlert = async (i: HandleInfo) => {
         : { parse: [] };
     const roleContent = roleSf
       ? `<@&${roleSf}>`
-      : (i.roles?.map(r => `<@&${r}>`).join(', ') ?? '');
+      : i.roles?.map(r => `<@&${r}>`).join(', ') ?? '';
     const content =
       `||${id}|| ` +
       (altReason || info) +
